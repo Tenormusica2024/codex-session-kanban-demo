@@ -387,6 +387,7 @@ Risk to avoid:
 
 Status:
 - Initial implementation added: `docs/ARTIFACT_USAGE.md` explains how to download the GitHub Actions artifact, open `index.html`, import local session JSON, preserve overrides, reset demo data, and avoid publishing private logs. README, demo usage docs, and release checklist link/check this path.
+- Follow-up clarified that the Actions artifact now contains a tested inner `codex-session-kanban-demo.zip`.
 
 Goal:
 - Make the non-Pages distribution path understandable for users.
@@ -429,6 +430,7 @@ Risk to avoid:
 
 Status:
 - Initial implementation added: `codex_session_review/smoke_public_build.py` checks the generated public HTML for embedded sessions, task clusters, suggested tasks, required UI mount points, bundled docs, distribution mode, and private-data signals. The GitHub Pages workflow now runs this after building the public fixture and before artifact upload/deploy.
+- Follow-up added `smoke_distribution_package.py` so the downloadable zip is checked for required files, bundled docs, valid bootstrap data, distribution mode, and private-data signals.
 
 Goal:
 - Catch regressions where the public demo build is valid JSON but effectively empty or missing key documentation.

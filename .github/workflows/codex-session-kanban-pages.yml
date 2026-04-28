@@ -82,6 +82,14 @@ jobs:
       - name: Smoke test public artifact
         run: python codex_session_review/smoke_public_build.py codex_session_review/github_pages/index.html --docs-dir codex_session_review/github_pages/docs --distribution
 
+      - name: Package downloadable artifact zip
+        run: |
+          cd codex_session_review/github_pages
+          zip -r ../codex-session-kanban-demo.zip index.html README_LOCAL_DEMO.txt docs
+
+      - name: Smoke test downloadable artifact zip
+        run: python codex_session_review/smoke_distribution_package.py codex_session_review/codex-session-kanban-demo.zip --distribution
+
       - name: Install browser smoke dependencies
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_browser_smoke == 'true' }}
         run: |
@@ -105,7 +113,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: codex-session-kanban-demo
-          path: codex_session_review/github_pages
+          path: codex_session_review/codex-session-kanban-demo.zip
 
   deploy:
     if: ${{ github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.deploy_pages == 'true') }}

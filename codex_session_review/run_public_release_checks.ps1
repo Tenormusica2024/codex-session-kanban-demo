@@ -35,7 +35,16 @@ Invoke-Step "Python compile check" {
     python -m py_compile `
         .\codex_session_review\build_review_surface.py `
         .\codex_session_review\validate_session_data.py `
-        .\codex_session_review\smoke_public_build.py
+        .\codex_session_review\smoke_public_build.py `
+        .\codex_session_review\smoke_distribution_package.py
+}
+
+Invoke-Step "Package downloadable distribution" {
+    powershell -NoProfile -ExecutionPolicy Bypass -File .\codex_session_review\package_distribution_snapshot.ps1
+}
+
+Invoke-Step "Distribution package smoke" {
+    python .\codex_session_review\smoke_distribution_package.py .\codex_session_review\distribution_package\codex-session-kanban-demo.zip --distribution
 }
 
 if (-not $SkipBrowserSmoke) {

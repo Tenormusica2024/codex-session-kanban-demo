@@ -16,10 +16,11 @@ The workflow:
 4. Generates `codex_session_review/github_pages/index.html`.
 5. Copies public `docs/` into the Pages/artifact output so in-app schema links work.
 6. Runs static artifact smoke before upload/deploy.
-7. Optionally runs Playwright desktop and mobile browser smoke when manually dispatched with `run_browser_smoke=true`.
-8. Uploads a GitHub Pages artifact.
-9. Uploads the same output as a downloadable Actions artifact.
-10. Deploys to GitHub Pages on `master` push when Pages is available. Manual `deploy_pages=true` remains available.
+7. Packages a downloadable `codex-session-kanban-demo.zip` and smoke-tests the zip contents.
+8. Optionally runs Playwright desktop and mobile browser smoke when manually dispatched with `run_browser_smoke=true`.
+9. Uploads a GitHub Pages artifact.
+10. Uploads the tested zip as a downloadable Actions artifact.
+11. Deploys to GitHub Pages on `master` push when Pages is available. Manual `deploy_pages=true` remains available.
 
 The push trigger targets `master`, matching this repository default branch. Manual execution is available via `workflow_dispatch`.
 
@@ -34,7 +35,7 @@ Repository Settings:
 3. Source: GitHub Actions
 4. Push to `master`, or run the workflow manually with `deploy_pages=true` if Pages is supported
 
-If Pages is not available for the repository visibility/plan, use the Actions artifact or move the demo-only files to a public repository. The workflow also uploads a downloadable artifact so distribution still works when Pages is unsupported.
+If Pages is not available for the repository visibility/plan, use the Actions artifact or move the demo-only files to a public repository. The workflow uploads a tested `codex-session-kanban-demo.zip` so distribution still works when Pages is unsupported.
 
 ## Optional browser smoke in Actions
 

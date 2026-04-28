@@ -37,6 +37,13 @@ powershell -ExecutionPolicy Bypass -File .\codex_session_review\open_distributio
 python .\codex_session_review\smoke_public_build.py .\codex_session_review\fixture_snapshot\index.html --docs-dir .\codex_session_review\fixture_snapshot\docs --distribution
 ```
 
+- [ ] Downloadable package builds and package smoke passes:
+
+```powershell
+npm run package:distribution
+npm run smoke:package
+```
+
 - [ ] Browser smoke passes locally:
 
 ```powershell
@@ -60,7 +67,8 @@ npm run smoke:browser:mobile:local
 - [ ] Workflow `Codex Session Kanban Demo Pages` passes.
 - [ ] Optional manual workflow with `run_browser_smoke=true` passes before major public releases.
 - [ ] If Pages is unavailable, use the downloadable Actions artifact instead.
-- [ ] Artifact contains `index.html`, `README_LOCAL_DEMO.txt`, and `docs/`.
+- [ ] Downloadable artifact contains the tested `codex-session-kanban-demo.zip`.
+- [ ] The inner zip contains `index.html`, `README_LOCAL_DEMO.txt`, and `docs/`.
 
 ## Positioning
 

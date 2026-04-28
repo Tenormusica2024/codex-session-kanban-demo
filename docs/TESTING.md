@@ -16,7 +16,7 @@ Equivalent npm shortcut:
 npm run release:check
 ```
 
-This runs fixture validation, distribution build, static artifact smoke, Python compile checks, and local desktop/mobile browser smoke.
+This runs fixture validation, distribution build, static artifact smoke, Python compile checks, downloadable package smoke, and local desktop/mobile browser smoke.
 
 To also verify the deployed GitHub Pages URL:
 
@@ -100,6 +100,17 @@ The browser smoke test checks:
 
 Japanese may still appear in source/session data. The English check is scoped to static UI labels, not arbitrary user-authored content.
 
+## 3. Downloadable package smoke
+
+Use this when changing artifact packaging or fallback distribution docs:
+
+```powershell
+npm run package:distribution
+npm run smoke:package
+```
+
+The package smoke checks that the zip contains `index.html`, `README_LOCAL_DEMO.txt`, bundled public docs, a valid bootstrap payload, derived task candidates, distribution mode, and no obvious private-data signals.
+
 ## GitHub Actions
 
 The normal Pages workflow always runs:
@@ -107,6 +118,7 @@ The normal Pages workflow always runs:
 - fixture JSON validation
 - public fixture build
 - static artifact smoke
+- downloadable zip package smoke
 
 The heavier browser smoke is optional. Run the workflow manually with:
 

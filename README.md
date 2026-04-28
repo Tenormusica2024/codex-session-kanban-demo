@@ -157,6 +157,13 @@ Static artifact check:
 python .\codex_session_review\smoke_public_build.py .\codex_session_review\fixture_snapshot\index.html --docs-dir .\codex_session_review\fixture_snapshot\docs --distribution
 ```
 
+Downloadable package check:
+
+```powershell
+npm run package:distribution
+npm run smoke:package
+```
+
 Browser operation and visible-text check:
 
 ```powershell

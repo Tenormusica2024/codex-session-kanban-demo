@@ -24,6 +24,13 @@ powershell -ExecutionPolicy Bypass -File .\codex_session_review\open_distributio
 powershell -ExecutionPolicy Bypass -File .\codex_session_review\package_distribution_snapshot.ps1
 ```
 
+Or via npm:
+
+```powershell
+npm run package:distribution
+npm run smoke:package
+```
+
 The normal distribution path is GitHub Pages / GitHub Actions artifact. Local packaging is only for preflight or fallback.
 
 ## Full release check
@@ -46,6 +53,7 @@ It runs:
 - distribution fixture build
 - static artifact smoke
 - Python compile checks
+- downloadable package build and package smoke
 - Playwright browser smoke against the local fixture
 
 To also verify the deployed Pages URL:

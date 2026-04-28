@@ -4,6 +4,19 @@ All notable public-demo changes are tracked here.
 
 This project is still pre-1.0. Entries focus on public distribution, fixture safety, and the session-to-task review workflow.
 
+## 0.1.8 - 2026-04-29
+
+### Added
+
+- Downloadable distribution package smoke test for the zipped public demo artifact.
+- npm shortcuts for building and smoke-testing the local distribution package.
+
+### Changed
+
+- Release checks now build and smoke-test the downloadable package in addition to the static HTML and browser checks.
+- GitHub Actions now uploads a tested `codex-session-kanban-demo.zip` artifact instead of a raw folder artifact.
+- Artifact/distribution docs now explain the tested inner zip path.
+
 ## 0.1.7 - 2026-04-29
 
 ### Changed
