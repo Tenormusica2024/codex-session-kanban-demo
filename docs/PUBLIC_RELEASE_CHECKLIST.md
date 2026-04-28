@@ -68,4 +68,5 @@ npm run smoke:browser:local
 - [ ] README links to usage guide, import schema, competitive positioning, and TODO/adoption policy.
 - [ ] LICENSE, CONTRIBUTING, and SECURITY docs are present and still match the public fixture/privacy stance.
 - [ ] CHANGELOG and GitHub issue templates are present and still warn against sharing private session data.
+- [ ] Pull request template is present and still checks product fit, privacy, fixture safety, and release checks.
 - [ ] Demo fixture shows the product wedge without real personal task data.

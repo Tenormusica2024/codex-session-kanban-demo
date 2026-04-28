@@ -57,6 +57,17 @@ If you cannot run browser tests, at least run:
 npm run release:check -- -SkipBrowserSmoke
 ```
 
+## Pull request checklist
+
+Pull requests should use the repository PR template. In short, confirm:
+
+- the change strengthens task review, extraction quality, lineage clarity, or human override safety
+- static/local mode still works
+- public fixture mode remains safe
+- no private logs, local paths, credentials, or personal/client data are included
+- release checks were run, or the reason for skipping them is documented
+- screenshots are refreshed if visible UI changed
+
 ## Scope guidance
 
 Prefer small changes that improve:

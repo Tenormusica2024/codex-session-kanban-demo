@@ -567,6 +567,20 @@ Why:
 Risk to avoid:
 - Keep the roadmap focused on session-to-task extraction, lineage clarity, human override safety, and static/private distribution.
 
+### 32. Pull request safety template
+
+Status:
+- Initial implementation added `.github/PULL_REQUEST_TEMPLATE.md` and linked the expected checklist from CONTRIBUTING and the public release checklist.
+
+Goal:
+- Make future changes pass through product-fit, privacy, fixture-safety, and release-check prompts before merge.
+
+Why:
+- The repo now accepts public issue/feature intake. PR intake should preserve the same guardrails and reduce accidental scope creep or private-data exposure.
+
+Risk to avoid:
+- Keep the template lightweight; it should guide safe contributions, not become process-heavy.
+
 ## P2 / defer unless clearly needed
 
 - Built-in code diff review
