@@ -8,7 +8,8 @@ const STATUSES = [
   "Done",
   "Dropped",
 ];
-const DONE_PREVIEW_LIMIT = 5;
+const ARCHIVE_STATUSES = new Set(["Done", "Dropped"]);
+const ARCHIVE_PREVIEW_LIMIT = 5;
 
 const I18N = {
   ja: {
@@ -88,9 +89,9 @@ const I18N = {
     addNeedReview: "要確認へ仮追加して選択",
     show: "表示",
     collapse: "折りたたむ",
-    doneCollapsed: "完了 {count}件を折りたたみ中",
-    doneCollapsedBody: "完了履歴は通常非表示。ドラッグでこの列へ移動は可能です。",
-    doneArchive: "最新 {limit} 件のみ表示中 / 残り {count} 件は完了アーカイブ扱い",
+    archiveCollapsed: "{status} {count}件を折りたたみ中",
+    archiveCollapsedBody: "{status}履歴は通常非表示。ドラッグでこの列へ移動は可能です。",
+    archivePreview: "最新 {limit} 件のみ表示中 / 残り {count} 件はアーカイブ扱い",
     emptyColumn: "この列にはセッションがありません",
     move: "移動",
     unknownRepo: "repo不明",
@@ -230,9 +231,9 @@ const I18N = {
     addNeedReview: "Add to Need Review and select",
     show: "Show",
     collapse: "Collapse",
-    doneCollapsed: "Done {count} items collapsed",
-    doneCollapsedBody: "Done history is hidden by default. Dragging into this column still works.",
-    doneArchive: "Showing latest {limit} / {count} remaining items are archived",
+    archiveCollapsed: "{status} {count} items collapsed",
+    archiveCollapsedBody: "{status} history is hidden by default. Dragging into this column still works.",
+    archivePreview: "Showing latest {limit} / {count} remaining items are archived",
     emptyColumn: "No sessions in this column",
     move: "Move",
     unknownRepo: "unknown repo",
@@ -307,7 +308,7 @@ const state = {
   cluster: "all",
   selectedId: null,
   dragId: null,
-  doneExpanded: false,
+  archiveExpanded: {},
   lang: localStorage.getItem(LANGUAGE_KEY) || "ja",
 };
 
@@ -619,13 +620,49 @@ function getVisibleSessions() {
     if (state.status !== "all" && session.currentStatus !== state.status) return false;
     if (state.cluster !== "all" && (session.task_cluster_family || session.task_cluster_label) !== state.cluster) return false;
     if (!search) return true;
+    const relatedSessions = (session.related_session_ids || [])
+      .map((id) => state.sessions.find((item) => item.session_id === id))
+      .filter(Boolean);
     const haystack = [
       session.title,
+      session.title_ja,
+      session.title_en,
       session.summary,
+      session.summary_en,
+      session.task_body_summary,
+      session.task_body_summary_en,
       session.primary_repo,
+      session.session_id,
+      session.source_file,
+      session.current_goal,
+      session.current_goal_en,
+      session.deep_summary,
+      session.deep_summary_en,
+      session.latest_meaningful_change,
+      session.latest_meaningful_change_en,
+      session.blocker,
+      session.blocker_en,
+      session.suggested_reason,
+      session.suggested_reason_en,
+      session.task_cluster_key,
       session.task_cluster_label,
+      session.task_cluster_family,
       session.first_user_message,
+      session.first_user_message_en,
+      session.last_assistant_message,
+      session.last_assistant_message_en,
       ...(session.evidence_messages || []),
+      ...(session.evidence_messages_en || []),
+      ...relatedSessions.flatMap((item) => [
+        item.title,
+        item.title_ja,
+        item.summary,
+        item.task_body_summary,
+        item.session_id,
+        item.first_user_message,
+        item.latest_meaningful_change,
+        ...(item.evidence_messages || []),
+      ]),
     ]
       .filter(Boolean)
       .join("\n")
@@ -926,38 +963,40 @@ function renderBoard() {
   board.innerHTML = "";
 
   STATUSES.forEach((status) => {
-    const isDone = status === "Done";
-    const isDoneCollapsed = isDone && !state.doneExpanded;
+    const isArchive = ARCHIVE_STATUSES.has(status);
+    const archiveExpanded = Boolean(state.archiveExpanded[status]);
+    const isArchiveCollapsed = isArchive && !archiveExpanded;
     const columnSessions =
-      isDone && state.doneExpanded ? grouped[status].slice(0, DONE_PREVIEW_LIMIT) : isDoneCollapsed ? [] : grouped[status];
-    const hiddenDoneCount =
-      isDone && state.doneExpanded ? Math.max(grouped[status].length - DONE_PREVIEW_LIMIT, 0) : grouped[status].length;
+      isArchive && archiveExpanded ? grouped[status].slice(0, ARCHIVE_PREVIEW_LIMIT) : isArchiveCollapsed ? [] : grouped[status];
+    const hiddenArchiveCount =
+      isArchive && archiveExpanded ? Math.max(grouped[status].length - ARCHIVE_PREVIEW_LIMIT, 0) : grouped[status].length;
     const column = document.createElement("section");
-    column.className = `kanban-column${isDone ? " done-column" : ""}${isDoneCollapsed ? " collapsed" : ""}`;
+    column.className = `kanban-column${isArchive ? " archive-column" : ""}${isArchiveCollapsed ? " collapsed" : ""}`;
     column.innerHTML = `
       <div class="column-header">
         <h2>${escapeHtml(statusLabel(status))}</h2>
         <div class="column-header-actions">
-          ${isDone ? `<button class="column-toggle" data-done-toggle type="button">${escapeHtml(state.doneExpanded ? t("collapse") : t("show"))}</button>` : ""}
+          ${isArchive ? `<button class="column-toggle" data-archive-toggle="${escapeHtml(status)}" type="button">${escapeHtml(archiveExpanded ? t("collapse") : t("show"))}</button>` : ""}
           <span class="count-chip">${grouped[status].length}</span>
         </div>
       </div>
       <div class="dropzone" data-status="${escapeHtml(status)}"></div>
     `;
-    column.querySelector("[data-done-toggle]")?.addEventListener("click", (event) => {
+    column.querySelector("[data-archive-toggle]")?.addEventListener("click", (event) => {
       event.preventDefault();
-      state.doneExpanded = !state.doneExpanded;
+      const targetStatus = event.currentTarget.dataset.archiveToggle;
+      state.archiveExpanded[targetStatus] = !state.archiveExpanded[targetStatus];
       renderBoard();
     });
     const dropzone = column.querySelector(".dropzone");
     attachDropzone(dropzone, status);
 
-    if (isDoneCollapsed && grouped[status].length) {
+    if (isArchiveCollapsed && grouped[status].length) {
       const collapsed = document.createElement("div");
-      collapsed.className = "collapsed-done-state";
+      collapsed.className = "collapsed-archive-state";
       collapsed.innerHTML = `
-        <strong>${escapeHtml(t("doneCollapsed", { count: grouped[status].length }))}</strong>
-        <span>${escapeHtml(t("doneCollapsedBody"))}</span>
+        <strong>${escapeHtml(t("archiveCollapsed", { status: statusLabel(status), count: grouped[status].length }))}</strong>
+        <span>${escapeHtml(t("archiveCollapsedBody", { status: statusLabel(status) }))}</span>
       `;
       dropzone.appendChild(collapsed);
     }
@@ -1031,10 +1070,10 @@ function renderBoard() {
       dropzone.appendChild(card);
     });
 
-    if (isDone && state.doneExpanded && hiddenDoneCount > 0) {
+    if (isArchive && archiveExpanded && hiddenArchiveCount > 0) {
       const archive = document.createElement("div");
-      archive.className = "done-archive-note";
-      archive.textContent = t("doneArchive", { limit: DONE_PREVIEW_LIMIT, count: hiddenDoneCount });
+      archive.className = "archive-note";
+      archive.textContent = t("archivePreview", { limit: ARCHIVE_PREVIEW_LIMIT, count: hiddenArchiveCount });
       dropzone.appendChild(archive);
     }
 

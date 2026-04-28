@@ -90,6 +90,9 @@ Risk to avoid:
 
 ### 4. Done/Dropped archive collapse
 
+Status:
+- Implemented in the static UI: `Done` and `Dropped` are archive columns, collapsed by default, expandable on demand, with counts visible.
+
 Goal:
 - Done and Dropped should be compact by default.
 - Expand on demand.
@@ -102,6 +105,9 @@ Risk to avoid:
 - Do not hide human-fixed cards so completely that override state becomes hard to recover.
 
 ### 5. Evidence-aware search
+
+Status:
+- Initial implementation added: search now covers title/summary, task body, repo, session id, source file, cluster keys, current goal, deep summary, latest change, blocker, suggested reason, first/last messages, evidence messages, and related session evidence.
 
 Goal:
 - Search should cover:

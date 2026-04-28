@@ -532,16 +532,16 @@ button.secondary,
   outline-offset: 8px;
 }
 
-.done-column.collapsed {
+.archive-column.collapsed {
   min-height: 170px;
 }
 
-.done-column.collapsed .dropzone {
+.archive-column.collapsed .dropzone {
   min-height: 92px;
 }
 
-.collapsed-done-state,
-.done-archive-note {
+.collapsed-archive-state,
+.archive-note {
   border-radius: var(--radius-md);
   padding: 14px;
   border: 1px dashed rgba(151, 169, 195, 0.22);
@@ -549,17 +549,17 @@ button.secondary,
   color: var(--muted);
 }
 
-.collapsed-done-state {
+.collapsed-archive-state {
   display: grid;
   gap: 6px;
 }
 
-.collapsed-done-state strong {
+.collapsed-archive-state strong {
   color: var(--text);
 }
 
-.collapsed-done-state span,
-.done-archive-note {
+.collapsed-archive-state span,
+.archive-note {
   font-size: 0.86rem;
   line-height: 1.55;
 }
