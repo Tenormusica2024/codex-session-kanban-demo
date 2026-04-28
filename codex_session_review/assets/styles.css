@@ -1188,3 +1188,10 @@ button.secondary,
   margin: 6px 0 10px;
   padding-left: 18px;
 }
+
+.button-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}

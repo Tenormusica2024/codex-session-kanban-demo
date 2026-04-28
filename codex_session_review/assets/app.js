@@ -86,8 +86,16 @@ const I18N = {
     importWarnings: "警告",
     importNoWarnings: "警告なし",
     importMissingFields: "不足フィールド",
+    importInvalidStatuses: "不正なstatus",
+    importDuplicateIds: "重複session_id",
+    importInvalidTimestamps: "不正な時刻",
+    importBrokenRelatedIds: "参照切れrelated_session_ids",
     importPrivacySignals: "private情報らしき信号",
     importValidationHint: "警告がある場合もローカル表示だけなら続行できます。公開fixtureへ入れる前には必ず修正してください。",
+    downloadSampleJson: "sample JSONをDL",
+    copySampleJson: "sample JSONをコピー",
+    openSchemaDocs: "schema docs",
+    copiedSampleJson: "sample JSONをコピーしました。",
     invalidSessionData: "sessions 配列を含むJSONを指定してください",
     clearOverrides: "手動修正を全消去",
     overridePanelTitle: "手動修正の保存/復元",
@@ -309,8 +317,16 @@ const I18N = {
     importWarnings: "Warnings",
     importNoWarnings: "No warnings",
     importMissingFields: "Missing fields",
+    importInvalidStatuses: "Invalid statuses",
+    importDuplicateIds: "Duplicate session_id",
+    importInvalidTimestamps: "Invalid timestamps",
+    importBrokenRelatedIds: "Broken related_session_ids",
     importPrivacySignals: "Possible private-data signals",
     importValidationHint: "Warnings are acceptable for local-only review, but fix them before publishing fixture data.",
+    downloadSampleJson: "Download sample JSON",
+    copySampleJson: "Copy sample JSON",
+    openSchemaDocs: "Schema docs",
+    copiedSampleJson: "Sample JSON copied.",
     invalidSessionData: "Choose JSON with a sessions array",
     clearOverrides: "Clear all overrides",
     overridePanelTitle: "Override backup / restore",
@@ -2352,8 +2368,15 @@ async function copyEffectiveSummary() {
 
 function validateImportedSessions(sessions) {
   const required = ["session_id", "title", "summary", "suggested_status", "primary_repo", "start_at", "end_at"];
+  const allowedStatuses = new Set(STATUSES);
   const missing = [];
+  const invalidStatuses = [];
+  const duplicateIds = [];
+  const invalidTimestamps = [];
+  const brokenRelatedIds = [];
   const privacy = [];
+  const seenIds = new Set();
+  const allIds = new Set(sessions.map((session, index) => session.session_id || `#${index + 1}`));
   const privatePattern = /(C:\\Users\\|\\Users\\|\/Users\/|\/home\/|token|api[_-]?key|cookie|bypass|secret|password|credential)/i;
   sessions.forEach((session, index) => {
     const label = session.session_id || `#${index + 1}`;
@@ -2361,6 +2384,24 @@ function validateImportedSessions(sessions) {
     if (missingFields.length) {
       missing.push(`${label}: ${missingFields.join(", ")}`);
     }
+    if (session.session_id) {
+      if (seenIds.has(session.session_id)) duplicateIds.push(session.session_id);
+      seenIds.add(session.session_id);
+    }
+    const status = session.suggested_status || session.currentStatus;
+    if (status && !allowedStatuses.has(status)) {
+      invalidStatuses.push(`${label}: ${status}`);
+    }
+    ["start_at", "end_at"].forEach((field) => {
+      if (session[field] && Number.isNaN(new Date(session[field]).getTime())) {
+        invalidTimestamps.push(`${label}: ${field}=${session[field]}`);
+      }
+    });
+    (session.related_session_ids || []).forEach((relatedId) => {
+      if (!allIds.has(relatedId)) {
+        brokenRelatedIds.push(`${label}: ${relatedId}`);
+      }
+    });
     const searchable = JSON.stringify(session);
     if (privatePattern.test(searchable)) {
       privacy.push(label);
@@ -2369,15 +2410,19 @@ function validateImportedSessions(sessions) {
   return {
     sessionCount: sessions.length,
     missing,
+    invalidStatuses,
+    duplicateIds: [...new Set(duplicateIds)],
+    invalidTimestamps,
+    brokenRelatedIds,
     privacy: [...new Set(privacy)],
-    ok: missing.length === 0 && privacy.length === 0,
+    ok: missing.length === 0 && invalidStatuses.length === 0 && duplicateIds.length === 0 && invalidTimestamps.length === 0 && brokenRelatedIds.length === 0 && privacy.length === 0,
   };
 }
 
 function renderImportValidationReport(report) {
   const panel = document.getElementById("detail-panel");
   if (!panel || !report) return;
-  const warningCount = report.missing.length + report.privacy.length;
+  const warningCount = report.missing.length + report.invalidStatuses.length + report.duplicateIds.length + report.invalidTimestamps.length + report.brokenRelatedIds.length + report.privacy.length;
   panel.innerHTML = `
     <h2>${escapeHtml(t("importValidationTitle"))}</h2>
     <div class="detail-meta">
@@ -2389,6 +2434,22 @@ function renderImportValidationReport(report) {
       <div>
         <strong>${escapeHtml(t("importMissingFields"))}</strong>
         <ul>${report.missing.map((item) => `<li>${escapeHtml(item)}</li>`).join("") || `<li>${escapeHtml(t("importNoWarnings"))}</li>`}</ul>
+      </div>
+      <div>
+        <strong>${escapeHtml(t("importInvalidStatuses"))}</strong>
+        <ul>${report.invalidStatuses.map((item) => `<li>${escapeHtml(item)}</li>`).join("") || `<li>${escapeHtml(t("importNoWarnings"))}</li>`}</ul>
+      </div>
+      <div>
+        <strong>${escapeHtml(t("importDuplicateIds"))}</strong>
+        <ul>${report.duplicateIds.map((item) => `<li>${escapeHtml(item)}</li>`).join("") || `<li>${escapeHtml(t("importNoWarnings"))}</li>`}</ul>
+      </div>
+      <div>
+        <strong>${escapeHtml(t("importInvalidTimestamps"))}</strong>
+        <ul>${report.invalidTimestamps.map((item) => `<li>${escapeHtml(item)}</li>`).join("") || `<li>${escapeHtml(t("importNoWarnings"))}</li>`}</ul>
+      </div>
+      <div>
+        <strong>${escapeHtml(t("importBrokenRelatedIds"))}</strong>
+        <ul>${report.brokenRelatedIds.map((item) => `<li>${escapeHtml(item)}</li>`).join("") || `<li>${escapeHtml(t("importNoWarnings"))}</li>`}</ul>
       </div>
       <div>
         <strong>${escapeHtml(t("importPrivacySignals"))}</strong>
@@ -2516,6 +2577,33 @@ function applyBoardData(boardData) {
   renderCandidateStrip();
   renderBoard();
   renderDetail();
+}
+
+function sampleJsonText() {
+  const payload = {
+    generated_at: state.boardData?.generated_at || new Date().toISOString(),
+    source: "sample-fixture-public",
+    schema_version: state.boardData?.schema_version || "0.2.0",
+    surface_mode: "distribution",
+    supported_providers: state.boardData?.supported_providers || ["codex"],
+    sessions: state.originalBoardData?.sessions || state.sessions || [],
+  };
+  return JSON.stringify(payload, null, 2);
+}
+
+function downloadSampleJson() {
+  const blob = new Blob([sampleJsonText()], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "codex-session-kanban-sample.json";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+async function copySampleJson() {
+  await navigator.clipboard.writeText(sampleJsonText());
+  alert(t("copiedSampleJson"));
 }
 
 function importSessionData(file) {
@@ -2656,6 +2744,10 @@ function init() {
   });
   document.getElementById("reset-demo-data")?.addEventListener("click", () => {
     applyBoardData(JSON.parse(JSON.stringify(state.originalBoardData)));
+  });
+  document.getElementById("download-sample-json")?.addEventListener("click", downloadSampleJson);
+  document.getElementById("copy-sample-json")?.addEventListener("click", () => {
+    copySampleJson().catch((error) => alert(t("copyFailed", { message: error.message })));
   });
   document.getElementById("clear-overrides").addEventListener("click", () => {
     state.overrides = {};
