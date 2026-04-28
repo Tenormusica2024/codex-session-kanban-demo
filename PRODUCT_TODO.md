@@ -75,6 +75,9 @@ Risk to avoid:
 
 ### 3. Needs-input badge/filter
 
+Status:
+- Initial implementation added: cards with blocker/auth/login/credential/manual-action/deploy/budget/rate-limit signals get a `needs input` badge and can be filtered from the toolbar. This stays as a badge/filter, not a new column.
+
 Goal:
 - Distinguish ordinary review from true user/input blockers:
   - user answer needed

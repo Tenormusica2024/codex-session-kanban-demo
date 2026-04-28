@@ -55,7 +55,11 @@ const I18N = {
     filterRepo: "Repo",
     filterStatus: "状態",
     filterCluster: "まとまり",
+    filterAttention: "注目",
     searchPlaceholder: "repo / 依頼文 / 要約",
+    allAttention: "すべて",
+    attentionNeedsInput: "入力/操作待ち",
+    attentionHasBlocker: "blockerあり",
     exportOverrides: "手動修正を出力",
     copyOverridesJson: "手動修正JSONをコピー",
     saveSyncJson: "同期用JSONを保存",
@@ -123,6 +127,7 @@ const I18N = {
     deepReadMemo: "深読みメモ",
     latestMeaningfulChange: "直近の意味変化",
     blocker: "blocker",
+    needsInput: "入力/操作待ち",
     manualReview: "手動レビュー",
     status: "状態",
     notes: "メモ",
@@ -197,7 +202,11 @@ const I18N = {
     filterRepo: "Repo",
     filterStatus: "Status",
     filterCluster: "Cluster",
+    filterAttention: "Attention",
     searchPlaceholder: "repo / prompt / summary",
+    allAttention: "All",
+    attentionNeedsInput: "Needs input",
+    attentionHasBlocker: "Has blocker",
     exportOverrides: "Export overrides",
     copyOverridesJson: "Copy overrides JSON",
     saveSyncJson: "Save sync JSON",
@@ -265,6 +274,7 @@ const I18N = {
     deepReadMemo: "Deep read memo",
     latestMeaningfulChange: "Latest meaningful change",
     blocker: "blocker",
+    needsInput: "needs input",
     manualReview: "Manual review",
     status: "Status",
     notes: "Notes",
@@ -306,6 +316,7 @@ const state = {
   repo: "all",
   status: "all",
   cluster: "all",
+  attention: "all",
   selectedId: null,
   dragId: null,
   archiveExpanded: {},
@@ -437,6 +448,32 @@ function displayReason(item) {
   if (state.lang === "ja" || !hasJapanese(raw)) return raw;
   const status = item?.["推奨列"] || item?.suggested_status || item?.currentStatus || "Need Review";
   return `Recommended status: ${statusLabel(status)}. Needs human review if completion or blocker evidence is not explicit.`;
+}
+
+function attentionSignals(item) {
+  const texts = [
+    item?.blocker,
+    item?.blocker_en,
+    item?.suggested_reason,
+    item?.suggested_reason_en,
+    item?.latest_meaningful_change,
+    item?.latest_meaningful_change_en,
+    item?.summary,
+    item?.task_body_summary,
+    item?.first_user_message,
+    item?.last_assistant_message,
+    ...(item?.evidence_messages || []),
+  ]
+    .filter(Boolean)
+    .join("\n")
+    .toLowerCase();
+  const blocker = String(item?.blocker || item?.blocker_en || "").trim().toLowerCase();
+  const hasBlocker = Boolean(blocker && !["none", "n/a", "なし", "無し", "特になし"].includes(blocker));
+  const needsInput =
+    hasBlocker ||
+    /login|auth|credential|permission|token|secret|manual action|user action|needs input|user input|approval|consent|browser|deploy|vercel|github pages|billing|budget|rate limit|quota/.test(texts) ||
+    /ログイン|認証|権限|資格情報|credential|token|手動|ユーザー操作|確認が必要|判断が必要|同意|利用規約|ブラウザ|デプロイ|予算|制限/.test(texts);
+  return { needsInput, hasBlocker };
 }
 
 function displayNextAction(item) {
@@ -619,6 +656,11 @@ function getVisibleSessions() {
     if (state.repo !== "all" && session.primary_repo !== state.repo) return false;
     if (state.status !== "all" && session.currentStatus !== state.status) return false;
     if (state.cluster !== "all" && (session.task_cluster_family || session.task_cluster_label) !== state.cluster) return false;
+    if (state.attention !== "all") {
+      const signals = attentionSignals(session);
+      if (state.attention === "needs-input" && !signals.needsInput) return false;
+      if (state.attention === "has-blocker" && !signals.hasBlocker) return false;
+    }
     if (!search) return true;
     const relatedSessions = (session.related_session_ids || [])
       .map((id) => state.sessions.find((item) => item.session_id === id))
@@ -718,6 +760,17 @@ function renderClusterFilter() {
   select.value = state.cluster;
 }
 
+function renderAttentionFilter() {
+  const select = document.getElementById("attention-filter");
+  if (!select) return;
+  select.innerHTML = `
+    <option value="all">${escapeHtml(t("allAttention"))}</option>
+    <option value="needs-input">${escapeHtml(t("attentionNeedsInput"))}</option>
+    <option value="has-blocker">${escapeHtml(t("attentionHasBlocker"))}</option>
+  `;
+  select.value = state.attention;
+}
+
 function renderClusterStrip(visible) {
   const host = document.getElementById("cluster-list");
   const counts = new Map();
@@ -808,6 +861,7 @@ function revealBoardSession(sessionId) {
   renderRepoFilter();
   renderStatusFilter();
   renderClusterFilter();
+  renderAttentionFilter();
   renderCandidateStrip();
   renderBoard();
   renderDetail();
@@ -1016,6 +1070,7 @@ function renderBoard() {
           <span class="tag">${escapeHtml(session.recency_label || t("recent"))}</span>
           <span class="tag ${escapeHtml(session.autonomy_mode || "")}">${escapeHtml(localizeAutonomyMode(session.autonomy_mode))}</span>
           ${session.clusterCard ? `<span class="tag">${escapeHtml(t("cluster"))}</span>` : ""}
+          ${attentionSignals(session).needsInput ? `<span class="tag attention">${escapeHtml(t("needsInput"))}</span>` : ""}
           ${session.overrideLock ? `<span class="tag override">${escapeHtml(t("humanLock"))}</span>` : ""}
           ${session.orderLock ? `<span class="tag override">${escapeHtml(t("manualOrder"))}</span>` : ""}
         </div>
@@ -1177,6 +1232,7 @@ function renderDetail() {
       <span class="tag">${escapeHtml(session.primary_repo || t("unknownRepo"))}</span>
       <span class="tag">${escapeHtml(statusLabel(session.currentStatus))}</span>
       <span class="tag ${escapeHtml(session.autonomy_mode || "")}">${escapeHtml(localizeAutonomyMode(session.autonomy_mode))}</span>
+      ${attentionSignals(session).needsInput ? `<span class="tag attention">${escapeHtml(t("needsInput"))}</span>` : ""}
       <span class="tag">${escapeHtml(session.statusOwner || "ai")} ${escapeHtml(t("owner"))}</span>
       <span class="tag">${escapeHtml(displayClusterLabel(session.task_cluster_family || session.task_cluster_label || "misc"))} / ${session.related_session_count || 1} ${escapeHtml(t("sessions"))}</span>
       <span class="tag mono">sid ${escapeHtml(shortSessionId(session.session_id))}</span>
@@ -1637,6 +1693,7 @@ function init() {
       renderRepoFilter();
       renderStatusFilter();
       renderClusterFilter();
+      renderAttentionFilter();
       renderCandidateStrip();
       renderBoard();
       renderDetail();
@@ -1645,6 +1702,7 @@ function init() {
   renderRepoFilter();
   renderStatusFilter();
   renderClusterFilter();
+  renderAttentionFilter();
   renderCandidateStrip();
 
   document.getElementById("search-input").addEventListener("input", (event) => {
@@ -1662,6 +1720,10 @@ function init() {
   });
   document.getElementById("cluster-filter").addEventListener("change", (event) => {
     state.cluster = event.target.value;
+    renderBoard();
+  });
+  document.getElementById("attention-filter")?.addEventListener("change", (event) => {
+    state.attention = event.target.value;
     renderBoard();
   });
 

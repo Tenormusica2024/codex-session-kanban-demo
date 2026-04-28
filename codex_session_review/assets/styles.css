@@ -711,6 +711,12 @@ button.secondary,
   border: 1px solid rgba(255, 184, 77, 0.24);
 }
 
+.tag.attention {
+  color: #ffd166;
+  border: 1px solid rgba(255, 209, 102, 0.28);
+  background: rgba(255, 209, 102, 0.08);
+}
+
 .detail-panel {
   position: sticky;
   top: 22px;
