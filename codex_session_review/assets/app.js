@@ -141,6 +141,13 @@ const I18N = {
     statusOwner: "状態の所有者",
     overrideLock: "override lock",
     orderLock: "order lock",
+    extractionTimeline: "抽出タイムライン",
+    timelineFirstSeen: "初回検出",
+    timelineLatestEvidence: "最新の決定的根拠",
+    timelineMergedSessions: "統合/代表セッション",
+    timelineManualOverride: "手動修正",
+    timelineNoManualOverride: "手動修正なし",
+    timelineNotAvailable: "タイムライン情報なし",
     deepReadSummary: "深読み要約",
     currentGoal: "現在ゴール",
     taskSummary: "タスク概要",
@@ -321,6 +328,13 @@ const I18N = {
     statusOwner: "status owner",
     overrideLock: "override lock",
     orderLock: "order lock",
+    extractionTimeline: "Extraction timeline",
+    timelineFirstSeen: "First seen",
+    timelineLatestEvidence: "Latest decisive evidence",
+    timelineMergedSessions: "Merged / represented sessions",
+    timelineManualOverride: "Manual override",
+    timelineNoManualOverride: "No manual override",
+    timelineNotAvailable: "No timeline information",
     deepReadSummary: "Deep read summary",
     currentGoal: "Current goal",
     taskSummary: "Task summary",
@@ -619,6 +633,55 @@ function lineageInfo(session, relatedSessions = []) {
     hint: hasMerged ? t("mergedHint") : t("noLineage"),
   };
 }
+function formatTimelineDate(value) {
+  if (!value) return "n/a";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value);
+  return date.toLocaleString(state.lang === "ja" ? "ja-JP" : "en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function buildExtractionTimeline(session, relatedSessions = []) {
+  const all = [session, ...relatedSessions].filter(Boolean);
+  const sorted = all
+    .slice()
+    .sort((a, b) => new Date(a.start_at || a.end_at || 0) - new Date(b.start_at || b.end_at || 0));
+  const first = sorted[0] || session;
+  const latest = sorted
+    .slice()
+    .sort((a, b) => new Date(b.end_at || b.start_at || 0) - new Date(a.end_at || a.start_at || 0))[0] || session;
+  const overrideAt = session.reviewTouchedAt || session.touched_at || session.override_touched_at || session.override?.touched_at;
+  const mergedLabels = relatedSessions
+    .slice(0, 4)
+    .map((item) => `${displayTaskTitle(item)} (${shortSessionId(item.session_id)})`);
+  return [
+    {
+      label: t("timelineFirstSeen"),
+      value: `${formatTimelineDate(first.start_at || first.end_at)} / ${displayTaskTitle(first)}`,
+    },
+    {
+      label: t("timelineLatestEvidence"),
+      value: `${formatTimelineDate(latest.end_at || latest.start_at)} / ${displayTaskTitle(latest)}`,
+    },
+    {
+      label: t("timelineMergedSessions"),
+      value: mergedLabels.length
+        ? `${relatedSessions.length} ${t("sessions")}: ${mergedLabels.join(" / ")}`
+        : t("representativeOnly"),
+    },
+    {
+      label: t("timelineManualOverride"),
+      value: session.overrideLock || session.orderLock
+        ? `${formatTimelineDate(overrideAt)} / ${session.statusOwner || "human"}`
+        : t("timelineNoManualOverride"),
+    },
+  ].filter((item) => item.value && item.value !== "n/a");
+}
+
 
 function relatedTaskMap(session, displaySessions) {
   const family = session.task_cluster_family || session.task_cluster_label;
@@ -1590,6 +1653,21 @@ function renderDetail() {
         <div>${escapeHtml(displayReason(session) || "n/a")}</div>
         <div class="small">${escapeHtml(t("taskCluster"))}: ${escapeHtml(displayClusterLabel(session.task_cluster_family || session.task_cluster_label || "misc"))} / ${escapeHtml(t("relatedSessions"))}: ${session.related_session_count || 1}</div>
         <div class="small">${escapeHtml(t("statusOwner"))}: ${escapeHtml(session.statusOwner || "ai")} / ${escapeHtml(t("overrideLock"))}: ${session.overrideLock ? t("on") : t("off")} / ${escapeHtml(t("orderLock"))}: ${session.orderLock ? t("on") : t("off")}</div>
+      </div>
+    </div>
+
+    <div class="detail-section">
+      <h3>${escapeHtml(t("extractionTimeline"))}</h3>
+      <div class="timeline-list">
+        ${buildExtractionTimeline(session, relatedSessions)
+          .map(
+            (item) => `
+              <div class="timeline-item">
+                <span>${escapeHtml(item.label)}</span>
+                <strong>${escapeHtml(item.value)}</strong>
+              </div>`
+          )
+          .join("") || `<p>${escapeHtml(t("timelineNotAvailable"))}</p>`}
       </div>
     </div>
 

@@ -1018,3 +1018,36 @@ button.secondary,
     align-items: stretch;
   }
 }
+
+.timeline-list {
+  display: grid;
+  gap: 8px;
+}
+
+.timeline-item {
+  display: grid;
+  grid-template-columns: minmax(120px, 0.35fr) 1fr;
+  gap: 12px;
+  align-items: start;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(151, 169, 195, 0.14);
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.timeline-item span {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.timeline-item strong {
+  color: var(--text);
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+@media (max-width: 720px) {
+  .timeline-item {
+    grid-template-columns: 1fr;
+  }
+}

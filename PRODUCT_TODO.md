@@ -189,6 +189,9 @@ Risk to avoid:
 
 ### 8. Card extraction timeline
 
+Status:
+- Initial implementation added: the detail panel now shows first seen, latest decisive evidence, merged/represented sessions, and manual override timing so extraction decisions can be debugged without raw transcript rereading.
+
 Goal:
 - Show how the card was derived over time:
   - first seen
