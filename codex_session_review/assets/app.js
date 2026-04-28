@@ -41,6 +41,8 @@ const I18N = {
       "候補一覧は staging。`推奨列へ追加` か `要確認へ仮追加して選択` で初めてボードに固定され、固定済み候補は候補一覧から消えます。",
     guideNoteSchedule:
       "配布版は sample fixture だけから GitHub Actions で生成します。外部 LLM API や実セッションは使いません。",
+    guideKeyboard:
+      "ショートカット: j/k で選択移動、Alt+↑/↓ で同列順位変更、1-6 で状態変更、c でsession IDコピー。入力欄フォーカス中は無効。",
     statVisible: "表示中セッション",
     statOverrides: "手動固定",
     statAutoReady: "自動処理候補",
@@ -196,6 +198,8 @@ const I18N = {
       "The candidate list is staging. A card is fixed to the board only after adding it to the recommended column or temporarily adding it to Need Review.",
     guideNoteSchedule:
       "The public demo is generated from sample fixtures by GitHub Actions. It uses no external LLM API and no real session logs.",
+    guideKeyboard:
+      "Shortcuts: j/k select next/previous, Alt+↑/↓ reorder within column, 1-6 move status, c copy session ID. Disabled while typing in inputs.",
     statVisible: "Visible sessions",
     statOverrides: "Human overrides",
     statAutoReady: "Auto-ready",
@@ -1282,6 +1286,67 @@ function moveSessionWithinColumn(sessionId, direction) {
   renderDetail();
 }
 
+function selectAdjacentSession(direction) {
+  const visible = getVisibleSessions();
+  if (!visible.length) return;
+  const ordered = STATUSES.flatMap((status) =>
+    visible.filter((item) => item.currentStatus === status).sort(compareSessionsWithinColumn)
+  );
+  const currentIndex = ordered.findIndex((item) => item.session_id === state.selectedId);
+  const nextIndex = currentIndex < 0 ? 0 : Math.max(0, Math.min(ordered.length - 1, currentIndex + direction));
+  state.selectedId = ordered[nextIndex].session_id;
+  renderBoard();
+  renderDetail();
+}
+
+function setSelectedStatusByIndex(index) {
+  const session = getMergedSessions().find((item) => item.session_id === state.selectedId);
+  const status = STATUSES[index];
+  if (!session || !status) return;
+  setOverride(session.session_id, { status, notes: session.reviewNotes || "" });
+  renderBoard();
+  renderDetail();
+}
+
+function copySelectedSessionId() {
+  const session = getMergedSessions().find((item) => item.session_id === state.selectedId);
+  if (!session) return;
+  navigator.clipboard?.writeText(session.session_id).catch(() => {});
+}
+
+function isTypingTarget(target) {
+  const tag = String(target?.tagName || "").toLowerCase();
+  return tag === "input" || tag === "textarea" || tag === "select" || Boolean(target?.isContentEditable);
+}
+
+function handleKeyboardTriage(event) {
+  if (isTypingTarget(event.target) || event.ctrlKey || event.metaKey || event.shiftKey) return;
+  if (event.altKey && event.key === "ArrowUp") {
+    event.preventDefault();
+    if (state.selectedId) moveSessionWithinColumn(state.selectedId, -1);
+    return;
+  }
+  if (event.altKey && event.key === "ArrowDown") {
+    event.preventDefault();
+    if (state.selectedId) moveSessionWithinColumn(state.selectedId, 1);
+    return;
+  }
+  if (event.altKey) return;
+  if (event.key === "j") {
+    event.preventDefault();
+    selectAdjacentSession(1);
+  } else if (event.key === "k") {
+    event.preventDefault();
+    selectAdjacentSession(-1);
+  } else if (/^[1-6]$/.test(event.key)) {
+    event.preventDefault();
+    setSelectedStatusByIndex(Number(event.key) - 1);
+  } else if (event.key.toLowerCase() === "c") {
+    event.preventDefault();
+    copySelectedSessionId();
+  }
+}
+
 function renderDetail() {
   const panel = document.getElementById("detail-panel");
   const merged = getMergedSessions();
@@ -1851,6 +1916,7 @@ function init() {
     renderBoard();
     renderDetail();
   });
+  document.addEventListener("keydown", handleKeyboardTriage);
 
   renderBoard();
   renderDetail();
