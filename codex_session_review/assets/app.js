@@ -159,6 +159,7 @@ const I18N = {
     representativeOnly: "このまとまりでは今のところこのセッションが代表です。",
     lastAssistantRecap: "最後のassistant要約",
     source: "Source",
+    provider: "provider",
     owner: "owner",
     on: "on",
     off: "off",
@@ -323,6 +324,7 @@ const I18N = {
     representativeOnly: "This session is currently the representative for this cluster.",
     lastAssistantRecap: "Last assistant recap",
     source: "Source",
+    provider: "provider",
     owner: "owner",
     on: "on",
     off: "off",
@@ -610,6 +612,10 @@ function localizeAutonomyMode(value) {
     "auto-suggest": "AI提案",
     "auto-ready": "自動処理候補",
   }[value] || value;
+}
+
+function providerLabel(item) {
+  return item?.provider || item?.session_provider || state.boardData?.provider || "codex";
 }
 
 function applyStaticI18n() {
@@ -1172,6 +1178,7 @@ function renderBoard() {
         </div>
         <div class="card-tags">
           <span class="tag">${escapeHtml(session.primary_repo || t("unknownRepo"))}</span>
+          <span class="tag provider">${escapeHtml(providerLabel(session))}</span>
           <span class="tag">${escapeHtml(session.recency_label || t("recent"))}</span>
           <span class="tag ${escapeHtml(session.autonomy_mode || "")}">${escapeHtml(localizeAutonomyMode(session.autonomy_mode))}</span>
           ${session.clusterCard ? `<span class="tag">${escapeHtml(t("cluster"))}</span>` : ""}
@@ -1400,6 +1407,7 @@ function renderDetail() {
     <h2>${escapeHtml(displayTaskTitle(session))}</h2>
     <div class="detail-meta">
       <span class="tag">${escapeHtml(session.primary_repo || t("unknownRepo"))}</span>
+      <span class="tag provider">${escapeHtml(providerLabel(session))}</span>
       <span class="tag">${escapeHtml(statusLabel(session.currentStatus))}</span>
       <span class="tag ${escapeHtml(session.autonomy_mode || "")}">${escapeHtml(localizeAutonomyMode(session.autonomy_mode))}</span>
       ${attentionSignals(session).needsInput ? `<span class="tag attention">${escapeHtml(t("needsInput"))}</span>` : ""}
@@ -1561,6 +1569,7 @@ function renderDetail() {
     <div class="detail-section">
       <h3>${escapeHtml(t("source"))}</h3>
       <p class="mono">${escapeHtml(session.source_file || "n/a")}</p>
+      <p class="small">${escapeHtml(t("provider"))}: <span class="mono">${escapeHtml(providerLabel(session))}</span>${session.provider_session_type ? ` / <span class="mono">${escapeHtml(session.provider_session_type)}</span>` : ""}</p>
       <p class="small">session_id: <span class="mono">${escapeHtml(session.session_id)}</span></p>
     </div>
   `;

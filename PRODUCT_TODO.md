@@ -216,6 +216,9 @@ Risk to avoid:
 
 ### 11. Provider/schema extensibility
 
+Status:
+- Initial implementation added: sample data now includes provider/schema hints, cards display provider badges, and docs clarify that provider support is display/import compatibility only, not agent execution.
+
 Goal:
 - Keep Codex-first while making fields extensible for Claude Code, Gemini, Cursor, etc.
 

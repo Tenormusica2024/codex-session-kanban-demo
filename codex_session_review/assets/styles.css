@@ -742,6 +742,12 @@ button.secondary,
   background: rgba(100, 210, 255, 0.08);
 }
 
+.tag.provider {
+  color: #d6ccff;
+  border: 1px solid rgba(138, 125, 255, 0.24);
+  background: rgba(138, 125, 255, 0.07);
+}
+
 .detail-panel {
   position: sticky;
   top: 22px;

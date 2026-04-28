@@ -39,7 +39,10 @@
       "deep_summary_en": "A blocked integration should not stop the source-side review surface. The task is to separate the sink blocker from the main workflow and continue local progress.",
       "latest_meaningful_change_en": "Decision changed from provisioning an external board to finishing the local review surface first.",
       "blocker_en": "External board provisioning is blocked, but local source-side work can continue.",
-      "suggested_reason_en": "The external board cannot be provisioned yet, so this card belongs in Blocked only for the sink path."
+      "suggested_reason_en": "The external board cannot be provisioned yet, so this card belongs in Blocked only for the sink path.",
+      "provider": "codex",
+      "provider_session_type": "codex-cli-session",
+      "provider_source": "sample-fixture"
     },
     {
       "session_id": "sample-html-surface",
@@ -77,7 +80,10 @@
       "deep_summary_en": "The work focuses on proving that session cards, manual movement, status changes, and localStorage persistence can function without a dynamic backend.",
       "latest_meaningful_change_en": "The implementation direction settled on static HTML plus localStorage before any server-backed board.",
       "blocker_en": "none",
-      "suggested_reason_en": "Implementation is active and not yet complete, so In Progress is the safest status."
+      "suggested_reason_en": "Implementation is active and not yet complete, so In Progress is the safest status.",
+      "provider": "codex",
+      "provider_session_type": "codex-cli-session",
+      "provider_source": "sample-fixture"
     },
     {
       "session_id": "sample-llmwiki-compare",
@@ -115,7 +121,19 @@
       "deep_summary_en": "This is a completed review task. The output is a concise set of deltas rather than a new project direction.",
       "latest_meaningful_change_en": "The comparison concluded that only minor workflow notes should be kept.",
       "blocker_en": "none",
-      "suggested_reason_en": "The comparison has reached a conclusion, so Done is appropriate."
+      "suggested_reason_en": "The comparison has reached a conclusion, so Done is appropriate.",
+      "provider": "codex",
+      "provider_session_type": "codex-cli-session",
+      "provider_source": "sample-fixture"
     }
-  ]
+  ],
+  "schema_version": "0.2.0",
+  "supported_providers": [
+    "codex",
+    "claude-code",
+    "gemini-cli",
+    "cursor-agent",
+    "generic-ai-session"
+  ],
+  "provider_schema_note": "Provider fields are display/schema hints only; this demo does not run agents."
 }

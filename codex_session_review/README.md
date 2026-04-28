@@ -16,6 +16,10 @@ The target is not only "show sessions as cards". The target is a review surface 
 
 For competitor notes and product direction, see `../COMPETITIVE_POSITIONING.md`.
 
+## Provider/schema stance
+
+This demo is Codex-first, but the card schema includes lightweight provider hints such as `provider`, `provider_session_type`, and `provider_source`. These fields are for display/import compatibility only. The public demo does not run agents or orchestrate external tools.
+
 ## Build fixture locally
 
 ```powershell
