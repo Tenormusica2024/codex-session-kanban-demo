@@ -59,6 +59,9 @@ Risk to avoid:
 
 ### 2. Card existence / inference explanation
 
+Status:
+- Initial implementation added: the detail panel now shows `Why this card exists`, including inferred task intent, compact evidence, source-session/lineage notes, and human override notes when applicable.
+
 Goal:
 - Each card should explain why it exists:
   - source sessions

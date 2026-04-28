@@ -115,6 +115,12 @@ const I18N = {
     moveStatus: "状態を変更",
     humanLockHint: "変更すると human override lock として保存",
     aiRecommendation: "AI判断",
+    whyThisCard: "このカードの根拠",
+    inferredIntent: "推定したタスク意図",
+    evidence: "根拠",
+    lineage: "前後関係",
+    noLineage: "このカードでは代表セッションのみを表示中",
+    sourceSessions: "元セッション",
     confidence: "確信度",
     taskCluster: "タスクまとまり",
     relatedSessions: "関連セッション",
@@ -262,6 +268,12 @@ const I18N = {
     moveStatus: "Move status",
     humanLockHint: "Changing this saves a human override lock",
     aiRecommendation: "AI recommendation",
+    whyThisCard: "Why this card exists",
+    inferredIntent: "Inferred task intent",
+    evidence: "Evidence",
+    lineage: "Lineage",
+    noLineage: "Only the representative session is shown for this card",
+    sourceSessions: "Source sessions",
     confidence: "confidence",
     taskCluster: "task cluster",
     relatedSessions: "related sessions",
@@ -501,6 +513,42 @@ function displayEvidenceMessages(session) {
     return session.evidence_messages_en;
   }
   return session.evidence_messages || [];
+}
+
+function buildCardRationale(session, relatedSessions = []) {
+  const evidence = displayEvidenceMessages(session).filter(Boolean).slice(0, 3);
+  const relatedCount = Math.max(Number(session.related_session_count || 1), relatedSessions.length + 1);
+  const relatedTitles = relatedSessions.slice(0, 4).map((item) => displayTaskTitle(item));
+  const lineageParts = [];
+  if (relatedCount > 1) {
+    lineageParts.push(
+      state.lang === "ja"
+        ? `${relatedCount}件の関連セッションを代表カードに集約`
+        : `${relatedCount} related sessions are represented by this card`
+    );
+  }
+  if (relatedTitles.length) {
+    lineageParts.push(`${t("sourceSessions")}: ${relatedTitles.join(" / ")}`);
+  }
+  if (session.clusterCard) {
+    lineageParts.push(
+      state.lang === "ja"
+        ? "task cluster から生成された代表カード"
+        : "representative card generated from a task cluster"
+    );
+  }
+  if (session.overrideLock) {
+    lineageParts.push(
+      state.lang === "ja"
+        ? "human override lock により状態は手動判断を優先"
+        : "status follows the human override lock"
+    );
+  }
+  return {
+    intent: displayTaskSummary(session) || displayOriginalText(session.current_goal || "", displayTaskTitle(session), session.current_goal_en),
+    evidence,
+    lineage: lineageParts.length ? lineageParts : [t("noLineage")],
+  };
 }
 
 function localizeAutonomyMode(value) {
@@ -1225,6 +1273,7 @@ function renderDetail() {
   const relatedSessions = merged
     .filter((item) => (item.task_cluster_family || item.task_cluster_label) === (session.task_cluster_family || session.task_cluster_label) && item.session_id !== session.session_id)
     .slice(0, 6);
+  const rationale = buildCardRationale(session, relatedSessions);
 
   panel.innerHTML = `
     <h2>${escapeHtml(displayTaskTitle(session))}</h2>
@@ -1257,6 +1306,21 @@ function renderDetail() {
       <span class="small">${escapeHtml(t("humanLockHint"))}</span>
     </div>
     <p class="detail-summary">${escapeHtml(displayTaskSummary(session))}</p>
+
+    <div class="detail-section">
+      <h3>${escapeHtml(t("whyThisCard"))}</h3>
+      <div class="reason-box rationale-box">
+        <div><strong>${escapeHtml(t("inferredIntent"))}:</strong> ${escapeHtml(rationale.intent || "n/a")}</div>
+        <div>
+          <strong>${escapeHtml(t("evidence"))}:</strong>
+          <ul>${rationale.evidence.map((item) => `<li>${escapeHtml(displayOriginalText(item))}</li>`).join("") || "<li>n/a</li>"}</ul>
+        </div>
+        <div>
+          <strong>${escapeHtml(t("lineage"))}:</strong>
+          <ul>${rationale.lineage.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
+        </div>
+      </div>
+    </div>
 
     <div class="detail-section">
       <h3>${escapeHtml(t("aiRecommendation"))}</h3>
