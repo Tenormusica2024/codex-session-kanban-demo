@@ -28,6 +28,7 @@ This repository is fixture-only:
 
 - [Demo usage guide](./docs/DEMO_USAGE.md)
 - [Import schema](./docs/IMPORT_SCHEMA.md)
+- [Public release checklist](./docs/PUBLIC_RELEASE_CHECKLIST.md)
 - [Competitive positioning](./COMPETITIVE_POSITIONING.md)
 - [Product TODO / adoption policy](./PRODUCT_TODO.md)
 

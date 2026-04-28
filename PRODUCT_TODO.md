@@ -340,6 +340,20 @@ Why:
 Risk to avoid:
 - Keep validation conservative enough to catch real leaks without blocking harmless project names such as `openclaw-secretary`.
 
+### 16. Public release checklist
+
+Status:
+- Initial implementation added: `docs/PUBLIC_RELEASE_CHECKLIST.md` captures data-safety, build, demo-quality, GitHub Pages/artifact, and positioning checks. README and GitHub distribution docs now link/reflect the current public Pages workflow.
+
+Goal:
+- Make public release preparation repeatable and safe.
+
+Why:
+- The main risk of a public demo is accidentally weakening the private/public split or publishing a fixture that does not show the product wedge.
+
+Risk to avoid:
+- Do not treat the checklist as a replacement for `--distribution` validation; use both.
+
 ## P2 / defer unless clearly needed
 
 - Built-in code diff review
