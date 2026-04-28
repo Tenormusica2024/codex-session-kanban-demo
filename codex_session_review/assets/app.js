@@ -42,7 +42,7 @@ const I18N = {
     guideNoteSchedule:
       "配布版は sample fixture だけから GitHub Actions で生成します。外部 LLM API や実セッションは使いません。",
     guideKeyboard:
-      "ショートカット: j/k で選択移動、Alt+↑/↓ で同列順位変更、1-6 で状態変更、c でsession IDコピー。入力欄フォーカス中は無効。",
+      "ショートカット: j/k でカード選択移動、Alt+↑/↓ で同列順位変更、1-6 で状態変更、c でsession IDコピー。候補一覧フォーカス中は j/k で候補移動、Enterで詳細、aで推奨列へ追加。入力欄フォーカス中は無効。",
     statVisible: "表示中セッション",
     statOverrides: "手動固定",
     statAutoReady: "自動処理候補",
@@ -273,7 +273,7 @@ const I18N = {
     guideNoteSchedule:
       "The public demo is generated from sample fixtures by GitHub Actions. It uses no external LLM API and no real session logs.",
     guideKeyboard:
-      "Shortcuts: j/k select next/previous, Alt+↑/↓ reorder within column, 1-6 move status, c copy session ID. Disabled while typing in inputs.",
+      "Shortcuts: j/k select cards, Alt+↑/↓ reorder within a column, 1-6 move status, c copy session ID. When the candidate list is focused, j/k move candidates, Enter previews, and a adds to the recommended column. Disabled while typing in inputs.",
     statVisible: "Visible sessions",
     statOverrides: "Human overrides",
     statAutoReady: "Auto-ready",
@@ -487,6 +487,7 @@ const state = {
   cluster: "all",
   attention: "all",
   selectedId: null,
+  selectedCandidateIndex: 0,
   dragId: null,
   archiveExpanded: {},
   lang: localStorage.getItem(LANGUAGE_KEY) || "ja",
@@ -1306,8 +1307,20 @@ function revealBoardSession(sessionId) {
   });
 }
 
+function getOpenCandidateTasks() {
+  const allCandidates = state.boardData?.suggested_tasks || [];
+  return allCandidates.filter((task) => {
+    const representative = findRepresentativeForTask(task);
+    return !(representative && state.overrides[representative.session_id]?.status);
+  });
+}
+
 function focusCandidateTask(task) {
+  const openCandidates = getOpenCandidateTasks();
+  const index = openCandidates.findIndex((candidate) => candidate === task || (candidate.task_id && candidate.task_id === task.task_id));
+  if (index >= 0) state.selectedCandidateIndex = index;
   renderCandidateDetail(task);
+  renderCandidateStrip();
 }
 
 function addCandidateTask(task, targetStatus = null) {
@@ -1378,11 +1391,9 @@ function renderCandidateDetail(task) {
 function renderCandidateStrip() {
   const host = document.getElementById("candidate-list");
   const allCandidates = state.boardData?.suggested_tasks || [];
-  const openCandidates = allCandidates.filter((task) => {
-    const representative = findRepresentativeForTask(task);
-    return !(representative && state.overrides[representative.session_id]?.status);
-  });
+  const openCandidates = getOpenCandidateTasks();
   const hiddenCount = allCandidates.length - openCandidates.length;
+  state.selectedCandidateIndex = Math.max(0, Math.min(state.selectedCandidateIndex || 0, Math.max(0, openCandidates.length - 1)));
   const candidates = openCandidates.slice(0, 8);
   host.innerHTML = "";
   if (!candidates.length) {
@@ -1398,12 +1409,13 @@ function renderCandidateStrip() {
     note.textContent = t("fixedHidden", { count: hiddenCount });
     host.appendChild(note);
   }
-  candidates.forEach((task) => {
+  candidates.forEach((task, index) => {
     const representative = findRepresentativeForTask(task);
     const targetStatus = task["推奨列"] || "Need Review";
     const card = document.createElement("article");
-    card.className = "candidate-card";
+    card.className = `candidate-card${index === state.selectedCandidateIndex ? " selected" : ""}`;
     card.tabIndex = 0;
+    card.dataset.candidateIndex = String(index);
     card.innerHTML = `
       <div class="card-tags">
         <span class="tag">${escapeHtml(displayTaskSize(task.task_size_ja))}</span>
@@ -1724,6 +1736,34 @@ function moveSessionWithinColumn(sessionId, direction) {
   renderDetail();
 }
 
+function selectAdjacentCandidate(direction) {
+  const candidates = getOpenCandidateTasks();
+  if (!candidates.length) return;
+  const nextIndex = Math.max(0, Math.min(candidates.length - 1, (state.selectedCandidateIndex || 0) + direction));
+  state.selectedCandidateIndex = nextIndex;
+  renderCandidateStrip();
+  renderCandidateDetail(candidates[nextIndex]);
+  requestAnimationFrame(() => {
+    document.querySelector(`.candidate-card[data-candidate-index="${CSS.escape(String(nextIndex))}"]`)?.focus();
+  });
+}
+
+function previewSelectedCandidate() {
+  const candidates = getOpenCandidateTasks();
+  const task = candidates[state.selectedCandidateIndex || 0];
+  if (task) renderCandidateDetail(task);
+}
+
+function addSelectedCandidate() {
+  const candidates = getOpenCandidateTasks();
+  const task = candidates[state.selectedCandidateIndex || 0];
+  if (task) addCandidateTask(task);
+}
+
+function candidateFocusActive() {
+  return Boolean(document.activeElement?.closest?.("#candidate-list"));
+}
+
 function selectAdjacentSession(direction) {
   const visible = getVisibleSessions();
   if (!visible.length) return;
@@ -1770,12 +1810,21 @@ function handleKeyboardTriage(event) {
     return;
   }
   if (event.altKey) return;
+  const inCandidateList = candidateFocusActive();
   if (event.key === "j") {
     event.preventDefault();
-    selectAdjacentSession(1);
+    if (inCandidateList) selectAdjacentCandidate(1);
+    else selectAdjacentSession(1);
   } else if (event.key === "k") {
     event.preventDefault();
-    selectAdjacentSession(-1);
+    if (inCandidateList) selectAdjacentCandidate(-1);
+    else selectAdjacentSession(-1);
+  } else if (inCandidateList && event.key === "Enter") {
+    event.preventDefault();
+    previewSelectedCandidate();
+  } else if (inCandidateList && event.key.toLowerCase() === "a") {
+    event.preventDefault();
+    addSelectedCandidate();
   } else if (/^[1-6]$/.test(event.key)) {
     event.preventDefault();
     setSelectedStatusByIndex(Number(event.key) - 1);

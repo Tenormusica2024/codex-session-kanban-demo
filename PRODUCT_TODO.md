@@ -240,6 +240,7 @@ Risk to avoid:
 Status:
 - Initial implementation added: selected card can be triaged with `j/k` selection movement, `Alt+↑/↓` rank movement, `1-6` status changes, and `c` session-id copy. Shortcuts are disabled while typing in form controls.
 - Follow-up added browser smoke coverage for status-number keyboard triage and selected-session copy behavior.
+- Follow-up added candidate-list keyboard triage: `j/k` candidate movement, `Enter` preview, `a` recommended-column promotion, and browser smoke coverage.
 
 Goal:
 - Fast operations for personal review:

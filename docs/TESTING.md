@@ -173,3 +173,12 @@ python .\codex_session_review\smoke_public_build.py .\codex_session_review\fixtu
 ```
 
 This does not run external agents. It only verifies import/display compatibility.
+
+## Keyboard triage smoke coverage
+
+Browser smoke covers both board-card and candidate-list shortcuts:
+
+- candidate list: focus candidate, `j/k` movement, `Enter` preview, `a` promote to recommended column
+- board cards: `1-6` status movement and `c` session-id copy
+
+These checks protect the no-drag fallback path for dense boards and mobile/narrow review workflows.

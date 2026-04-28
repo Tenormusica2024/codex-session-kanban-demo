@@ -136,10 +136,19 @@ async function main() {
   if (englishUi.hasJapaneseUiLabels) errors.push("English UI still contains common Japanese static labels");
 
   const firstCandidate = page.locator(".candidate-card").first();
-  await firstCandidate
-    .getByRole("button", { name: /Add to recommended|Add to suggested|推奨列へ追加/i })
-    .click();
+  await firstCandidate.focus();
+  await page.keyboard.press("j");
+  await page.waitForTimeout(100);
+  await page.keyboard.press("Enter");
+  await page.waitForTimeout(100);
+  await page.locator(".candidate-card.selected").focus();
+  await page.keyboard.press("a");
   await page.waitForSelector(".session-card", { timeout: 10000 });
+  const candidateKeyboard = await page.evaluate(() => ({
+    selectedCandidateCount: document.querySelectorAll(".candidate-card.selected").length,
+    candidateCardsAfterAdd: document.querySelectorAll(".candidate-card").length,
+    detailMentionsCandidate: /Candidate detail|追加候補の詳細|session_id/.test(document.querySelector("#detail-panel")?.textContent || ""),
+  }));
 
   const promoted = await page.evaluate(() => ({
     sessionCards: document.querySelectorAll(".session-card").length,
@@ -153,6 +162,8 @@ async function main() {
     hasHorizontalOverflow: document.documentElement.scrollWidth > window.innerWidth + 2,
   }));
 
+  if (candidateKeyboard.candidateCardsAfterAdd >= initial.candidateCards) errors.push("candidate keyboard add did not remove a candidate from staging");
+  if (!candidateKeyboard.detailMentionsCandidate) errors.push("candidate keyboard preview/add did not update detail panel");
   if (promoted.sessionCards <= 0) errors.push("candidate promotion did not create a session card");
   if (!promoted.hasHumanLock) errors.push("candidate promotion did not create a human lock marker");
   if (!promoted.detailHasSessionId) errors.push("detail panel does not expose session_id");
@@ -196,6 +207,7 @@ async function main() {
     targetUrl,
     initial,
     promoted,
+    candidateKeyboard,
     keyboardTriage,
     note: promoted.visibleTextHasJapanese
       ? "Japanese may remain in source/session data; static English UI labels were checked separately."

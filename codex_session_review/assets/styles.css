@@ -360,6 +360,11 @@ body {
   transform: translateY(-1px);
 }
 
+.candidate-card.selected {
+  border-color: rgba(100, 210, 255, 0.48);
+  box-shadow: inset 0 0 0 1px rgba(100, 210, 255, 0.22), 0 0 0 1px rgba(100, 210, 255, 0.08);
+}
+
 .candidate-review-panel {
   margin-top: 18px;
 }
