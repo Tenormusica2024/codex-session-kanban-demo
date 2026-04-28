@@ -1126,3 +1126,33 @@ button.secondary,
   color: var(--muted);
   font-weight: 500;
 }
+
+.debug-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 10px;
+}
+
+.debug-card {
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(100, 210, 255, 0.14);
+  background: linear-gradient(135deg, rgba(100, 210, 255, 0.045), rgba(255, 255, 255, 0.02));
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.debug-card strong {
+  display: block;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.debug-card p,
+.debug-card ul {
+  margin: 0;
+}
+
+.debug-card ul {
+  padding-left: 18px;
+}

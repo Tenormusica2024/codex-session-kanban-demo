@@ -184,6 +184,14 @@ const I18N = {
     lastAssistantRecap: "最後のassistant要約",
     source: "Source",
     provider: "provider",
+    extractionDebug: "抽出デバッグ",
+    titleSource: "タイトル根拠",
+    summarySource: "本文根拠",
+    discardedTopicSignals: "捨てた/弱めたトピック संकेत",
+    debugRules: "発火したルール",
+    debugNoSignals: "目立つデバッグ信号なし",
+    debugIntentFirst: "前置きの確認語より、実作業の目的・成果物・次の一手を優先",
+    debugLineage: "同じ前後関係の古い情報は、新しい文脈と整合した場合だけ代表カードへ統合",
     qualityCheck: "抽出品質チェック",
     qualityOk: "品質OK",
     qualityReview: "要品質確認",
@@ -382,6 +390,14 @@ const I18N = {
     lastAssistantRecap: "Last assistant recap",
     source: "Source",
     provider: "provider",
+    extractionDebug: "Extraction debug",
+    titleSource: "Title source",
+    summarySource: "Body source",
+    discardedTopicSignals: "Discarded / downweighted topic signals",
+    debugRules: "Triggered rules",
+    debugNoSignals: "No notable debug signals",
+    debugIntentFirst: "Prefer the actual work goal, output, and next action over preflight review phrases",
+    debugLineage: "Merge older lineage only when newer context reconciles it",
     qualityCheck: "Extraction quality check",
     qualityOk: "Quality OK",
     qualityReview: "Needs quality review",
@@ -788,6 +804,42 @@ function localizeAutonomyMode(value) {
 
 function providerLabel(item) {
   return item?.provider || item?.session_provider || state.boardData?.provider || "codex";
+}
+
+function extractionDebugInfo(session, relatedSessions = []) {
+  const title = displayTaskTitle(session);
+  const summary = displayTaskSummary(session);
+  const evidence = displayEvidenceMessages(session).filter(Boolean);
+  const signals = [];
+  const rawSources = [
+    session.first_user_message,
+    session.current_goal,
+    session.latest_meaningful_change,
+    session.deep_summary,
+    session.last_assistant_message,
+    ...evidence,
+  ].filter(Boolean);
+  const preflightPattern = /内容確認|差分確認|進捗確認|状態確認|確認|review|check|status|progress/i;
+  const actionPattern = /実装|追加|修正|生成|制作|返信|デプロイ|調査|整理|統合|分割|改善|方針|next|implement|fix|deploy|generate|reply|summar/i;
+  const preflightHits = rawSources.filter((text) => preflightPattern.test(String(text))).slice(0, 3);
+  const actionHits = rawSources.filter((text) => actionPattern.test(String(text))).slice(0, 3);
+  if (preflightHits.length && actionHits.length) {
+    signals.push(state.lang === "ja" ? "確認・レビュー語は前置き候補として弱める" : "Review/check phrases are downweighted as preflight candidates");
+  }
+  if (session.task_shift_signal || /本題|主題|前後関係|別タスク|topic|shift/i.test(rawSources.join(" "))) {
+    signals.push(state.lang === "ja" ? "topic shift 可能性を検出" : "Possible topic shift detected");
+  }
+  if (relatedSessions.length || Number(session.related_session_count || 1) > 1) {
+    signals.push(t("debugLineage"));
+  }
+  const titleSource = actionHits[0] || evidence[0] || session.current_goal || title;
+  const summarySource = evidence.find((item) => item !== titleSource) || session.deep_summary || session.latest_meaningful_change || summary;
+  return {
+    titleSource,
+    summarySource,
+    discardedSignals: preflightHits,
+    rules: [t("debugIntentFirst"), ...signals],
+  };
 }
 
 function auditExtractionQuality(session) {
@@ -1663,6 +1715,7 @@ function renderDetail() {
   const taskMap = relatedTaskMap(session, displaySessions);
   const suppressedLineage = buildSuppressedLineage(session, merged);
   const quality = auditExtractionQuality(session);
+  const extractionDebug = extractionDebugInfo(session, relatedSessions);
   const evidenceCategories = buildEvidenceCategories(session);
 
   panel.innerHTML = `
@@ -1712,6 +1765,28 @@ function renderDetail() {
           <strong>${escapeHtml(t("lineage"))}:</strong>
           <ul>${rationale.lineage.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
           ${detailLineage.hasMerged ? `<p class="small">${escapeHtml(detailLineage.hint)}</p>` : ""}
+        </div>
+      </div>
+    </div>
+
+    <div class="detail-section">
+      <h3>${escapeHtml(t("extractionDebug"))}</h3>
+      <div class="debug-grid">
+        <div class="debug-card">
+          <strong>${escapeHtml(t("titleSource"))}</strong>
+          <p>${escapeHtml(displayOriginalText(extractionDebug.titleSource || displayTaskTitle(session)))}</p>
+        </div>
+        <div class="debug-card">
+          <strong>${escapeHtml(t("summarySource"))}</strong>
+          <p>${escapeHtml(displayOriginalText(extractionDebug.summarySource || displayTaskSummary(session)))}</p>
+        </div>
+        <div class="debug-card">
+          <strong>${escapeHtml(t("discardedTopicSignals"))}</strong>
+          <ul>${extractionDebug.discardedSignals.map((item) => `<li>${escapeHtml(displayOriginalText(item))}</li>`).join("") || `<li>${escapeHtml(t("debugNoSignals"))}</li>`}</ul>
+        </div>
+        <div class="debug-card">
+          <strong>${escapeHtml(t("debugRules"))}</strong>
+          <ul>${extractionDebug.rules.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
         </div>
       </div>
     </div>

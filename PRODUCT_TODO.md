@@ -220,6 +220,21 @@ Why:
 Risk to avoid:
 - Keep this as a detail-only explanation layer; do not overfit extraction from keyword buckets alone.
 
+### 8.6 Extraction rule debug panel
+
+Status:
+- Initial implementation added: detail view now shows title source, body source, downweighted preflight/topic signals, and triggered extraction rules.
+
+Goal:
+- Make it clear why a card title/body was generated without exposing full transcripts.
+- Help detect when extraction was pulled toward a preflight phrase instead of the actual task.
+
+Why:
+- This is a high-return differentiator because it makes the intent-first extraction process inspectable.
+
+Risk to avoid:
+- Keep it explanatory. Do not make keyword buckets the only extraction mechanism.
+
 ### 9. Keyboard triage shortcuts
 
 Status:
