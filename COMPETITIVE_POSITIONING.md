@@ -105,3 +105,108 @@ Longer version:
 - agtx: https://github.com/fynnfluegge/agtx
 - Claude Deck: https://claudedeck.org/
 - Anthropic session-report plugin: https://claude.com/plugins/session-report
+
+## Competitor-inspired adoption backlog
+
+This section is intentionally practical: features that can be borrowed without changing the core wedge of intent-first session-to-task extraction.
+
+### P0 — high leverage, low/medium cost
+
+1. **Explain why a card exists**
+   - Borrowed pattern: dashboards show status/progress, but usually not enough rationale.
+   - Adaptation: each card should expose compact evidence: source sessions, latest decisive message, stale-predecessor suppression, and why the suggested status was chosen.
+   - Why it matters: makes the extraction engine trustworthy and reduces manual re-reading.
+   - Cost: medium; mostly data-shape/UI work.
+
+2. **Stale predecessor / successor badges**
+   - Borrowed pattern: Kangentic/Vibe emphasize handoff and task continuity.
+   - Adaptation: show "superseded by newer session" or "merged into current task" rather than silently hiding old sessions.
+   - Why it matters: directly strengthens cross-session lineage, the main differentiator.
+   - Cost: medium.
+
+3. **Needs-input vs needs-review split**
+   - Borrowed pattern: Claudine has needs-input/question detection; agent dashboards often distinguish user attention from ordinary review.
+   - Adaptation: keep columns simple, but add a badge/filter for "needs user answer", "needs browser/login", "needs deployment credentials", etc.
+   - Why it matters: avoids mixing human decision blockers with normal review tasks.
+   - Cost: low/medium.
+
+4. **Search across evidence, not only title**
+   - Borrowed pattern: Claudine full-text search.
+   - Adaptation: search title, task summary, repo, cluster, session id, evidence snippets, and hidden lineage notes.
+   - Why it matters: high utility for almost no conceptual risk.
+   - Cost: low.
+
+5. **Done/Dropped archive collapse**
+   - Borrowed pattern: Claudine auto-archive; Kanban tools hide completed work.
+   - Adaptation: compact Done/Dropped by default with expand-on-demand and counts.
+   - Why it matters: keeps active review surface small.
+   - Cost: low.
+
+6. **Backlog/promote flow for candidates**
+   - Borrowed pattern: Kangentic backlog + batch promote; Vibe issue/workspace separation.
+   - Adaptation: keep "Kanban追加候補" as a staging backlog; fixed/manual cards disappear from candidate list; allow promote to chosen status.
+   - Why it matters: matches the user's review workflow and avoids duplicate cards.
+   - Cost: low/medium.
+
+### P1 — strong, but should not distract
+
+7. **Parent/child or linked task relation**
+   - Borrowed pattern: Vibe issue parent/child relationships and sub-issues.
+   - Adaptation: use only for lineage/decomposition display, not full project management.
+   - Why it matters: helps when one large project legitimately has multiple parallel tasks.
+   - Cost: medium.
+
+8. **Activity timeline per card**
+   - Borrowed pattern: Kangentic activity log and Vibe workspace logs.
+   - Adaptation: show extracted decision points instead of raw terminal logs.
+   - Why it matters: lets the user inspect why the card changed over time.
+   - Cost: medium/high.
+
+9. **Keyboard triage shortcuts**
+   - Borrowed pattern: TUI/agent dashboards prioritize fast triage.
+   - Adaptation: focused card + shortcuts for move left/right, up/down, promote, archive, copy session id.
+   - Why it matters: faster than drag for personal Kanban review.
+   - Cost: medium.
+
+10. **Import/export presets**
+    - Borrowed pattern: Claudine export/import; Kangentic imports issues/projects.
+    - Adaptation: keep local override JSON, but add clear backup/restore and fixture export.
+    - Why it matters: improves trust before cloud sync exists.
+    - Cost: low.
+
+11. **Provider/schema extensibility**
+    - Borrowed pattern: Vibe/Kangentic support many agents.
+    - Adaptation: do not become a multi-agent runner; just make session source/provider labels extensible.
+    - Why it matters: future-proofs for Claude Code, Codex, Gemini, Cursor logs.
+    - Cost: medium.
+
+### P2 — attractive, but lower priority for this product
+
+12. **Diff/review panel**
+    - Borrowed pattern: Vibe built-in diffs and PR-like review.
+    - Reason to delay: this project is a session-to-task review surface, not a code review orchestrator.
+
+13. **Agent spawn/resume from Kanban**
+    - Borrowed pattern: Vibe/Kangentic drag-to-run agents.
+    - Reason to delay: high scope and security/credential implications; weakens static/privacy-first positioning.
+
+14. **Remote server/SSH monitoring**
+    - Borrowed pattern: claude-kanban multi-server monitoring.
+    - Reason to delay: useful later, but not needed for the public fixture/static wedge.
+
+15. **Deep token/cost analytics**
+    - Borrowed pattern: Claude Deck/session-report style analytics.
+    - Reason to delay: only add lightweight stats if they improve prioritization.
+
+## Recommended next implementation order
+
+1. Candidate backlog cleanup: fixed cards disappear; promote-to-status is explicit.
+2. Explainability: show why status/title/summary/lineage were inferred.
+3. Needs-input badge/filter.
+4. Done/Dropped collapse.
+5. Evidence-aware search.
+6. Stale predecessor badges and successor links.
+7. Keyboard triage shortcuts.
+8. Parent/child relation display for legitimate parallel tasks.
+
+The main rule: borrow workflow affordances, not the entire agent-orchestration product category.
