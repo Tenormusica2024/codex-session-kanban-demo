@@ -32,6 +32,22 @@ powershell -ExecutionPolicy Bypass -File .\codex_session_review\build_fixture_sn
 powershell -ExecutionPolicy Bypass -File .\codex_session_review\open_distribution_review.ps1
 ```
 
+## Release checks
+
+Run the full local public-release check before sharing a build:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\codex_session_review\run_public_release_checks.ps1
+```
+
+To include the currently deployed GitHub Pages URL:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\codex_session_review\run_public_release_checks.ps1 -PagesSmoke
+```
+
+This wraps fixture validation, distribution build, static artifact smoke, Python compile checks, and browser operation smoke.
+
 ## GitHub distribution
 
 See `GITHUB_DISTRIBUTION.md`. The GitHub workflow builds with `--distribution`, uploads a Pages artifact, and also provides a downloadable Actions artifact.

@@ -455,7 +455,7 @@ Risk to avoid:
 ### 24. One-command public release checks
 
 Status:
-- Initial implementation added: `codex_session_review/run_public_release_checks.ps1` runs public fixture validation, distribution build, static artifact smoke, Python compile checks, local browser smoke, and optionally Pages static/browser smoke. README, testing docs, and release checklist now point to this command.
+- Initial implementation added: `codex_session_review/run_public_release_checks.ps1` runs public fixture validation, distribution build, static artifact smoke, Python compile checks, local browser smoke, and optionally Pages static/browser smoke. README, testing docs, and release checklist now point to this command. Follow-up docs updated internal distribution notes (`codex_session_review/README.md`, `DISTRIBUTION_BUILD.md`, `GITHUB_DISTRIBUTION.md`) so older distribution instructions no longer omit smoke/browser checks.
 
 Goal:
 - Make pre-release verification easy enough to run before every public update.

@@ -44,6 +44,8 @@ This repository is fixture-only:
 - [Public release checklist](./docs/PUBLIC_RELEASE_CHECKLIST.md)
 - [Competitive positioning](./COMPETITIVE_POSITIONING.md)
 - [Product TODO / adoption policy](./PRODUCT_TODO.md)
+- [Distribution build notes](./codex_session_review/DISTRIBUTION_BUILD.md)
+- [GitHub distribution notes](./codex_session_review/GITHUB_DISTRIBUTION.md)
 
 ## Local build
 

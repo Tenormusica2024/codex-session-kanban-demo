@@ -26,6 +26,28 @@ powershell -ExecutionPolicy Bypass -File .\codex_session_review\package_distribu
 
 The normal distribution path is GitHub Pages / GitHub Actions artifact. Local packaging is only for preflight or fallback.
 
+## Full release check
+
+For normal pre-release validation, prefer the wrapper:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\codex_session_review\run_public_release_checks.ps1
+```
+
+It runs:
+
+- fixture JSON validation
+- distribution fixture build
+- static artifact smoke
+- Python compile checks
+- Playwright browser smoke against the local fixture
+
+To also verify the deployed Pages URL:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\codex_session_review\run_public_release_checks.ps1 -PagesSmoke
+```
+
 ## Guard
 
 `-Distribution` fails if the bundle contains local paths, bypass tokens, credentials filenames, or additional private markers supplied through `CODEX_REVIEW_PRIVATE_MARKERS`.
