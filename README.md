@@ -65,6 +65,7 @@ Real session data should stay local or in a private repository. The public demo 
 
 - **Intent-first task extraction**: infer the real task from session context instead of using raw prompts like "check progress" or "review this".
 - **Topic conflict decomposition**: separate setup checks, side quests, resolved blockers, and the current main task.
+- **Parallel tasks inside one repo**: keep distinct work streams separate when the repo is the same but the deliverable differs.
 - **Cross-session task lineage**: suppress stale predecessor sessions when a newer session clearly continues or supersedes the same task.
 - **Human override lock**: when a user moves or edits a card, later AI sync should not silently revert that decision.
 - **Inspectable extraction**: detail panels expose evidence categories, extraction timeline, suppressed predecessor sessions, and extraction debug hints.

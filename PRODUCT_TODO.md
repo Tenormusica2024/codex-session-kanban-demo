@@ -303,6 +303,7 @@ Risk to avoid:
 
 Status:
 - Initial implementation added: sample fixture now includes six sessions covering static review surface lineage, suppressed predecessor handling, topic-shift decomposition, needs-input/blocker deployment, completed knowledge review, and external sink rescoping.
+- Follow-up expanded the fixture with same-repo parallel task separation and a non-Codex provider import example.
 
 Goal:
 - Make the public demo demonstrate the product wedge without private data.
@@ -360,6 +361,7 @@ Risk to avoid:
 Status:
 - Initial implementation added: README now includes generated screenshots for board overview and card detail/extraction evidence. Screenshots live under `docs/assets/` and should be regenerated after major UI changes.
 - Follow-up refreshed both screenshots from the current fixture UI after README/release polish.
+- Follow-up refreshed desktop/mobile screenshots after expanding fixture coverage.
 
 Goal:
 - Make the public demo value understandable visually without requiring the reader to run it first.

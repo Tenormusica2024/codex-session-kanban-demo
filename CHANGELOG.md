@@ -4,6 +4,19 @@ All notable public-demo changes are tracked here.
 
 This project is still pre-1.0. Entries focus on public distribution, fixture safety, and the session-to-task review workflow.
 
+## 0.1.11 - 2026-04-29
+
+### Added
+
+- Public fixture examples for:
+  - same-repo parallel task separation
+  - non-Codex provider import/display metadata via a Claude Code-style sample
+
+### Changed
+
+- Import schema docs now document provider metadata fields and the current `schema_version`.
+- README/demo/roadmap docs now call out same-repo parallel task handling.
+
 ## 0.1.10 - 2026-04-29
 
 ### Changed

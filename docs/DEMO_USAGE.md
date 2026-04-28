@@ -19,7 +19,9 @@ The demo shows four core behaviors:
    - Cards should describe the real task, not just the first prompt.
 2. **Lineage-aware deduplication**
    - Older sessions can be represented by a newer card instead of appearing as duplicate active cards.
-3. **Human override lock**
+3. **Parallel tasks in one repo**
+   - The sample data includes same-repo work streams that stay separate when their deliverables differ.
+4. **Human override lock**
    - Moving a card or changing status makes the human decision authoritative.
 4. **Inspectable extraction**
    - Detail panels show evidence, extraction timeline, suppressed sessions, and debug hints.

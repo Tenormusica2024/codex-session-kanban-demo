@@ -60,6 +60,7 @@ Keep improving the static/local workflow before adding backend features:
 Keep the fixture demo useful without exposing private data:
 
 - maintain representative synthetic examples
+- cover topic conflict, same-repo parallel tasks, and provider import/display examples
 - keep screenshots current
 - keep release notes and smoke tests aligned
 - keep onboarding concise

@@ -8,9 +8,9 @@ Codex Session Kanban is designed around **session-to-task extraction**. Import d
 {
   "generated_at": "2026-04-28T00:00:00+09:00",
   "source": "sample-fixture-public",
-  "schema_version": "0.1",
+  "schema_version": "0.2.0",
   "surface_mode": "distribution",
-  "supported_providers": ["codex"],
+  "supported_providers": ["codex", "claude-code", "gemini-cli", "cursor-agent", "generic-ai-session"],
   "sessions": []
 }
 ```
@@ -41,6 +41,16 @@ Codex Session Kanban is designed around **session-to-task extraction**. Import d
 | `assistant_message_count` | number | Review signal. |
 | `command_count` | number | Review signal. |
 | `activity_score` | number | Ranking signal. |
+
+## Provider metadata fields
+
+Provider support is import/display compatibility only. The static board does not run agents.
+
+| Field | Type | Purpose |
+| --- | --- | --- |
+| `provider` | string | Source tool label, e.g. `codex`, `claude-code`, `gemini-cli`, `cursor-agent`, or `generic-ai-session`. |
+| `provider_session_type` | string | Optional source-session format hint. |
+| `provider_source` | string | Optional source/export origin hint. |
 
 ## Lineage / dedup fields
 
