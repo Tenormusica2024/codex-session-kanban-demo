@@ -416,6 +416,7 @@ Risk to avoid:
 
 Status:
 - Initial implementation added: `docs/ARCHITECTURE.md` documents the static-first data flow, public/private repository boundary, personal/private workflow, build modes, and backend deferral rationale. The Pages workflow now opts into Node 24 for JavaScript actions to address the GitHub Actions Node 20 deprecation warning.
+- Follow-up upgraded the workflow actions to current major versions (`checkout@v6`, `setup-python@v6`, `upload-pages-artifact@v5`, `upload-artifact@v7`, `deploy-pages@v5`) so the warning is handled at the dependency level rather than relying only on the runtime opt-in.
 
 Goal:
 - Make the public/private split and build architecture explicit, and keep CI ahead of upcoming runner deprecations.

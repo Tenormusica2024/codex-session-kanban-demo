@@ -4,6 +4,17 @@ All notable public-demo changes are tracked here.
 
 This project is still pre-1.0. Entries focus on public distribution, fixture safety, and the session-to-task review workflow.
 
+## 0.1.9 - 2026-04-29
+
+### Changed
+
+- Updated GitHub Actions dependencies to current major versions that run on newer Node runtimes:
+  - `actions/checkout@v6`
+  - `actions/setup-python@v6`
+  - `actions/upload-pages-artifact@v5`
+  - `actions/upload-artifact@v7`
+  - `actions/deploy-pages@v5`
+
 ## 0.1.8 - 2026-04-29
 
 ### Added
