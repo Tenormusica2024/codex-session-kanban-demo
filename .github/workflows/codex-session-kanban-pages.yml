@@ -20,6 +20,7 @@ on:
       - "codex_session_review/sample_data/**"
       - "codex_session_review/build_review_surface.py"
       - "codex_session_review/validate_session_data.py"
+      - "codex_session_review/smoke_public_build.py"
       - "docs/**"
       - "README.md"
       - ".github/workflows/codex-session-kanban-pages.yml"
@@ -66,6 +67,9 @@ jobs:
           This GitHub Pages build is generated from sample fixture data only.
           It must not contain real Codex sessions, local user paths, Vercel bypass tokens, or private project data.
           EOF
+
+      - name: Smoke test public artifact
+        run: python codex_session_review/smoke_public_build.py codex_session_review/github_pages/index.html --docs-dir codex_session_review/github_pages/docs --distribution
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

@@ -424,6 +424,20 @@ Why:
 Risk to avoid:
 - Do not imply that importing local session JSON into the browser makes it safe to commit or publish.
 
+### 22. Public artifact smoke test
+
+Status:
+- Initial implementation added: `codex_session_review/smoke_public_build.py` checks the generated public HTML for embedded sessions, task clusters, suggested tasks, required UI mount points, bundled docs, distribution mode, and private-data signals. The GitHub Pages workflow now runs this after building the public fixture and before artifact upload/deploy.
+
+Goal:
+- Catch regressions where the public demo build is valid JSON but effectively empty or missing key documentation.
+
+Why:
+- The public artifact is the main distribution path when Pages or hosting settings are unstable, so it needs a fast build-level sanity check.
+
+Risk to avoid:
+- Keep this as a cheap artifact smoke test, not a full browser/E2E test that slows down every push.
+
 ## P2 / defer unless clearly needed
 
 - Built-in code diff review
