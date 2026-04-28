@@ -34,6 +34,12 @@ For normal pre-release validation, prefer the wrapper:
 powershell -NoProfile -ExecutionPolicy Bypass -File .\codex_session_review\run_public_release_checks.ps1
 ```
 
+Or:
+
+```powershell
+npm run release:check
+```
+
 It runs:
 
 - fixture JSON validation
@@ -46,6 +52,12 @@ To also verify the deployed Pages URL:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\codex_session_review\run_public_release_checks.ps1 -PagesSmoke
+```
+
+Or:
+
+```powershell
+npm run release:check:pages
 ```
 
 ## Guard

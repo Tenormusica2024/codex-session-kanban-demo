@@ -40,10 +40,22 @@ Run the full local public-release check before sharing a build:
 powershell -NoProfile -ExecutionPolicy Bypass -File .\codex_session_review\run_public_release_checks.ps1
 ```
 
+Or:
+
+```powershell
+npm run release:check
+```
+
 To include the currently deployed GitHub Pages URL:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\codex_session_review\run_public_release_checks.ps1 -PagesSmoke
+```
+
+Or:
+
+```powershell
+npm run release:check:pages
 ```
 
 This wraps fixture validation, distribution build, static artifact smoke, Python compile checks, and browser operation smoke.

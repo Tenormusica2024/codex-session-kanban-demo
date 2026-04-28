@@ -4,10 +4,12 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "release:check": "powershell -NoProfile -ExecutionPolicy Bypass -File ./codex_session_review/run_public_release_checks.ps1",
+    "release:check:pages": "powershell -NoProfile -ExecutionPolicy Bypass -File ./codex_session_review/run_public_release_checks.ps1 -PagesSmoke",
     "smoke:browser": "node codex_session_review/smoke_browser_surface.mjs",
     "smoke:browser:local": "node codex_session_review/smoke_browser_surface.mjs --file codex_session_review/fixture_snapshot/index.html"
   },
   "devDependencies": {
-    "playwright": "^1.56.1"
+    "playwright": "1.59.1"
   }
 }

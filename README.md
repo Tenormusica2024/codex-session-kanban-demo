@@ -67,6 +67,12 @@ Recommended full local check:
 powershell -NoProfile -ExecutionPolicy Bypass -File .\codex_session_review\run_public_release_checks.ps1
 ```
 
+Or via npm:
+
+```powershell
+npm run release:check
+```
+
 Static artifact check:
 
 ```powershell
@@ -84,6 +90,12 @@ To verify the public Pages URL:
 
 ```powershell
 npm run smoke:browser
+```
+
+For the full release check including the deployed Pages URL:
+
+```powershell
+npm run release:check:pages
 ```
 
 See [Testing guide](./docs/TESTING.md) for details.

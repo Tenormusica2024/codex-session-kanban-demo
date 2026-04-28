@@ -10,12 +10,24 @@ Before sharing a release, run:
 powershell -NoProfile -ExecutionPolicy Bypass -File .\codex_session_review\run_public_release_checks.ps1
 ```
 
+Equivalent npm shortcut:
+
+```powershell
+npm run release:check
+```
+
 This runs fixture validation, distribution build, static artifact smoke, Python compile checks, and local browser smoke.
 
 To also verify the deployed GitHub Pages URL:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\codex_session_review\run_public_release_checks.ps1 -PagesSmoke
+```
+
+Equivalent npm shortcut:
+
+```powershell
+npm run release:check:pages
 ```
 
 If Playwright/browser dependencies are not available and you only want the cheap checks:

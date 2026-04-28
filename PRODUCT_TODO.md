@@ -466,6 +466,20 @@ Why:
 Risk to avoid:
 - Keep this as a local/pre-release helper. Do not hide individual commands or make CI unexpectedly slow.
 
+### 25. Release-check npm shortcuts and pinned browser dependency
+
+Status:
+- Initial implementation added npm shortcuts `release:check` and `release:check:pages`, pinned Playwright to the locked version, and documented the shortcuts in README/testing/distribution docs.
+
+Goal:
+- Make the public-release validation path discoverable for users who start from `package.json` or npm scripts.
+
+Why:
+- The project now has a browser smoke dependency. Pinning and exposing scripts reduces accidental version drift and makes local verification easier to run.
+
+Risk to avoid:
+- Keep npm scripts as wrappers around the canonical PowerShell release check, not a second divergent test path.
+
 ## P2 / defer unless clearly needed
 
 - Built-in code diff review
