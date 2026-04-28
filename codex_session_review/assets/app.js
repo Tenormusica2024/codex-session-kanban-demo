@@ -24,7 +24,7 @@ const I18N = {
     accessPersonal: "個人用・保護URL",
     accessDistribution: "配布用・fixture",
     guideAccessTitle: "URLの使い分け",
-    guideAccessPersonal: "個人用: 実セッション入り。ローカルHTMLか Vercel protected URL で見る。未承認アクセスが401なら正常。",
+    guideAccessPersonal: "個人用: 実セッション入りのため、このpublic demoには含めない。",
     guideAccessDistribution: "配布用: sample fixtureだけで生成。公開前に -Distribution guard を通し、個人セッション・ローカルパス・bypass token を混ぜない。",
     guideButton: "使い方",
     guideTitle: "このKanbanの使い方",
@@ -39,7 +39,7 @@ const I18N = {
     guideNoteCandidates:
       "候補一覧は staging。`推奨列へ追加` か `要確認へ仮追加して選択` で初めてボードに固定され、固定済み候補は候補一覧から消えます。",
     guideNoteSchedule:
-      "定期更新は 08:05 / 22:05。ローカル HTML を再生成し、Vercel alias に snapshot deploy します。外部 LLM API は使いません。",
+      "配布版は sample fixture だけから GitHub Actions で生成します。外部 LLM API や実セッションは使いません。",
     statVisible: "表示中セッション",
     statOverrides: "手動固定",
     statAutoReady: "自動処理候補",
@@ -166,7 +166,7 @@ const I18N = {
     accessPersonal: "personal / protected",
     accessDistribution: "distribution / fixture",
     guideAccessTitle: "URL profiles",
-    guideAccessPersonal: "Personal: includes real sessions. Use local HTML or the Vercel protected URL. A 401 for unauthenticated access is expected.",
+    guideAccessPersonal: "Personal: contains real sessions and is intentionally not included in this public demo.",
     guideAccessDistribution: "Distribution: generated only from sample fixtures. Run the -Distribution guard before publishing so real sessions, local paths, and bypass tokens are not included.",
     guideButton: "Guide",
     guideTitle: "How to use this Kanban",
@@ -181,7 +181,7 @@ const I18N = {
     guideNoteCandidates:
       "The candidate list is staging. A card is fixed to the board only after adding it to the recommended column or temporarily adding it to Need Review.",
     guideNoteSchedule:
-      "Scheduled refresh runs at 08:05 / 22:05. It regenerates local HTML and snapshot-deploys to the Vercel alias. No external LLM API is used.",
+      "The public demo is generated from sample fixtures by GitHub Actions. It uses no external LLM API and no real session logs.",
     statVisible: "Visible sessions",
     statOverrides: "Human overrides",
     statAutoReady: "Auto-ready",

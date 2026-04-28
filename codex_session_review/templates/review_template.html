@@ -27,7 +27,7 @@ __INLINE_CSS__
             <span class="pill"><strong data-i18n="pillModeKey">形式</strong> <span data-i18n="pillModeValue">静的HTML優先</span></span>
             <span class="pill"><strong data-i18n="pillStorageKey">保存先</strong> localStorage</span>
             <span class="pill"><strong data-i18n="pillOpsKey">運用</strong> <span data-i18n="pillOpsValue">AI優先 / 手動修正可</span></span>
-            <span class="pill access-pill" id="access-profile-pill"><strong data-i18n="pillAccessKey">用途</strong> 個人用・保護URL</span>
+            <span class="pill access-pill" id="access-profile-pill"><strong data-i18n="pillAccessKey">用途</strong> 配布用・fixture</span>
             <span class="pill" id="build-meta">built unknown</span>
             <div class="language-switch" role="group" aria-label="表示言語">
               <button type="button" data-lang-option="ja">日本語</button>
@@ -56,10 +56,10 @@ __INLINE_CSS__
           <p class="workflow-help-note" data-i18n="guideNoteCandidates">候補一覧は staging。`推奨列へ追加` か `要確認へ仮追加して選択` で初めてボードに固定され、固定済み候補は候補一覧から消えます。</p>
           <div class="workflow-help-access">
             <h3 data-i18n="guideAccessTitle">URLの使い分け</h3>
-            <p data-i18n="guideAccessPersonal">個人用: 実セッション入り。ローカルHTMLか Vercel protected URL で見る。未承認アクセスが401なら正常。</p>
+            <p data-i18n="guideAccessPersonal">個人用: 実セッション入りのため、このpublic demoには含めない。</p>
             <p data-i18n="guideAccessDistribution">配布用: sample fixtureだけで生成。公開前に -Distribution guard を通し、個人セッション・ローカルパス・bypass token を混ぜない。</p>
           </div>
-          <p class="workflow-help-note" data-i18n="guideNoteSchedule">定期更新は 08:05 / 22:05。ローカル HTML を再生成し、Vercel alias に snapshot deploy します。外部 LLM API は使いません。</p>
+          <p class="workflow-help-note" data-i18n="guideNoteSchedule">配布版は sample fixture だけから GitHub Actions で生成します。外部 LLM API や実セッションは使いません。</p>
         </div>
         <div class="stats-row">
           <div class="stat-card"><span class="label" data-i18n="statVisible">表示中セッション</span><span class="value" id="stat-total">0</span></div>
