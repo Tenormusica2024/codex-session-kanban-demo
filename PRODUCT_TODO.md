@@ -358,6 +358,7 @@ Risk to avoid:
 
 Status:
 - Initial implementation added: README now includes generated screenshots for board overview and card detail/extraction evidence. Screenshots live under `docs/assets/` and should be regenerated after major UI changes.
+- Follow-up refreshed both screenshots from the current fixture UI after README/release polish.
 
 Goal:
 - Make the public demo value understandable visually without requiring the reader to run it first.
@@ -541,6 +542,7 @@ Risk to avoid:
 
 Status:
 - Initial implementation aligned `package.json` / `package-lock.json` with the public release stream and added `CHANGELOG.md` notes for v0.1.2.
+- Follow-up aligned metadata and changelog for v0.1.3 after screenshot refresh and Pages smoke recheck.
 
 Goal:
 - Avoid confusing users who inspect npm metadata after the GitHub release has advanced.

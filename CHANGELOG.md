@@ -4,6 +4,14 @@ All notable public-demo changes are tracked here.
 
 This project is still pre-1.0. Entries focus on public distribution, fixture safety, and the session-to-task review workflow.
 
+## 0.1.3 - 2026-04-29
+
+### Changed
+
+- Refreshed README screenshots from the current public fixture UI.
+- Rechecked the deployed Pages demo with browser smoke after the screenshot refresh.
+- Kept release metadata aligned with the public release stream.
+
 ## 0.1.2 - 2026-04-29
 
 ### Changed
