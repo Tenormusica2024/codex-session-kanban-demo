@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Public demo
+    url: https://tenormusica2024.github.io/codex-session-kanban-demo/
+    about: Open the fixture-only public demo.
+  - name: Testing guide
+    url: https://github.com/Tenormusica2024/codex-session-kanban-demo/blob/master/docs/TESTING.md
+    about: Run local, Pages, and browser smoke checks before filing a regression.

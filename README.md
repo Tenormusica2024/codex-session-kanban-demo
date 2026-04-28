@@ -12,6 +12,7 @@ MIT. See [LICENSE](./LICENSE).
 
 - [Contributing guide](./CONTRIBUTING.md)
 - [Security policy](./SECURITY.md)
+- [Changelog](./CHANGELOG.md)
 
 ## Public demo
 

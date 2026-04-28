@@ -1,0 +1,36 @@
+name: Feature request
+description: Suggest an improvement that supports session-to-task review.
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please keep requests focused on fast task review, extraction quality, lineage clarity, or human override safety.
+
+        Avoid pasting private session logs or sensitive data.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What review workflow problem would this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe the smallest useful version of the feature.
+    validations:
+      required: true
+  - type: checkboxes
+    id: fit
+    attributes:
+      label: Product fit
+      options:
+        - label: Improves task review, extraction quality, lineage clarity, or human override safety.
+          required: true
+        - label: Can work in static/local mode without requiring a cloud backend.
+          required: false
+        - label: Does not require uploading real `.codex` logs to the public repo.
+          required: true

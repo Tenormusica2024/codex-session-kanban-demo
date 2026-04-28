@@ -494,6 +494,20 @@ Why:
 Risk to avoid:
 - Keep these docs aligned with the privacy boundary; do not encourage users to upload real `.codex` logs to the public repo.
 
+### 27. Public release metadata and issue intake hygiene
+
+Status:
+- Initial implementation added package metadata, a first `CHANGELOG.md`, and GitHub issue templates for bug reports and feature requests. Issue templates explicitly warn against posting private logs, local paths, or secrets.
+
+Goal:
+- Make the public repo easier to understand, install for tests, and receive safe feedback.
+
+Why:
+- Once public, bug/feature intake should reinforce the same fixture-only/privacy boundary as the app and docs.
+
+Risk to avoid:
+- Do not encourage generic feature requests that pull the project away from session-to-task review.
+
 ## P2 / defer unless clearly needed
 
 - Built-in code diff review
