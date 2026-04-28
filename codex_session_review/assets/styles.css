@@ -717,6 +717,12 @@ button.secondary,
   background: rgba(255, 209, 102, 0.08);
 }
 
+.tag.lineage {
+  color: #9bdcff;
+  border: 1px solid rgba(100, 210, 255, 0.28);
+  background: rgba(100, 210, 255, 0.08);
+}
+
 .detail-panel {
   position: sticky;
   top: 22px;

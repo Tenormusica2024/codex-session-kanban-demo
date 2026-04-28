@@ -121,6 +121,8 @@ const I18N = {
     lineage: "前後関係",
     noLineage: "このカードでは代表セッションのみを表示中",
     sourceSessions: "元セッション",
+    supersedes: "{count}件を代表表示中",
+    mergedHint: "古い関連セッションはこのカードに集約",
     confidence: "確信度",
     taskCluster: "タスクまとまり",
     relatedSessions: "関連セッション",
@@ -274,6 +276,8 @@ const I18N = {
     lineage: "Lineage",
     noLineage: "Only the representative session is shown for this card",
     sourceSessions: "Source sessions",
+    supersedes: "Represents {count} sessions",
+    mergedHint: "Older related sessions are merged into this card",
     confidence: "confidence",
     taskCluster: "task cluster",
     relatedSessions: "related sessions",
@@ -548,6 +552,21 @@ function buildCardRationale(session, relatedSessions = []) {
     intent: displayTaskSummary(session) || displayOriginalText(session.current_goal || "", displayTaskTitle(session), session.current_goal_en),
     evidence,
     lineage: lineageParts.length ? lineageParts : [t("noLineage")],
+  };
+}
+
+function lineageInfo(session, relatedSessions = []) {
+  const relatedCount = Math.max(Number(session.related_session_count || 1), relatedSessions.length + 1);
+  const hasMerged = relatedCount > 1 || (session.related_session_ids || []).length > 1;
+  const latestRelated = relatedSessions
+    .slice()
+    .sort((a, b) => new Date(b.end_at || b.start_at || 0) - new Date(a.end_at || a.start_at || 0))[0];
+  return {
+    hasMerged,
+    relatedCount,
+    latestRelated,
+    badge: hasMerged ? t("supersedes", { count: relatedCount }) : "",
+    hint: hasMerged ? t("mergedHint") : t("noLineage"),
   };
 }
 
@@ -1104,6 +1123,7 @@ function renderBoard() {
     }
 
     columnSessions.forEach((session) => {
+      const cardLineage = lineageInfo(session);
       const card = document.createElement("article");
       card.className = `session-card${session.session_id === state.selectedId ? " selected" : ""}`;
       card.draggable = true;
@@ -1119,6 +1139,7 @@ function renderBoard() {
           <span class="tag ${escapeHtml(session.autonomy_mode || "")}">${escapeHtml(localizeAutonomyMode(session.autonomy_mode))}</span>
           ${session.clusterCard ? `<span class="tag">${escapeHtml(t("cluster"))}</span>` : ""}
           ${attentionSignals(session).needsInput ? `<span class="tag attention">${escapeHtml(t("needsInput"))}</span>` : ""}
+          ${cardLineage.hasMerged ? `<span class="tag lineage">${escapeHtml(cardLineage.badge)}</span>` : ""}
           ${session.overrideLock ? `<span class="tag override">${escapeHtml(t("humanLock"))}</span>` : ""}
           ${session.orderLock ? `<span class="tag override">${escapeHtml(t("manualOrder"))}</span>` : ""}
         </div>
@@ -1274,6 +1295,7 @@ function renderDetail() {
     .filter((item) => (item.task_cluster_family || item.task_cluster_label) === (session.task_cluster_family || session.task_cluster_label) && item.session_id !== session.session_id)
     .slice(0, 6);
   const rationale = buildCardRationale(session, relatedSessions);
+  const detailLineage = lineageInfo(session, relatedSessions);
 
   panel.innerHTML = `
     <h2>${escapeHtml(displayTaskTitle(session))}</h2>
@@ -1282,6 +1304,7 @@ function renderDetail() {
       <span class="tag">${escapeHtml(statusLabel(session.currentStatus))}</span>
       <span class="tag ${escapeHtml(session.autonomy_mode || "")}">${escapeHtml(localizeAutonomyMode(session.autonomy_mode))}</span>
       ${attentionSignals(session).needsInput ? `<span class="tag attention">${escapeHtml(t("needsInput"))}</span>` : ""}
+      ${detailLineage.hasMerged ? `<span class="tag lineage">${escapeHtml(detailLineage.badge)}</span>` : ""}
       <span class="tag">${escapeHtml(session.statusOwner || "ai")} ${escapeHtml(t("owner"))}</span>
       <span class="tag">${escapeHtml(displayClusterLabel(session.task_cluster_family || session.task_cluster_label || "misc"))} / ${session.related_session_count || 1} ${escapeHtml(t("sessions"))}</span>
       <span class="tag mono">sid ${escapeHtml(shortSessionId(session.session_id))}</span>
@@ -1318,6 +1341,7 @@ function renderDetail() {
         <div>
           <strong>${escapeHtml(t("lineage"))}:</strong>
           <ul>${rationale.lineage.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
+          ${detailLineage.hasMerged ? `<p class="small">${escapeHtml(detailLineage.hint)}</p>` : ""}
         </div>
       </div>
     </div>
