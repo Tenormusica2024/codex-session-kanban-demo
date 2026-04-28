@@ -59,6 +59,25 @@ These fields are what make the project different from a generic Kanban board.
 | `doneish_signal` | boolean | Indicates completion-ish language. |
 | `pendingish_signal` | boolean | Indicates pending/waiting language. |
 
+## Validation script
+
+Before publishing fixture data, run:
+
+```powershell
+python codex_session_review\validate_session_data.py codex_session_review\sample_data\recent_sessions.sample.json --distribution
+```
+
+The validator checks:
+
+- required fields
+- status enum values
+- duplicate `session_id`
+- timestamp parse errors
+- broken `related_session_ids` references
+- private-data-like signals such as local user paths, tokens, cookies, secrets, passwords, credentials, and bypass markers
+
+In `--distribution` mode, privacy-like signals fail the build. Without `--distribution`, they are warnings for local review.
+
 ## Public fixture safety rules
 
 Public/demo data must not contain:

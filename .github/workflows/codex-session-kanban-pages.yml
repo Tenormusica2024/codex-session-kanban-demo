@@ -19,6 +19,7 @@ on:
       - "codex_session_review/templates/**"
       - "codex_session_review/sample_data/**"
       - "codex_session_review/build_review_surface.py"
+      - "codex_session_review/validate_session_data.py"
       - ".github/workflows/codex-session-kanban-pages.yml"
 
 permissions:
@@ -41,6 +42,9 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+
+      - name: Validate public fixture
+        run: python codex_session_review/validate_session_data.py codex_session_review/sample_data/recent_sessions.sample.json --distribution
 
       - name: Build public fixture
         run: |

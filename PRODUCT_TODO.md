@@ -326,6 +326,20 @@ Why:
 Risk to avoid:
 - Do not persist imported private session data into public builds or remote storage.
 
+### 15. Strict fixture validation script
+
+Status:
+- Initial implementation added: `codex_session_review/validate_session_data.py` validates required fields, status enums, duplicate IDs, timestamps, broken related-session references, and privacy-like signals. The GitHub Pages workflow now runs it with `--distribution` before building the public fixture.
+
+Goal:
+- Prevent unsafe or malformed fixture data from being published.
+
+Why:
+- This protects the public/private split and makes the repository safer to use as a distributable demo.
+
+Risk to avoid:
+- Keep validation conservative enough to catch real leaks without blocking harmless project names such as `openclaw-secretary`.
+
 ## P2 / defer unless clearly needed
 
 - Built-in code diff review
