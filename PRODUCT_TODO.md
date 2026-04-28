@@ -526,6 +526,7 @@ Risk to avoid:
 
 Status:
 - Initial implementation added README badges for GitHub Pages, latest release, MIT license, and static/privacy-aware positioning, plus a direct release section linking to v0.1.0 and the changelog.
+- Follow-up changed the README release link to GitHub's latest-release URL and added `CHANGELOG.md` notes for v0.1.1 so patch releases do not leave README stale.
 
 Goal:
 - Make the public repo landing page look complete and help users immediately find the demo, release, license, and architecture stance.

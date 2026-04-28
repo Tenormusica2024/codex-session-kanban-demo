@@ -41,7 +41,7 @@ MIT. See [LICENSE](./LICENSE).
 
 ## Release
 
-- Latest release: [v0.1.0 - Public fixture demo](https://github.com/Tenormusica2024/codex-session-kanban-demo/releases/tag/v0.1.0)
+- Latest release: [GitHub Releases](https://github.com/Tenormusica2024/codex-session-kanban-demo/releases/latest)
 - Changelog: [CHANGELOG.md](./CHANGELOG.md)
 
 ## Contributing / security

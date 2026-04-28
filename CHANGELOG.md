@@ -4,6 +4,21 @@ All notable public-demo changes are tracked here.
 
 This project is still pre-1.0. Entries focus on public distribution, fixture safety, and the session-to-task review workflow.
 
+## 0.1.1 - 2026-04-29
+
+### Added
+
+- Public README positioning improvements for first-time visitors.
+- README badges for demo, release, license, and static/privacy-aware architecture.
+- Direct release/changelog links from the README.
+- GitHub repository metadata, topics, and public issue templates.
+- Public OSS hygiene docs: license, contribution guide, and security policy.
+
+### Changed
+
+- Improved demo usage fast path and release/check documentation.
+- Added npm shortcuts for release checks.
+
 ## 0.1.0 - 2026-04-29
 
 ### Added
