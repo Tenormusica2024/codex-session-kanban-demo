@@ -4,6 +4,18 @@ Static HTML Kanban/review surface for recent Codex sessions.
 
 This distribution build uses sample fixture data only. It is intended for GitHub Pages / GitHub Actions artifact distribution and must not include real `.codex` session logs.
 
+## What makes this different
+
+The target is not only "show sessions as cards". The target is a review surface for AI coding workflows:
+
+- infer task-like titles and summaries from session intent
+- avoid titles based on preflight phrases such as "progress check" or "content review"
+- split genuine topic conflicts while suppressing resolved setup detours
+- compare related sessions and avoid showing stale predecessors as separate current tasks
+- preserve human override locks when the user manually changes status/order
+
+For competitor notes and product direction, see `../COMPETITIVE_POSITIONING.md`.
+
 ## Build fixture locally
 
 ```powershell
