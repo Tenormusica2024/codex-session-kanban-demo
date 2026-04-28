@@ -553,6 +553,20 @@ Why:
 Risk to avoid:
 - Do not imply npm package publishing; package metadata is for local tooling and repo clarity.
 
+### 31. Public roadmap
+
+Status:
+- Initial implementation added `docs/ROADMAP.md` and linked it from README and CONTRIBUTING.
+
+Goal:
+- Make future direction clear without implying that broad PM/cloud/agent-runner features are next.
+
+Why:
+- Public contributors and future readers need a positive roadmap and an explicit deferral boundary.
+
+Risk to avoid:
+- Keep the roadmap focused on session-to-task extraction, lineage clarity, human override safety, and static/private distribution.
+
 ## P2 / defer unless clearly needed
 
 - Built-in code diff review

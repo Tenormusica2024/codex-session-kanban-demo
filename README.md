@@ -122,6 +122,7 @@ npm run release:check:pages
 - [Architecture / data flow](./docs/ARCHITECTURE.md)
 - [Import schema](./docs/IMPORT_SCHEMA.md)
 - [Testing guide](./docs/TESTING.md)
+- [Roadmap](./docs/ROADMAP.md)
 - [Public release checklist](./docs/PUBLIC_RELEASE_CHECKLIST.md)
 - [Competitive positioning](./COMPETITIVE_POSITIONING.md)
 - [Product TODO / adoption policy](./PRODUCT_TODO.md)

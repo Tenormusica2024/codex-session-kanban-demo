@@ -4,6 +4,16 @@ All notable public-demo changes are tracked here.
 
 This project is still pre-1.0. Entries focus on public distribution, fixture safety, and the session-to-task review workflow.
 
+## 0.1.4 - 2026-04-29
+
+### Added
+
+- Public roadmap focused on extraction quality, lineage clarity, personal/local workflow, and fixture-demo quality.
+
+### Changed
+
+- Linked the roadmap from README and CONTRIBUTING.
+
 ## 0.1.3 - 2026-04-29
 
 ### Changed

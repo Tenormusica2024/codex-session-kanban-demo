@@ -16,6 +16,7 @@ Check:
 
 - [PRODUCT_TODO.md](./PRODUCT_TODO.md)
 - [COMPETITIVE_POSITIONING.md](./COMPETITIVE_POSITIONING.md)
+- [docs/ROADMAP.md](./docs/ROADMAP.md)
 - [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)
 - [docs/TESTING.md](./docs/TESTING.md)
 
