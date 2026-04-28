@@ -38,6 +38,7 @@ This repository is fixture-only:
 
 - [Demo usage guide](./docs/DEMO_USAGE.md)
 - [Downloadable artifact usage](./docs/ARTIFACT_USAGE.md)
+- [Architecture / data flow](./docs/ARCHITECTURE.md)
 - [Import schema](./docs/IMPORT_SCHEMA.md)
 - [Public release checklist](./docs/PUBLIC_RELEASE_CHECKLIST.md)
 - [Competitive positioning](./COMPETITIVE_POSITIONING.md)

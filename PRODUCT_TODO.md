@@ -410,6 +410,20 @@ Why:
 Risk to avoid:
 - Do not mutate source fixture files during build; enrichment happens in the output bundle.
 
+### 21. Architecture docs and Node 24 workflow opt-in
+
+Status:
+- Initial implementation added: `docs/ARCHITECTURE.md` documents the static-first data flow, public/private repository boundary, personal/private workflow, build modes, and backend deferral rationale. The Pages workflow now opts into Node 24 for JavaScript actions to address the GitHub Actions Node 20 deprecation warning.
+
+Goal:
+- Make the public/private split and build architecture explicit, and keep CI ahead of upcoming runner deprecations.
+
+Why:
+- The project is useful only if users can trust that public fixture distribution and private session review remain separated.
+
+Risk to avoid:
+- Do not imply that importing local session JSON into the browser makes it safe to commit or publish.
+
 ## P2 / defer unless clearly needed
 
 - Built-in code diff review
