@@ -73,6 +73,10 @@ const I18N = {
     copyReviewSummary: "レビュー要約をコピー",
     importOverrides: "手動修正を読み込み",
     clearOverrides: "手動修正を全消去",
+    overridePanelTitle: "手動修正の保存/復元",
+    overridePanelBody:
+      "状態変更・同列順位・メモは localStorage と export JSON に保存されます。AI同期は human override lock を戻さない前提です。",
+    overridePanelCount: "保存中 {count} 件 / localStorage",
     detailEmpty: "カードを選ぶと、ここにセッション概要と手動レビュー操作が表示されます。",
     statusNeedReview: "要確認",
     statusPending: "保留",
@@ -230,6 +234,10 @@ const I18N = {
     copyReviewSummary: "Copy review summary",
     importOverrides: "Import overrides",
     clearOverrides: "Clear all overrides",
+    overridePanelTitle: "Override backup / restore",
+    overridePanelBody:
+      "Status moves, rank changes, and notes are saved in localStorage and export JSON. AI sync must not revert human override locks.",
+    overridePanelCount: "{count} saved overrides / localStorage",
     detailEmpty: "Select a card to see the session digest and manual review controls.",
     statusNeedReview: "Need Review",
     statusPending: "Pending",
@@ -787,6 +795,7 @@ function getVisibleSessions() {
 function updateOverviewStats(visible) {
   const total = visible.length;
   const overridden = visible.filter((item) => item.hasOverride).length;
+  const storedOverrides = Object.keys(state.overrides || {}).length;
   const autoReady = visible.filter((item) => item.autonomy_mode === "auto-ready").length;
   const blocked = visible.filter((item) => item.currentStatus === "Blocked").length;
   const repos = new Set(visible.map((item) => item.primary_repo).filter(Boolean)).size;
@@ -798,6 +807,10 @@ function updateOverviewStats(visible) {
   document.getElementById("stat-blocked").textContent = String(blocked);
   document.getElementById("stat-clusters").textContent = String(clusters);
   document.getElementById("stat-repos").textContent = String(repos);
+  const overrideCount = document.getElementById("override-storage-count");
+  if (overrideCount) {
+    overrideCount.textContent = t("overridePanelCount", { count: storedOverrides });
+  }
 }
 
 function renderStatusFilter() {

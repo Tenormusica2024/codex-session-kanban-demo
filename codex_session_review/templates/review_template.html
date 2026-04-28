@@ -86,8 +86,15 @@ __INLINE_CSS__
         </div>
       </section>
 
-      <section class="toolbar">
-        <div class="toolbar-row">
+    <section class="toolbar">
+      <div class="override-ux-panel">
+        <div>
+          <strong data-i18n="overridePanelTitle">手動修正の保存/復元</strong>
+          <p data-i18n="overridePanelBody">状態変更・同列順位・メモは localStorage と export JSON に保存されます。AI同期は human override lock を戻さない前提です。</p>
+        </div>
+        <span class="tag override" id="override-storage-count">0</span>
+      </div>
+      <div class="toolbar-row">
           <div class="toolbar-group">
             <label>
               <span data-i18n="filterSearch">検索</span>

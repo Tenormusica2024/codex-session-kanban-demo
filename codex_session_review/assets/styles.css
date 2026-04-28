@@ -401,6 +401,25 @@ body {
   min-width: 0;
 }
 
+.override-ux-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(66, 211, 146, 0.16);
+  background: linear-gradient(135deg, rgba(66, 211, 146, 0.07), rgba(100, 210, 255, 0.035));
+}
+
+.override-ux-panel p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  line-height: 1.5;
+  font-size: 0.86rem;
+}
+
 .toolbar-row {
   align-items: center;
   justify-content: space-between;

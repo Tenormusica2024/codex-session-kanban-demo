@@ -198,6 +198,9 @@ Risk to avoid:
 
 ### 10. Override export/import UX
 
+Status:
+- Initial implementation added: toolbar now explains localStorage/export JSON behavior and shows the current stored override count.
+
 Goal:
 - Make manual override backup/restore obvious.
 - Clarify what is stored in localStorage and what can be copied/exported.
