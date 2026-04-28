@@ -441,7 +441,7 @@ Risk to avoid:
 ### 23. Browser operation and visible text smoke test
 
 Status:
-- Initial implementation added: `codex_session_review/smoke_browser_surface.mjs` and npm scripts for Pages/local HTML browser checks. The test loads the page with Playwright, verifies board/candidate/detail mount points, switches to English, checks common static UI labels are translated, promotes one candidate into the board, and verifies the resulting card/detail/human-lock controls.
+- Initial implementation added: `codex_session_review/smoke_browser_surface.mjs` and npm scripts for Pages/local HTML browser checks. The test loads the page with Playwright, verifies board/candidate/detail mount points, switches to English, checks common static UI labels are translated, promotes one candidate into the board, and verifies the resulting card/detail/human-lock controls. Follow-up docs added `docs/TESTING.md`, README links, demo guide links, and release checklist steps so the test path is discoverable.
 
 Goal:
 - Make browser operation and visible text regressions testable without requiring CiC for every run.

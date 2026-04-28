@@ -25,6 +25,18 @@ powershell -ExecutionPolicy Bypass -File .\codex_session_review\build_fixture_sn
 powershell -ExecutionPolicy Bypass -File .\codex_session_review\open_distribution_review.ps1
 ```
 
+- [ ] Static artifact smoke passes:
+
+```powershell
+python .\codex_session_review\smoke_public_build.py .\codex_session_review\fixture_snapshot\index.html --docs-dir .\codex_session_review\fixture_snapshot\docs --distribution
+```
+
+- [ ] Browser smoke passes locally:
+
+```powershell
+npm run smoke:browser:local
+```
+
 ## Demo quality
 
 - [ ] Board shows more than one meaningful status.
@@ -39,6 +51,7 @@ powershell -ExecutionPolicy Bypass -File .\codex_session_review\open_distributio
 - [ ] Repository is public if using free GitHub Pages.
 - [ ] Settings → Pages → Source is GitHub Actions.
 - [ ] Workflow `Codex Session Kanban Demo Pages` passes.
+- [ ] Optional manual workflow with `run_browser_smoke=true` passes before major public releases.
 - [ ] If Pages is unavailable, use the downloadable Actions artifact instead.
 - [ ] Artifact contains `index.html`, `README_LOCAL_DEMO.txt`, and `docs/`.
 

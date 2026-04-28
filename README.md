@@ -40,6 +40,7 @@ This repository is fixture-only:
 - [Downloadable artifact usage](./docs/ARTIFACT_USAGE.md)
 - [Architecture / data flow](./docs/ARCHITECTURE.md)
 - [Import schema](./docs/IMPORT_SCHEMA.md)
+- [Testing guide](./docs/TESTING.md)
 - [Public release checklist](./docs/PUBLIC_RELEASE_CHECKLIST.md)
 - [Competitive positioning](./COMPETITIVE_POSITIONING.md)
 - [Product TODO / adoption policy](./PRODUCT_TODO.md)
@@ -55,6 +56,29 @@ Output:
 ```text
 codex_session_review/fixture_snapshot/index.html
 ```
+
+## Smoke tests
+
+Static artifact check:
+
+```powershell
+python .\codex_session_review\smoke_public_build.py .\codex_session_review\fixture_snapshot\index.html --docs-dir .\codex_session_review\fixture_snapshot\docs --distribution
+```
+
+Browser operation and visible-text check:
+
+```powershell
+npm install
+npm run smoke:browser:local
+```
+
+To verify the public Pages URL:
+
+```powershell
+npm run smoke:browser
+```
+
+See [Testing guide](./docs/TESTING.md) for details.
 
 ## GitHub Pages
 

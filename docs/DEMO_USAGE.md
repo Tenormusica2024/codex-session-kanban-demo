@@ -52,3 +52,12 @@ Personal/local builds can use real session summaries, but should stay private un
 ## Downloadable artifact
 
 If GitHub Pages is unavailable, download the `codex-session-kanban-demo` artifact from the latest successful Actions run and open `index.html`. See [Downloadable artifact usage](./ARTIFACT_USAGE.md).
+
+## Testing the demo
+
+For repeatable checks, use the smoke tests instead of manual browser review only:
+
+- static artifact smoke: verifies embedded data, docs, mount points, and distribution safety
+- browser smoke: verifies visible UI, language switch, candidate promotion, human lock, session id, and status controls
+
+See [Testing guide](./TESTING.md).
