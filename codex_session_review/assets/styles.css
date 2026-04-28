@@ -1051,3 +1051,45 @@ button.secondary,
     grid-template-columns: 1fr;
   }
 }
+
+.evidence-category-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.evidence-category-card {
+  padding: 11px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(151, 169, 195, 0.14);
+  background: rgba(255, 255, 255, 0.025);
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.evidence-category-card strong {
+  display: block;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.evidence-category-card ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.evidence-category-card.blocker {
+  border-color: rgba(255, 96, 96, 0.22);
+  background: rgba(255, 96, 96, 0.045);
+}
+
+.evidence-category-card.nextAction,
+.evidence-category-card.decision {
+  border-color: rgba(100, 210, 255, 0.2);
+  background: rgba(100, 210, 255, 0.045);
+}
+
+.evidence-category-card.output {
+  border-color: rgba(66, 211, 146, 0.18);
+  background: rgba(66, 211, 146, 0.04);
+}

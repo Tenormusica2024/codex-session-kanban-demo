@@ -130,6 +130,13 @@ const I18N = {
     whyThisCard: "このカードの根拠",
     inferredIntent: "推定したタスク意図",
     evidence: "根拠",
+    evidenceCategories: "根拠の分類",
+    evidenceIntent: "目的/意図",
+    evidenceDecision: "決定/方針",
+    evidenceBlocker: "詰まり/待ち",
+    evidenceNextAction: "次の一手",
+    evidenceOutput: "成果物/変更",
+    evidenceOther: "その他",
     lineage: "前後関係",
     noLineage: "このカードでは代表セッションのみを表示中",
     sourceSessions: "元セッション",
@@ -317,6 +324,13 @@ const I18N = {
     whyThisCard: "Why this card exists",
     inferredIntent: "Inferred task intent",
     evidence: "Evidence",
+    evidenceCategories: "Evidence categories",
+    evidenceIntent: "Intent / goal",
+    evidenceDecision: "Decision / policy",
+    evidenceBlocker: "Blocker / waiting",
+    evidenceNextAction: "Next action",
+    evidenceOutput: "Output / change",
+    evidenceOther: "Other",
     lineage: "Lineage",
     noLineage: "Only the representative session is shown for this card",
     sourceSessions: "Source sessions",
@@ -581,6 +595,50 @@ function displayEvidenceMessages(session) {
     return session.evidence_messages_en;
   }
   return session.evidence_messages || [];
+}
+
+function classifyEvidenceMessage(message) {
+  const text = String(message || "").toLowerCase();
+  if (/block|blocked|waiting|credential|login|auth|permission|limit|budget|terms|policy|詰ま|待ち|停止|同意|利用規約|認証|ログイン|制限|予算/.test(text)) {
+    return "blocker";
+  }
+  if (/next|todo|follow|continue|confirm|review|進め|次|確認|レビュー|残タスク|一手/.test(text)) {
+    return "nextAction";
+  }
+  if (/decid|policy|direction|should|must|方針|決定|判断|優先|採用|やめる|戻す/.test(text)) {
+    return "decision";
+  }
+  if (/goal|intent|purpose|objective|目的|意図|ゴール|主題|本題/.test(text)) {
+    return "intent";
+  }
+  if (/commit|push|deploy|built|generated|implemented|added|fixed|変更|実装|追加|修正|生成|反映|成果物/.test(text)) {
+    return "output";
+  }
+  return "other";
+}
+
+function evidenceCategoryLabel(category) {
+  return {
+    intent: t("evidenceIntent"),
+    decision: t("evidenceDecision"),
+    blocker: t("evidenceBlocker"),
+    nextAction: t("evidenceNextAction"),
+    output: t("evidenceOutput"),
+    other: t("evidenceOther"),
+  }[category] || t("evidenceOther");
+}
+
+function buildEvidenceCategories(session) {
+  const messages = displayEvidenceMessages(session).filter(Boolean);
+  const grouped = new Map();
+  for (const message of messages) {
+    const category = classifyEvidenceMessage(message);
+    if (!grouped.has(category)) grouped.set(category, []);
+    grouped.get(category).push(message);
+  }
+  return ["intent", "decision", "blocker", "nextAction", "output", "other"]
+    .filter((category) => grouped.has(category))
+    .map((category) => ({ category, items: grouped.get(category).slice(0, 3) }));
 }
 
 function buildCardRationale(session, relatedSessions = []) {
@@ -1583,6 +1641,7 @@ function renderDetail() {
   const detailLineage = lineageInfo(session, relatedSessions);
   const taskMap = relatedTaskMap(session, displaySessions);
   const quality = auditExtractionQuality(session);
+  const evidenceCategories = buildEvidenceCategories(session);
 
   panel.innerHTML = `
     <h2>${escapeHtml(displayTaskTitle(session))}</h2>
@@ -1632,6 +1691,21 @@ function renderDetail() {
           <ul>${rationale.lineage.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
           ${detailLineage.hasMerged ? `<p class="small">${escapeHtml(detailLineage.hint)}</p>` : ""}
         </div>
+      </div>
+    </div>
+
+    <div class="detail-section">
+      <h3>${escapeHtml(t("evidenceCategories"))}</h3>
+      <div class="evidence-category-grid">
+        ${evidenceCategories
+          .map(
+            (group) => `
+              <div class="evidence-category-card ${escapeHtml(group.category)}">
+                <strong>${escapeHtml(evidenceCategoryLabel(group.category))}</strong>
+                <ul>${group.items.map((item) => `<li>${escapeHtml(displayOriginalText(item))}</li>`).join("")}</ul>
+              </div>`
+          )
+          .join("") || `<p>${escapeHtml(t("qualityWeakEvidence"))}</p>`}
       </div>
     </div>
 

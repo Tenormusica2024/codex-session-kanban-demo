@@ -205,6 +205,21 @@ Why:
 Risk to avoid:
 - Keep it collapsed or detail-only; main card must stay readable.
 
+### 8.5 Evidence categorization drilldown
+
+Status:
+- Initial implementation added: detail view groups evidence into intent/goal, decision/policy, blocker/waiting, next action, output/change, and other. This helps review whether a title/body was derived from the real task instead of a preflight phrase.
+
+Goal:
+- Let users inspect what kind of evidence drove a card without reading the raw transcript.
+- Make misclassification easier to debug before changing extraction rules.
+
+Why:
+- Higher return than generic PM features because it directly improves trust in session-to-task extraction.
+
+Risk to avoid:
+- Keep this as a detail-only explanation layer; do not overfit extraction from keyword buckets alone.
+
 ### 9. Keyboard triage shortcuts
 
 Status:
