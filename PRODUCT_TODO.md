@@ -45,6 +45,9 @@ If the answer is unclear, keep the feature as a backlog idea rather than impleme
 
 ### 1. Candidate backlog cleanup
 
+Status:
+- Extended with an initial candidate review panel: the UI now summarizes open candidates, fixed candidates, quality-review cards, and multi-session representatives before/after promotion.
+
 Goal:
 - Treat "Kanban追加候補" as a staging backlog.
 - Cards already fixed or placed on the board should disappear from candidate list.

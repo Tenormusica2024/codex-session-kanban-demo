@@ -53,6 +53,12 @@ const I18N = {
     majorClustersLead: "同じ大タスクっぽい session をまとめて見るための local heuristic",
     candidatesTitle: "Kanban 追加候補",
     candidatesLead: "直近 session から見えた大タスク / 中タスク候補",
+    candidateReviewTitle: "候補レビュー",
+    candidateReviewLead: "追加前後の候補を品質・固定状態・前後関係で確認",
+    candidateOpen: "未追加候補",
+    candidateFixed: "固定済み",
+    candidateQualityReview: "品質要確認",
+    candidateLineage: "複数session代表",
     filterSearch: "検索",
     filterRepo: "Repo",
     filterStatus: "状態",
@@ -227,6 +233,12 @@ const I18N = {
     majorClustersLead: "Local heuristic for grouping sessions that look like the same major task",
     candidatesTitle: "Kanban candidates",
     candidatesLead: "Major/mid task candidates found from recent sessions",
+    candidateReviewTitle: "Candidate review",
+    candidateReviewLead: "Review candidates by add-state, extraction quality, and lineage",
+    candidateOpen: "Open candidates",
+    candidateFixed: "Fixed",
+    candidateQualityReview: "Quality review",
+    candidateLineage: "Multi-session representative",
     filterSearch: "Search",
     filterRepo: "Repo",
     filterStatus: "Status",
@@ -1096,6 +1108,7 @@ function renderCandidateStrip() {
     host.innerHTML = `<span class="small">${
       hiddenCount ? escapeHtml(t("noUnaddedCandidates", { count: hiddenCount })) : escapeHtml(t("noCandidates"))
     }</span>`;
+    renderCandidateReviewPanel();
     return;
   }
   if (hiddenCount) {
@@ -1147,6 +1160,42 @@ function renderCandidateStrip() {
     });
     host.appendChild(card);
   });
+  renderCandidateReviewPanel();
+}
+
+function renderCandidateReviewPanel() {
+  const host = document.getElementById("candidate-review-grid");
+  if (!host) return;
+  const displaySessions = getDisplaySessions();
+  const allCandidates = state.boardData?.suggested_tasks || [];
+  const fixedCandidateIds = new Set();
+  let openCandidateCount = 0;
+  allCandidates.forEach((task) => {
+    const representative = findRepresentativeForTask(task);
+    if (representative && state.overrides[representative.session_id]?.status) {
+      fixedCandidateIds.add(representative.session_id);
+    } else {
+      openCandidateCount += 1;
+    }
+  });
+  const qualityReview = displaySessions.filter((item) => !auditExtractionQuality(item).ok);
+  const lineageSessions = displaySessions.filter((item) => lineageInfo(item).hasMerged);
+  const rows = [
+    { label: t("candidateOpen"), count: openCandidateCount, items: allCandidates.slice(0, 3).map((task) => displayTaskTitle(task)).filter(Boolean) },
+    { label: t("candidateFixed"), count: fixedCandidateIds.size, items: [...fixedCandidateIds].slice(0, 3).map((id) => displayTaskTitle(displaySessions.find((item) => item.session_id === id) || { title: id })) },
+    { label: t("candidateQualityReview"), count: qualityReview.length, items: qualityReview.slice(0, 3).map(displayTaskTitle) },
+    { label: t("candidateLineage"), count: lineageSessions.length, items: lineageSessions.slice(0, 3).map(displayTaskTitle) },
+  ];
+  host.innerHTML = rows
+    .map(
+      (row) => `
+        <div class="candidate-review-card">
+          <div class="candidate-review-count">${escapeHtml(row.count)}</div>
+          <strong>${escapeHtml(row.label)}</strong>
+          <ul>${row.items.map((item) => `<li>${escapeHtml(item)}</li>`).join("") || "<li>n/a</li>"}</ul>
+        </div>`
+    )
+    .join("");
 }
 
 function getVisibleClusters() {
