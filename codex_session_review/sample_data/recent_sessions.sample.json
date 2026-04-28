@@ -1,0 +1,121 @@
+{
+  "generated_at": "2026-04-27T15:40:00+09:00",
+  "source": "sample-fixture-public",
+  "sessions": [
+    {
+      "session_id": "sample-plane-poc",
+      "title": "Plane PoC の blocked 理由を整理して source-side に戻す",
+      "summary": "Plane provisioning を先に掘りすぎたので、元の目的である recent Codex session review surface を前段に戻すべきと判断した。",
+      "first_user_message": "task status は blocked のままだけど、元の目的に対して今のボトルネックは何？",
+      "last_assistant_message": "ボトルネックは source 理解ではなく Plane への sink を先に実装しすぎたこと。Track A を先に進めるべき。",
+      "evidence_messages": [
+        "元は recent Codex session の内容把握と HITL 判定が目的。",
+        "Plane blocked は元タスク全体ではなく sink 側サブタスクの blocked。",
+        "collector / digest / review surface が先。"
+      ],
+      "suggested_status": "Blocked",
+      "user_message_count": 8,
+      "assistant_message_count": 9,
+      "command_count": 17,
+      "activity_score": 44,
+      "primary_repo": "openclaw-secretary",
+      "active_paths": [
+        "/workspace/openclaw-secretary"
+      ],
+      "source_file": "sample/plane-poc.jsonl",
+      "start_at": "2026-04-27T13:10:00+09:00",
+      "end_at": "2026-04-27T15:20:00+09:00",
+      "recency_label": "today",
+      "title_en": "Re-scope a Blocked External Kanban Integration",
+      "summary_en": "The session identifies that the external Kanban sink was explored too early. The next step is to finish the source-side Codex session review surface before returning to provisioning.",
+      "first_user_message_en": "The task is still blocked. What is the real bottleneck against the original goal?",
+      "last_assistant_message_en": "The bottleneck is not session understanding; it is that the external sink was prioritized before the review surface. Track A should move first.",
+      "evidence_messages_en": [
+        "The original goal was to understand recent Codex sessions and support HITL review.",
+        "The external Kanban blocker belongs to the sink subtask, not the whole project.",
+        "Collector, digest, and review surface work should come first."
+      ],
+      "current_goal_en": "Recover the correct implementation order after an external Kanban integration was marked blocked.",
+      "deep_summary_en": "A blocked integration should not stop the source-side review surface. The task is to separate the sink blocker from the main workflow and continue local progress.",
+      "latest_meaningful_change_en": "Decision changed from provisioning an external board to finishing the local review surface first.",
+      "blocker_en": "External board provisioning is blocked, but local source-side work can continue.",
+      "suggested_reason_en": "The external board cannot be provisioned yet, so this card belongs in Blocked only for the sink path."
+    },
+    {
+      "session_id": "sample-html-surface",
+      "title": "HTML review surface で manual drag + localStorage を先に成立させる",
+      "summary": "single-file HTML で review board を作り、manual drag を human override として保存する。静的 deploy しやすい構成を優先。",
+      "first_user_message": "html で進めて。github から vercel deploy でもいい。",
+      "last_assistant_message": "static-first で single-file HTML に寄せれば local open / Vercel / GitHub のどれでも回しやすい。",
+      "evidence_messages": [
+        "HTML なら local でも deploy 後でも同じ surface にできる。",
+        "drag 操作と detail pane を同居させると HITL がやりやすい。"
+      ],
+      "suggested_status": "In Progress",
+      "user_message_count": 5,
+      "assistant_message_count": 6,
+      "command_count": 10,
+      "activity_score": 31,
+      "primary_repo": "openclaw-secretary",
+      "active_paths": [
+        "/workspace/openclaw-secretary"
+      ],
+      "source_file": "sample/html-surface.jsonl",
+      "start_at": "2026-04-27T15:25:00+09:00",
+      "end_at": "2026-04-27T15:37:00+09:00",
+      "recency_label": "today",
+      "title_en": "Build a Static Review Surface with Manual Overrides",
+      "summary_en": "The session designs a single-file HTML review board where drag and status changes are stored as human overrides. Static hosting remains possible while AI sync respects manual decisions.",
+      "first_user_message_en": "Proceed with HTML. GitHub to Vercel deployment is fine if that is the simplest path.",
+      "last_assistant_message_en": "A static-first single-file HTML surface works locally and can later be deployed to Vercel or another static host.",
+      "evidence_messages_en": [
+        "A static HTML surface keeps local and hosted behavior close.",
+        "Drag operations and a detail pane make HITL review practical.",
+        "Human overrides must be preserved across later AI sync."
+      ],
+      "current_goal_en": "Create the first usable static review board for Codex session triage.",
+      "deep_summary_en": "The work focuses on proving that session cards, manual movement, status changes, and localStorage persistence can function without a dynamic backend.",
+      "latest_meaningful_change_en": "The implementation direction settled on static HTML plus localStorage before any server-backed board.",
+      "blocker_en": "none",
+      "suggested_reason_en": "Implementation is active and not yet complete, so In Progress is the safest status."
+    },
+    {
+      "session_id": "sample-llmwiki-compare",
+      "title": "llmwiki と外部投稿の差分調査",
+      "summary": "外部投稿の主張と既存 llmwiki の current knowledge を比較し、新情報の有無と実装差分だけ抽出した。",
+      "first_user_message": "現在導入済みのぼくの llmwiki と比較して新情報はある？",
+      "last_assistant_message": "根本的新情報は少ないが、workflow 向けの小さい実装アイデアが数点ある。",
+      "evidence_messages": [
+        "転載記事経由で内容確認。",
+        "既存 llmwiki の構造の方が上位互換寄りと評価。"
+      ],
+      "suggested_status": "Done",
+      "user_message_count": 6,
+      "assistant_message_count": 5,
+      "command_count": 12,
+      "activity_score": 29,
+      "primary_repo": "curiosity-wiki",
+      "active_paths": [
+        "/workspace/curiosity-wiki"
+      ],
+      "source_file": "sample/llmwiki-compare.jsonl",
+      "start_at": "2026-04-24T23:13:57+09:00",
+      "end_at": "2026-04-24T23:22:55+09:00",
+      "recency_label": "3 days ago",
+      "title_en": "Compare External Knowledge Against an Existing LLM Wiki",
+      "summary_en": "The session compares an external article with the current wiki and extracts only new or useful workflow deltas. Most claims are already covered, so the work can be archived as done.",
+      "first_user_message_en": "Compare this with the LLM wiki I already use. Is there any new information?",
+      "last_assistant_message_en": "There is little fundamentally new information, but a few small workflow implementation ideas are worth noting.",
+      "evidence_messages_en": [
+        "The external content was reviewed through a mirrored article.",
+        "The existing wiki structure was judged mostly stronger.",
+        "Only small implementation deltas were retained."
+      ],
+      "current_goal_en": "Evaluate whether external knowledge adds anything useful to the existing wiki.",
+      "deep_summary_en": "This is a completed review task. The output is a concise set of deltas rather than a new project direction.",
+      "latest_meaningful_change_en": "The comparison concluded that only minor workflow notes should be kept.",
+      "blocker_en": "none",
+      "suggested_reason_en": "The comparison has reached a conclusion, so Done is appropriate."
+    }
+  ]
+}

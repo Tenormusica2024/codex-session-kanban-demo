@@ -1,0 +1,11 @@
+dist/
+build/
+deploy_snapshot/
+fixture_snapshot/
+distribution_snapshot/
+distribution_package/
+github_pages/
+local_pack/
+!local_pack/
+local_pack/*
+!local_pack/base.overrides.json

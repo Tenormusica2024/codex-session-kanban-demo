@@ -1,0 +1,81 @@
+name: Codex Session Kanban Demo Pages
+
+on:
+  workflow_dispatch:
+    inputs:
+      deploy_pages:
+        description: "Also deploy to GitHub Pages. Requires Pages support for this repository."
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+  push:
+    branches:
+      - master
+    paths:
+      - "codex_session_review/assets/**"
+      - "codex_session_review/templates/**"
+      - "codex_session_review/sample_data/**"
+      - "codex_session_review/build_review_surface.py"
+      - ".github/workflows/codex-session-kanban-pages.yml"
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: codex-session-kanban-pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build public fixture
+        run: |
+          mkdir -p codex_session_review/github_pages
+          python codex_session_review/build_review_surface.py \
+            --input-json codex_session_review/sample_data/recent_sessions.sample.json \
+            --output codex_session_review/github_pages/index.html \
+            --distribution
+          touch codex_session_review/github_pages/.nojekyll
+          cat > codex_session_review/github_pages/README_LOCAL_DEMO.txt <<'EOF'
+          Codex Session Kanban Demo
+
+          This GitHub Pages build is generated from sample fixture data only.
+          It must not contain real Codex sessions, local user paths, Vercel bypass tokens, or private project data.
+          EOF
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: codex_session_review/github_pages
+
+      - name: Upload downloadable artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: codex-session-kanban-demo
+          path: codex_session_review/github_pages
+
+  deploy:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.deploy_pages == 'true' }}
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
