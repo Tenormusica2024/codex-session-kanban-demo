@@ -4,6 +4,15 @@ All notable public-demo changes are tracked here.
 
 This project is still pre-1.0. Entries focus on public distribution, fixture safety, and the session-to-task review workflow.
 
+## 0.1.7 - 2026-04-29
+
+### Changed
+
+- One-command release checks now run both desktop and mobile local browser smoke by default.
+- Pages smoke mode now verifies both desktop and mobile deployed URLs.
+- Manual GitHub Actions browser smoke now runs both desktop and mobile checks against the built artifact.
+- Release/check documentation now reflects the mobile smoke path.
+
 ## 0.1.6 - 2026-04-29
 
 ### Added

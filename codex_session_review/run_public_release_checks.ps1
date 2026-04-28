@@ -47,6 +47,9 @@ if (-not $SkipBrowserSmoke) {
     Invoke-Step "Browser smoke against local fixture" {
         npm run smoke:browser:local
     }
+    Invoke-Step "Mobile browser smoke against local fixture" {
+        npm run smoke:browser:mobile:local
+    }
 }
 
 if ($PagesSmoke) {
@@ -58,6 +61,9 @@ if ($PagesSmoke) {
     if (-not $SkipBrowserSmoke) {
         Invoke-Step "Browser smoke against Pages URL" {
             npm run smoke:browser -- --url $PagesUrl
+        }
+        Invoke-Step "Mobile browser smoke against Pages URL" {
+            npm run smoke:browser:mobile -- --url $PagesUrl
         }
     }
 }

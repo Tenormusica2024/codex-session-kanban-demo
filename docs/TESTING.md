@@ -16,7 +16,7 @@ Equivalent npm shortcut:
 npm run release:check
 ```
 
-This runs fixture validation, distribution build, static artifact smoke, Python compile checks, and local browser smoke.
+This runs fixture validation, distribution build, static artifact smoke, Python compile checks, and local desktop/mobile browser smoke.
 
 To also verify the deployed GitHub Pages URL:
 
@@ -111,6 +111,8 @@ The normal Pages workflow always runs:
 The heavier browser smoke is optional. Run the workflow manually with:
 
 - `run_browser_smoke=true`
+
+That manual browser smoke runs both desktop and mobile viewport checks.
 
 This keeps push deployments fast while still allowing a reproducible browser check without CiC.
 

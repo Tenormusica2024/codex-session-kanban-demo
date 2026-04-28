@@ -586,6 +586,7 @@ Risk to avoid:
 Status:
 - Initial implementation added mobile browser smoke commands and tightened narrow-screen spacing, wrapping, toolbar actions, and review panels.
 - Public mobile screenshots were added for quick visual review.
+- Follow-up wired mobile smoke into the one-command release check, Pages smoke path, and optional GitHub Actions browser-smoke run.
 
 Goal:
 - Keep the static review surface usable on phone-width screens and catch horizontal-overflow regressions automatically.

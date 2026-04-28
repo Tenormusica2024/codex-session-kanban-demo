@@ -16,7 +16,7 @@ The workflow:
 4. Generates `codex_session_review/github_pages/index.html`.
 5. Copies public `docs/` into the Pages/artifact output so in-app schema links work.
 6. Runs static artifact smoke before upload/deploy.
-7. Optionally runs Playwright browser smoke when manually dispatched with `run_browser_smoke=true`.
+7. Optionally runs Playwright desktop and mobile browser smoke when manually dispatched with `run_browser_smoke=true`.
 8. Uploads a GitHub Pages artifact.
 9. Uploads the same output as a downloadable Actions artifact.
 10. Deploys to GitHub Pages on `master` push when Pages is available. Manual `deploy_pages=true` remains available.
@@ -48,7 +48,7 @@ For a release verification run:
 4. Set `run_browser_smoke=true`.
 5. Set `deploy_pages=true` only if you also want to redeploy Pages from that manual run.
 
-The browser smoke checks that the built artifact can render candidate cards, switch language mode, promote a candidate, show a human lock, expose `session_id`, and display status controls.
+The browser smoke checks that the built artifact can render candidate cards, switch language mode, promote a candidate, show a human lock, expose `session_id`, display status controls, and avoid horizontal overflow in the mobile viewport.
 
 ## Privacy rule
 

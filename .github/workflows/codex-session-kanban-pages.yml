@@ -92,6 +92,10 @@ jobs:
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_browser_smoke == 'true' }}
         run: npm run smoke:browser -- --file codex_session_review/github_pages/index.html
 
+      - name: Mobile browser smoke test public artifact
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_browser_smoke == 'true' }}
+        run: npm run smoke:browser:mobile -- --file codex_session_review/github_pages/index.html
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:

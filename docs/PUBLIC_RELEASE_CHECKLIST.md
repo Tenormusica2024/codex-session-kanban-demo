@@ -41,6 +41,7 @@ python .\codex_session_review\smoke_public_build.py .\codex_session_review\fixtu
 
 ```powershell
 npm run smoke:browser:local
+npm run smoke:browser:mobile:local
 ```
 
 ## Demo quality
