@@ -603,6 +603,20 @@ Why:
 Risk to avoid:
 - Do not optimize mobile by hiding evidence that is required for trustworthy human review.
 
+### 34. Local update helper
+
+Status:
+- Initial implementation added: `codex_session_review/update_local_review.ps1` refreshes the distribution-safe fixture snapshot, validates fixture data, runs static smoke, optionally runs desktop/mobile browser smoke, optionally package-smokes the downloadable zip, and can open the generated local HTML. npm shortcuts expose the common flows.
+
+Goal:
+- Make local refresh and scheduled/manual review easier without requiring the full release pipeline every time.
+
+Why:
+- The project is static/local-first. A small local update command lowers the cost of checking current extraction/UI changes before publishing.
+
+Risk to avoid:
+- Keep this separate from private data collection. The public helper builds fixture data only; personal/private session import recipes should remain explicit and local.
+
 ## P2 / defer unless clearly needed
 
 - Built-in code diff review

@@ -4,6 +4,14 @@ All notable public-demo changes are tracked here.
 
 This project is still pre-1.0. Entries focus on public distribution, fixture safety, and the session-to-task review workflow.
 
+## 0.1.12 - 2026-04-29
+
+### Added
+
+- Local update helper for refreshing the fixture snapshot, running static/browser smoke checks, optionally opening the generated HTML, and optionally package-smoking the downloadable zip.
+- npm shortcuts for local update workflows: `local:update`, `local:update:open`, and `local:update:full`.
+- Local update helper documentation with Task Scheduler command examples.
+
 ## 0.1.11 - 2026-04-29
 
 ### Added

@@ -1,6 +1,6 @@
 {
   "name": "codex-session-kanban-demo",
-  "version": "0.1.11",
+  "version": "0.1.12",
   "description": "Static, privacy-aware Kanban review surface that turns AI coding sessions into deduplicated task candidates.",
   "private": true,
   "type": "module",
@@ -24,6 +24,9 @@
   "scripts": {
     "release:check": "powershell -NoProfile -ExecutionPolicy Bypass -File ./codex_session_review/run_public_release_checks.ps1",
     "release:check:pages": "powershell -NoProfile -ExecutionPolicy Bypass -File ./codex_session_review/run_public_release_checks.ps1 -PagesSmoke",
+    "local:update": "powershell -NoProfile -ExecutionPolicy Bypass -File ./codex_session_review/update_local_review.ps1",
+    "local:update:open": "powershell -NoProfile -ExecutionPolicy Bypass -File ./codex_session_review/update_local_review.ps1 -Open",
+    "local:update:full": "powershell -NoProfile -ExecutionPolicy Bypass -File ./codex_session_review/update_local_review.ps1 -MobileSmoke -Package",
     "package:distribution": "powershell -NoProfile -ExecutionPolicy Bypass -File ./codex_session_review/package_distribution_snapshot.ps1",
     "smoke:package": "python ./codex_session_review/smoke_distribution_package.py ./codex_session_review/distribution_package/codex-session-kanban-demo.zip --distribution",
     "smoke:browser": "node codex_session_review/smoke_browser_surface.mjs",

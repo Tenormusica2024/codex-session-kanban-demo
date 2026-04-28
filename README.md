@@ -84,6 +84,12 @@ https://tenormusica2024.github.io/codex-session-kanban-demo/
 ### Build the fixture locally
 
 ```powershell
+npm run local:update
+```
+
+Or call the builder directly:
+
+```powershell
 powershell -ExecutionPolicy Bypass -File .\codex_session_review\build_fixture_snapshot.ps1 -Distribution
 ```
 
@@ -131,6 +137,7 @@ npm run release:check:pages
 - [Architecture / data flow](./docs/ARCHITECTURE.md)
 - [Import schema](./docs/IMPORT_SCHEMA.md)
 - [Testing guide](./docs/TESTING.md)
+- [Local update helper](./docs/LOCAL_UPDATE_HELPER.md)
 - [Roadmap](./docs/ROADMAP.md)
 - [Public release checklist](./docs/PUBLIC_RELEASE_CHECKLIST.md)
 - [Competitive positioning](./COMPETITIVE_POSITIONING.md)
@@ -171,6 +178,14 @@ Browser operation and visible-text check:
 npm install
 npm run smoke:browser:local
 npm run smoke:browser:mobile:local
+```
+
+Lightweight local refresh helper:
+
+```powershell
+npm run local:update
+npm run local:update:open
+npm run local:update:full
 ```
 
 To verify the public Pages URL:

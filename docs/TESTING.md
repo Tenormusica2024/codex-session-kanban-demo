@@ -140,3 +140,25 @@ Use CiC for:
 - external services that require authentication
 
 Use Playwright smoke for repeatable public URL, local HTML, and text/operation regressions.
+
+## Local update helper
+
+For a lightweight fixture refresh plus smoke checks, run:
+
+```powershell
+npm run local:update
+```
+
+Open the generated snapshot after checks pass:
+
+```powershell
+npm run local:update:open
+```
+
+Run the fuller local update path including mobile smoke and package smoke:
+
+```powershell
+npm run local:update:full
+```
+
+See [Local update helper](./LOCAL_UPDATE_HELPER.md) for direct PowerShell flags and Task Scheduler examples.

@@ -22,6 +22,7 @@ The public fixture demo currently includes:
 - Japanese/English UI mode
 - static artifact smoke and Playwright browser smoke
 - one-command release checks
+- local update helper for fixture refresh, browser smoke, optional package smoke, and manual/Task Scheduler use
 
 ## Near-term focus
 
@@ -72,7 +73,7 @@ These are useful, but should be implemented only if they strengthen the core rev
 - Lightweight token/session stats if they help prioritization
 - More provider import compatibility for Claude Code, Gemini, Cursor, etc.
 - Better fixture examples for topic conflict and cross-session lineage
-- Optional scheduled local build/update helper
+- Optional Task Scheduler recipe refinements for personal/private imports
 - More keyboard-first triage actions
 - Better mobile/narrow-width layout polish
 
