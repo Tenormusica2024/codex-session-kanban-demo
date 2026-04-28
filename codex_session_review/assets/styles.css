@@ -1173,3 +1173,18 @@ button.secondary,
   color: var(--muted);
   line-height: 1.65;
 }
+
+.import-validation-box.review {
+  border: 1px solid rgba(255, 184, 77, 0.24);
+  background: rgba(255, 184, 77, 0.045);
+}
+
+.import-validation-box.ok {
+  border: 1px solid rgba(66, 211, 146, 0.18);
+  background: rgba(66, 211, 146, 0.04);
+}
+
+.import-validation-box ul {
+  margin: 6px 0 10px;
+  padding-left: 18px;
+}

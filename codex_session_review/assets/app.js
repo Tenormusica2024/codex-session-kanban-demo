@@ -81,6 +81,13 @@ const I18N = {
     importSessionData: "session JSONを読み込み",
     resetDemoData: "デモデータに戻す",
     importedSessionData: "session JSONを読み込みました: {count}件",
+    importValidationTitle: "Import validation report",
+    importValidationSummary: "読み込み結果",
+    importWarnings: "警告",
+    importNoWarnings: "警告なし",
+    importMissingFields: "不足フィールド",
+    importPrivacySignals: "private情報らしき信号",
+    importValidationHint: "警告がある場合もローカル表示だけなら続行できます。公開fixtureへ入れる前には必ず修正してください。",
     invalidSessionData: "sessions 配列を含むJSONを指定してください",
     clearOverrides: "手動修正を全消去",
     overridePanelTitle: "手動修正の保存/復元",
@@ -297,6 +304,13 @@ const I18N = {
     importSessionData: "Import session JSON",
     resetDemoData: "Reset demo data",
     importedSessionData: "Imported session JSON: {count} sessions",
+    importValidationTitle: "Import validation report",
+    importValidationSummary: "Import result",
+    importWarnings: "Warnings",
+    importNoWarnings: "No warnings",
+    importMissingFields: "Missing fields",
+    importPrivacySignals: "Possible private-data signals",
+    importValidationHint: "Warnings are acceptable for local-only review, but fix them before publishing fixture data.",
     invalidSessionData: "Choose JSON with a sessions array",
     clearOverrides: "Clear all overrides",
     overridePanelTitle: "Override backup / restore",
@@ -2336,6 +2350,55 @@ async function copyEffectiveSummary() {
   alert(t("copiedEffectiveSummary"));
 }
 
+function validateImportedSessions(sessions) {
+  const required = ["session_id", "title", "summary", "suggested_status", "primary_repo", "start_at", "end_at"];
+  const missing = [];
+  const privacy = [];
+  const privatePattern = /(C:\\Users\\|\\Users\\|\/Users\/|\/home\/|token|api[_-]?key|cookie|bypass|secret|password|credential)/i;
+  sessions.forEach((session, index) => {
+    const label = session.session_id || `#${index + 1}`;
+    const missingFields = required.filter((field) => !session[field]);
+    if (missingFields.length) {
+      missing.push(`${label}: ${missingFields.join(", ")}`);
+    }
+    const searchable = JSON.stringify(session);
+    if (privatePattern.test(searchable)) {
+      privacy.push(label);
+    }
+  });
+  return {
+    sessionCount: sessions.length,
+    missing,
+    privacy: [...new Set(privacy)],
+    ok: missing.length === 0 && privacy.length === 0,
+  };
+}
+
+function renderImportValidationReport(report) {
+  const panel = document.getElementById("detail-panel");
+  if (!panel || !report) return;
+  const warningCount = report.missing.length + report.privacy.length;
+  panel.innerHTML = `
+    <h2>${escapeHtml(t("importValidationTitle"))}</h2>
+    <div class="detail-meta">
+      <span class="tag">${escapeHtml(t("sessions"))}: ${escapeHtml(report.sessionCount)}</span>
+      <span class="tag ${warningCount ? "quality-review" : "quality-ok"}">${escapeHtml(t("importWarnings"))}: ${warningCount}</span>
+    </div>
+    <div class="reason-box import-validation-box ${warningCount ? "review" : "ok"}">
+      <div><strong>${escapeHtml(t("importValidationSummary"))}:</strong> ${escapeHtml(warningCount ? t("importWarnings") : t("importNoWarnings"))}</div>
+      <div>
+        <strong>${escapeHtml(t("importMissingFields"))}</strong>
+        <ul>${report.missing.map((item) => `<li>${escapeHtml(item)}</li>`).join("") || `<li>${escapeHtml(t("importNoWarnings"))}</li>`}</ul>
+      </div>
+      <div>
+        <strong>${escapeHtml(t("importPrivacySignals"))}</strong>
+        <ul>${report.privacy.map((item) => `<li>${escapeHtml(item)}</li>`).join("") || `<li>${escapeHtml(t("importNoWarnings"))}</li>`}</ul>
+      </div>
+      <p class="small">${escapeHtml(t("importValidationHint"))}</p>
+    </div>
+  `;
+}
+
 function normalizeImportedBoardData(raw) {
   const sessions = Array.isArray(raw) ? raw : raw?.sessions;
   if (!Array.isArray(sessions)) {
@@ -2461,7 +2524,9 @@ function importSessionData(file) {
   reader.onload = () => {
     try {
       const imported = normalizeImportedBoardData(JSON.parse(reader.result));
+      const report = validateImportedSessions(imported.sessions);
       applyBoardData(imported);
+      renderImportValidationReport(report);
       alert(t("importedSessionData", { count: imported.sessions.length }));
     } catch (error) {
       alert(t("invalidJson", { message: error.message }));

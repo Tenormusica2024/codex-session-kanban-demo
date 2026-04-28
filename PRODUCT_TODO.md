@@ -315,7 +315,7 @@ Risk to avoid:
 ### 14. Local session JSON import
 
 Status:
-- Initial implementation added: the static UI can import a local sessions JSON file, derive minimal task clusters/candidates when they are missing, and reset back to the embedded demo fixture. Overrides remain localStorage-based and separate from imported session data.
+- Extended implementation added: the static UI can import a local sessions JSON file, derive minimal task clusters/candidates when they are missing, show an import validation report for missing required fields and possible private-data signals, and reset back to the embedded demo fixture. Overrides remain localStorage-based and separate from imported session data.
 
 Goal:
 - Let users try their own sanitized/exported session data without rebuilding the HTML.
