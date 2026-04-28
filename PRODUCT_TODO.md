@@ -522,6 +522,20 @@ Why:
 Risk to avoid:
 - Keep the pitch accurate: this is a static fixture demo and local/private review tool, not a hosted task-management service.
 
+### 29. README badges and release link
+
+Status:
+- Initial implementation added README badges for GitHub Pages, latest release, MIT license, and static/privacy-aware positioning, plus a direct release section linking to v0.1.0 and the changelog.
+
+Goal:
+- Make the public repo landing page look complete and help users immediately find the demo, release, license, and architecture stance.
+
+Why:
+- After creating the first public release, the README should expose that release and the demo without requiring users to search GitHub UI.
+
+Risk to avoid:
+- Keep badges informational only; do not imply hosted cloud service functionality.
+
 ## P2 / defer unless clearly needed
 
 - Built-in code diff review

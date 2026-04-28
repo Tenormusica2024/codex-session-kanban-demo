@@ -1,5 +1,10 @@
 # Codex Session Kanban Demo
 
+[![GitHub Pages](https://img.shields.io/badge/demo-GitHub%20Pages-2ea44f)](https://tenormusica2024.github.io/codex-session-kanban-demo/)
+[![Release](https://img.shields.io/github/v/release/Tenormusica2024/codex-session-kanban-demo?include_prereleases&sort=semver)](https://github.com/Tenormusica2024/codex-session-kanban-demo/releases)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+[![Static first](https://img.shields.io/badge/static--first-privacy--aware-64d2ff)](./docs/ARCHITECTURE.md)
+
 Public fixture demo for **Codex Session Kanban**.
 
 Codex Session Kanban is a static, privacy-aware review surface that turns long AI coding sessions into **deduplicated task candidates**.
@@ -33,6 +38,11 @@ This is useful if you:
 ## License
 
 MIT. See [LICENSE](./LICENSE).
+
+## Release
+
+- Latest release: [v0.1.0 - Public fixture demo](https://github.com/Tenormusica2024/codex-session-kanban-demo/releases/tag/v0.1.0)
+- Changelog: [CHANGELOG.md](./CHANGELOG.md)
 
 ## Contributing / security
 
