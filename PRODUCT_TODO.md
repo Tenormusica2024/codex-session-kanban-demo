@@ -283,6 +283,21 @@ Why:
 Risk to avoid:
 - Do not add agent execution/orchestration scope yet.
 
+### 12. Public onboarding and import docs
+
+Status:
+- Initial implementation added: README now links a demo usage guide and import schema. The Pages workflow is also configured to deploy on push for public repositories using GitHub Actions Pages.
+
+Goal:
+- Help new users understand that this is a session-to-task extraction review surface, not a generic Kanban.
+- Provide a safe fixture/import shape for public distribution and future provider adapters.
+
+Why:
+- Public distribution needs clear docs before broader packaging.
+
+Risk to avoid:
+- Do not encourage publishing real `.codex` logs or private paths.
+
 ## P2 / defer unless clearly needed
 
 - Built-in code diff review
