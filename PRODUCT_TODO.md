@@ -537,6 +537,20 @@ Why:
 Risk to avoid:
 - Keep badges informational only; do not imply hosted cloud service functionality.
 
+### 30. Package version alignment
+
+Status:
+- Initial implementation aligned `package.json` / `package-lock.json` with the public release stream and added `CHANGELOG.md` notes for v0.1.2.
+
+Goal:
+- Avoid confusing users who inspect npm metadata after the GitHub release has advanced.
+
+Why:
+- Even though this is a private/non-published package, the version is visible in the public repo and should not lag behind the release notes.
+
+Risk to avoid:
+- Do not imply npm package publishing; package metadata is for local tooling and repo clarity.
+
 ## P2 / defer unless clearly needed
 
 - Built-in code diff review
