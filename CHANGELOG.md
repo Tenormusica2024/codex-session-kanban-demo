@@ -4,6 +4,18 @@ All notable public-demo changes are tracked here.
 
 This project is still pre-1.0. Entries focus on public distribution, fixture safety, and the session-to-task review workflow.
 
+## 0.1.6 - 2026-04-29
+
+### Added
+
+- Mobile/narrow-viewport browser smoke mode for local fixture and deployed Pages checks.
+- Mobile overview/detail screenshots for public visual regression review.
+
+### Changed
+
+- Tightened small-screen spacing, card wrapping, toolbar actions, and single-column review panels to avoid horizontal overflow.
+- Testing guide now documents the mobile smoke commands.
+
 ## 0.1.5 - 2026-04-29
 
 ### Added

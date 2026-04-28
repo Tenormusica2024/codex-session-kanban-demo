@@ -31,6 +31,10 @@ function argValue(name) {
   return process.argv[index + 1] || null;
 }
 
+function hasFlag(name) {
+  return process.argv.includes(name);
+}
+
 function buildTargetUrl() {
   const explicitUrl = argValue("--url");
   if (explicitUrl) return explicitUrl;
@@ -52,8 +56,10 @@ function visibleTextHasJapanese(text) {
 
 async function main() {
   const targetUrl = buildTargetUrl();
+  const mobile = hasFlag("--mobile");
+  const viewport = mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 };
   const browser = await chromium.launch({ headless: true });
-  const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
+  const page = await browser.newPage({ viewport, isMobile: mobile });
   const errors = [];
 
   page.on("pageerror", (error) => errors.push(`pageerror: ${error.message}`));
@@ -75,12 +81,18 @@ async function main() {
     stats: [...document.querySelectorAll(".stat-card .value")].map((node) => node.textContent.trim()),
     hasCandidateList: Boolean(document.querySelector("#candidate-list")),
     hasDetailPanel: Boolean(document.querySelector("#detail-panel")),
+    viewport: { width: window.innerWidth, height: window.innerHeight },
+    scrollWidth: document.documentElement.scrollWidth,
+    hasHorizontalOverflow: document.documentElement.scrollWidth > window.innerWidth + 2,
   }));
 
   if (!initial.hasCandidateList) errors.push("candidate-list is missing");
   if (!initial.hasDetailPanel) errors.push("detail-panel is missing");
   if (initial.candidateCards <= 0) errors.push("candidate cards are not visible");
   if (initial.columns.length < 5) errors.push(`too few kanban columns: ${initial.columns.join(", ")}`);
+  if (initial.hasHorizontalOverflow) {
+    errors.push(`horizontal overflow before interaction: viewport=${initial.viewport.width}, scrollWidth=${initial.scrollWidth}`);
+  }
 
   await page.getByRole("button", { name: "EN" }).click();
   await page.waitForTimeout(100);
@@ -120,6 +132,8 @@ async function main() {
     statusControls: document.querySelectorAll("#quick-status, #detail-status, .card-status-select, #manual-status").length,
     visibleTextLength: document.body.innerText.length,
     visibleTextHasJapanese: /[ぁ-んァ-ン一-龥]/.test(document.body.innerText),
+    scrollWidth: document.documentElement.scrollWidth,
+    hasHorizontalOverflow: document.documentElement.scrollWidth > window.innerWidth + 2,
   }));
 
   if (promoted.sessionCards <= 0) errors.push("candidate promotion did not create a session card");
@@ -127,6 +141,9 @@ async function main() {
   if (!promoted.detailHasSessionId) errors.push("detail panel does not expose session_id");
   if (promoted.statusControls <= 0) errors.push("status controls are missing after promotion");
   if (promoted.visibleTextLength <= 200) errors.push("visible text is unexpectedly short");
+  if (promoted.hasHorizontalOverflow) {
+    errors.push(`horizontal overflow after interaction: viewport=${viewport.width}, scrollWidth=${promoted.scrollWidth}`);
+  }
 
   await browser.close();
 

@@ -78,11 +78,19 @@ Run against a local fixture build:
 npm run smoke:browser:local
 ```
 
+Run the same checks in a narrow mobile viewport:
+
+```powershell
+npm run smoke:browser:mobile
+npm run smoke:browser:mobile:local
+```
+
 The browser smoke test checks:
 
 - the page loads without JavaScript errors
 - candidate cards are visible
 - Kanban columns are rendered
+- the viewport has no horizontal overflow, including in mobile mode
 - the detail panel exists
 - English mode translates common static UI labels
 - a candidate can be promoted into the board

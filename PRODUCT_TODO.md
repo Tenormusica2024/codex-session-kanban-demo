@@ -581,6 +581,21 @@ Why:
 Risk to avoid:
 - Keep the template lightweight; it should guide safe contributions, not become process-heavy.
 
+### 33. Mobile/narrow viewport review safety
+
+Status:
+- Initial implementation added mobile browser smoke commands and tightened narrow-screen spacing, wrapping, toolbar actions, and review panels.
+- Public mobile screenshots were added for quick visual review.
+
+Goal:
+- Keep the static review surface usable on phone-width screens and catch horizontal-overflow regressions automatically.
+
+Why:
+- The workflow is often checked away from the main development terminal. Mobile should be good enough for review, status movement, and detail inspection.
+
+Risk to avoid:
+- Do not optimize mobile by hiding evidence that is required for trustworthy human review.
+
 ## P2 / defer unless clearly needed
 
 - Built-in code diff review

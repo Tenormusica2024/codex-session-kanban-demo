@@ -1052,6 +1052,102 @@ button.secondary,
   }
 }
 
+@media (max-width: 640px) {
+  .page-shell {
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .hero,
+  .detail-panel,
+  .toolbar,
+  .export-panel {
+    border-radius: 18px;
+    padding: 16px;
+  }
+
+  .hero h1 {
+    font-size: 1.42rem;
+    line-height: 1.2;
+  }
+
+  .hero p {
+    font-size: 0.92rem;
+  }
+
+  .hero-actions,
+  .toolbar-actions,
+  .candidate-actions,
+  .detail-actions,
+  .manual-actions {
+    gap: 8px;
+  }
+
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .stat-card,
+  .candidate-card,
+  .session-card,
+  .cluster-chip,
+  .evidence-category-card,
+  .timeline-item,
+  .suppressed-session {
+    min-width: 0;
+  }
+
+  .candidate-list,
+  .candidate-review-grid,
+  .evidence-category-grid,
+  .extraction-debug-grid,
+  .suppressed-session-list {
+    grid-template-columns: 1fr;
+  }
+
+  .toolbar-group,
+  .toolbar-actions {
+    width: 100%;
+  }
+
+  .toolbar label {
+    flex: 1 1 150px;
+    min-width: 0;
+  }
+
+  button,
+  .file-button {
+    white-space: normal;
+  }
+
+  .candidate-actions button,
+  .toolbar-actions button,
+  .toolbar-actions .file-button {
+    flex: 1 1 130px;
+  }
+
+  .session-card {
+    padding: 12px;
+  }
+
+  .session-card .card-tags {
+    padding-right: 54px;
+  }
+
+  .card-top-actions {
+    opacity: 1;
+  }
+
+  .kanban-column {
+    padding: 14px;
+  }
+
+  .detail-section {
+    padding: 12px;
+  }
+}
+
 .evidence-category-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));

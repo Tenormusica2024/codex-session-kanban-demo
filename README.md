@@ -115,6 +115,14 @@ npm run release:check:pages
 
 ![Card detail](./docs/assets/card-detail.png)
 
+### Mobile review surface
+
+![Mobile overview](./docs/assets/mobile-overview.png)
+
+### Mobile detail controls
+
+![Mobile detail](./docs/assets/mobile-detail.png)
+
 ## Docs
 
 - [Demo usage guide](./docs/DEMO_USAGE.md)
@@ -154,12 +162,14 @@ Browser operation and visible-text check:
 ```powershell
 npm install
 npm run smoke:browser:local
+npm run smoke:browser:mobile:local
 ```
 
 To verify the public Pages URL:
 
 ```powershell
 npm run smoke:browser
+npm run smoke:browser:mobile
 ```
 
 For the full release check including the deployed Pages URL:
