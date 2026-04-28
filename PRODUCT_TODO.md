@@ -354,6 +354,20 @@ Why:
 Risk to avoid:
 - Do not treat the checklist as a replacement for `--distribution` validation; use both.
 
+### 17. README screenshots
+
+Status:
+- Initial implementation added: README now includes generated screenshots for board overview and card detail/extraction evidence. Screenshots live under `docs/assets/` and should be regenerated after major UI changes.
+
+Goal:
+- Make the public demo value understandable visually without requiring the reader to run it first.
+
+Why:
+- The product wedge is easier to understand when lineage, evidence, and review UI are visible.
+
+Risk to avoid:
+- Keep screenshots generated from public fixture data only.
+
 ## P2 / defer unless clearly needed
 
 - Built-in code diff review

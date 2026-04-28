@@ -24,6 +24,16 @@ This repository is fixture-only:
 - **Inspectable extraction**: detail panels expose evidence categories, extraction timeline, suppressed predecessor sessions, and extraction debug hints.
 - **Static/private-safe distribution**: public demos use fixture data only; real `.codex` logs stay local/private.
 
+## Screenshots
+
+### Board overview
+
+![Board overview](./docs/assets/board-overview.png)
+
+### Card detail with extraction evidence
+
+![Card detail](./docs/assets/card-detail.png)
+
 ## Docs
 
 - [Demo usage guide](./docs/DEMO_USAGE.md)

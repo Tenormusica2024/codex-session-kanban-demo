@@ -44,5 +44,6 @@ powershell -ExecutionPolicy Bypass -File .\codex_session_review\open_distributio
 ## Positioning
 
 - [ ] README explains that this is a session-to-task extraction review surface, not a generic Kanban.
+- [ ] README screenshots are regenerated after major UI changes.
 - [ ] README links to usage guide, import schema, competitive positioning, and TODO/adoption policy.
 - [ ] Demo fixture shows the product wedge without real personal task data.
