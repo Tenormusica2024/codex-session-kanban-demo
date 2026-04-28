@@ -298,6 +298,20 @@ Why:
 Risk to avoid:
 - Do not encourage publishing real `.codex` logs or private paths.
 
+### 13. Public demo fixture coverage
+
+Status:
+- Initial implementation added: sample fixture now includes six sessions covering static review surface lineage, suppressed predecessor handling, topic-shift decomposition, needs-input/blocker deployment, completed knowledge review, and external sink rescoping.
+
+Goal:
+- Make the public demo demonstrate the product wedge without private data.
+
+Why:
+- A stronger fixture makes intent-first extraction, lineage, blocker handling, and candidate promotion understandable to first-time users.
+
+Risk to avoid:
+- Keep sample data synthetic and fixture-only; never use personal `.codex` logs in the public demo.
+
 ## P2 / defer unless clearly needed
 
 - Built-in code diff review

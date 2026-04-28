@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-27T15:40:00+09:00",
+  "generated_at": "2026-04-28T23:50:00+09:00",
   "source": "sample-fixture-public",
   "sessions": [
     {
@@ -42,7 +42,13 @@
       "suggested_reason_en": "The external board cannot be provisioned yet, so this card belongs in Blocked only for the sink path.",
       "provider": "codex",
       "provider_session_type": "codex-cli-session",
-      "provider_source": "sample-fixture"
+      "provider_source": "sample-fixture",
+      "task_cluster_key": "codex-kanban:external-sink-rescope",
+      "task_cluster_label": "External Kanban sink rescope",
+      "topic_key": "codex-kanban:external-sink-rescope",
+      "topic_label": "External Kanban sink rescope",
+      "lineage_key": "codex-kanban:external-sink-rescope",
+      "lineage_label": "External Kanban sink rescope"
     },
     {
       "session_id": "sample-html-surface",
@@ -83,7 +89,13 @@
       "suggested_reason_en": "Implementation is active and not yet complete, so In Progress is the safest status.",
       "provider": "codex",
       "provider_session_type": "codex-cli-session",
-      "provider_source": "sample-fixture"
+      "provider_source": "sample-fixture",
+      "task_cluster_key": "codex-kanban:static-review-surface",
+      "task_cluster_label": "Static review surface",
+      "topic_key": "codex-kanban:static-review-surface",
+      "topic_label": "Static review surface",
+      "lineage_key": "codex-kanban:static-review-surface",
+      "lineage_label": "Static review surface"
     },
     {
       "session_id": "sample-llmwiki-compare",
@@ -124,7 +136,160 @@
       "suggested_reason_en": "The comparison has reached a conclusion, so Done is appropriate.",
       "provider": "codex",
       "provider_session_type": "codex-cli-session",
-      "provider_source": "sample-fixture"
+      "provider_source": "sample-fixture",
+      "task_cluster_key": "knowledge-ops:llmwiki-delta-review",
+      "task_cluster_label": "LLMWIKI delta review",
+      "topic_key": "knowledge-ops:llmwiki-delta-review",
+      "topic_label": "LLMWIKI delta review",
+      "lineage_key": "knowledge-ops:llmwiki-delta-review",
+      "lineage_label": "LLMWIKI delta review"
+    },
+    {
+      "session_id": "sample-static-surface-predecessor",
+      "title": "進捗確認ではなく静的レビュー面の土台整理",
+      "summary": "最初は進捗確認から入ったが、実際の作業はCodexセッションを静的HTMLで確認できるレビュー面の土台整理だった。後続セッションでmanual override実装へ進んだため、このセッションは代表カードに統合される。",
+      "first_user_message": "今の進捗を確認して、まず何から作るべきか整理して。",
+      "last_assistant_message": "最初に作るべきものは外部Kanban連携ではなく、ローカルで見られる静的レビュー面です。",
+      "evidence_messages": [
+        "進捗確認は前置きで、実タスクはreview surfaceの最小構成を決めること。",
+        "外部Kanban連携よりsource-sideの確認UIを先にする。",
+        "後続セッションでHTML + localStorage実装に進んだ。"
+      ],
+      "suggested_status": "In Progress",
+      "user_message_count": 4,
+      "assistant_message_count": 4,
+      "command_count": 3,
+      "activity_score": 22,
+      "primary_repo": "codex-session-kanban-demo",
+      "active_paths": [
+        "/workspace/codex-session-kanban-demo"
+      ],
+      "source_file": "sample/static-surface-predecessor.jsonl",
+      "start_at": "2026-04-27T12:00:00+09:00",
+      "end_at": "2026-04-27T12:40:00+09:00",
+      "recency_label": "today",
+      "title_en": "Define the Static Review Surface Foundation",
+      "summary_en": "The session starts as a progress check, but the actual task is defining the minimal static review surface. It is later represented by the implementation card.",
+      "first_user_message_en": "Check the progress and decide what should be built first.",
+      "last_assistant_message_en": "The first build target should be the source-side static review surface, not the external Kanban integration.",
+      "evidence_messages_en": [
+        "The progress check is only a preflight phrase; the task is deciding the review surface foundation.",
+        "Source-side review should precede external Kanban integration.",
+        "A later session continues into HTML plus localStorage implementation."
+      ],
+      "current_goal_en": "Define the first source-side review surface before implementing external integrations.",
+      "deep_summary_en": "This predecessor session establishes the static-review-surface direction and is superseded by the later implementation session.",
+      "latest_meaningful_change_en": "Direction changed from checking status to building the local review surface first.",
+      "blocker_en": "none",
+      "suggested_reason_en": "The task continues in a newer session, so it should be represented by that newer card.",
+      "provider": "codex",
+      "provider_session_type": "codex-cli-session",
+      "provider_source": "sample-fixture",
+      "task_cluster_key": "codex-kanban:static-review-surface",
+      "task_cluster_label": "Static review surface",
+      "topic_key": "codex-kanban:static-review-surface",
+      "topic_label": "Static review surface",
+      "lineage_key": "codex-kanban:static-review-surface",
+      "lineage_label": "Static review surface",
+      "task_shift_signal": true
+    },
+    {
+      "session_id": "sample-topic-shift-image-to-lp",
+      "title": "Project DOF teaser LP creative direction",
+      "summary": "The session begins with image-generation route checks, then shifts to the actual task: deciding how the generated visual assets should support the Project DOF teaser LP. The setup topic is downweighted and the LP creative direction remains the card intent.",
+      "first_user_message": "Check whether the image generation route works, then use it for the teaser LP if it is viable.",
+      "last_assistant_message": "The useful outcome is the LP creative direction and which generated assets should be reused, not the browser route itself.",
+      "evidence_messages": [
+        "Image route verification is a setup topic.",
+        "The main task is choosing creative direction for the teaser LP.",
+        "The next action is to pick assets and update the LP section."
+      ],
+      "suggested_status": "Need Review",
+      "user_message_count": 7,
+      "assistant_message_count": 7,
+      "command_count": 6,
+      "activity_score": 38,
+      "primary_repo": "project-dof",
+      "active_paths": [
+        "/workspace/project-dof"
+      ],
+      "source_file": "sample/topic-shift-image-to-lp.jsonl",
+      "start_at": "2026-04-28T09:00:00+09:00",
+      "end_at": "2026-04-28T10:10:00+09:00",
+      "recency_label": "today",
+      "title_en": "Project DOF Teaser LP Creative Direction",
+      "summary_en": "The session starts with an image-generation route check, but the main task is deciding how visual assets support the teaser LP.",
+      "first_user_message_en": "Check whether the image generation route works, then use it for the teaser LP if viable.",
+      "last_assistant_message_en": "The useful outcome is LP creative direction, not the browser route itself.",
+      "evidence_messages_en": [
+        "Image route verification is a setup topic.",
+        "The main task is choosing creative direction for the teaser LP.",
+        "Next action is to pick assets and update the LP section."
+      ],
+      "current_goal_en": "Convert image-generation experiments into a concrete teaser LP creative direction.",
+      "deep_summary_en": "This fixture demonstrates topic conflict decomposition: setup verification is not the card title; the actual LP task is.",
+      "latest_meaningful_change_en": "Focus shifted from route validation to LP asset selection.",
+      "blocker_en": "none",
+      "suggested_reason_en": "The output needs human review before the LP direction is fixed.",
+      "provider": "codex",
+      "provider_session_type": "codex-cli-session",
+      "provider_source": "sample-fixture",
+      "task_cluster_key": "project-dof:teaser-lp-creative",
+      "task_cluster_label": "Teaser LP creative direction",
+      "topic_key": "project-dof:teaser-lp-creative",
+      "topic_label": "Teaser LP creative direction",
+      "lineage_key": "project-dof:teaser-lp-creative",
+      "lineage_label": "Teaser LP creative direction",
+      "task_shift_signal": true
+    },
+    {
+      "session_id": "sample-needs-input-deploy",
+      "title": "Public demo deployment permission check",
+      "summary": "The session prepares GitHub Pages deployment for the public fixture demo, but final publication depends on repository Pages settings and permission confirmation. The task needs user/environment input rather than more local implementation.",
+      "first_user_message": "Deploy the public demo if possible; if permissions block it, make the next action clear.",
+      "last_assistant_message": "The build is ready, but Pages settings or repository permissions may require user-side confirmation.",
+      "evidence_messages": [
+        "Distribution build must use fixture data only.",
+        "GitHub Pages settings may require user-side confirmation.",
+        "The next action is to verify Pages source and rerun the workflow."
+      ],
+      "suggested_status": "Blocked",
+      "user_message_count": 3,
+      "assistant_message_count": 4,
+      "command_count": 9,
+      "activity_score": 33,
+      "primary_repo": "codex-session-kanban-demo",
+      "active_paths": [
+        "/workspace/codex-session-kanban-demo"
+      ],
+      "source_file": "sample/needs-input-deploy.jsonl",
+      "start_at": "2026-04-28T11:00:00+09:00",
+      "end_at": "2026-04-28T11:40:00+09:00",
+      "recency_label": "today",
+      "title_en": "Public Demo Deployment Permission Check",
+      "summary_en": "The fixture build is ready, but deployment depends on GitHub Pages settings or repository permission confirmation.",
+      "first_user_message_en": "Deploy the public demo if possible; if permissions block it, make the next action clear.",
+      "last_assistant_message_en": "The build is ready, but Pages settings or repository permissions may require user-side confirmation.",
+      "evidence_messages_en": [
+        "Distribution build must use fixture data only.",
+        "GitHub Pages settings may require user-side confirmation.",
+        "Next action is to verify Pages source and rerun the workflow."
+      ],
+      "current_goal_en": "Publish the public fixture demo safely.",
+      "deep_summary_en": "This fixture demonstrates needs-input/blocker handling: local work is done, but an external setting may block deployment.",
+      "latest_meaningful_change_en": "Local build completed; deployment permission is now the gating item.",
+      "blocker_en": "GitHub Pages settings or repository permission confirmation required.",
+      "suggested_reason_en": "External permission/settings block publication, so Blocked is appropriate.",
+      "provider": "codex",
+      "provider_session_type": "codex-cli-session",
+      "provider_source": "sample-fixture",
+      "task_cluster_key": "codex-kanban:public-demo-deploy",
+      "task_cluster_label": "Public demo deployment",
+      "topic_key": "codex-kanban:public-demo-deploy",
+      "topic_label": "Public demo deployment",
+      "lineage_key": "codex-kanban:public-demo-deploy",
+      "lineage_label": "Public demo deployment",
+      "pendingish_signal": true
     }
   ],
   "schema_version": "0.2.0",
