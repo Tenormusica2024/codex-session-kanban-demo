@@ -137,7 +137,7 @@ Risk to avoid:
 ### 6. Stale predecessor / successor display
 
 Status:
-- Initial implementation added: representative cards with multiple related sessions now show a lineage badge and detail-panel lineage note. This is conservative: it exposes merged/represented sessions from existing cluster data without inventing hidden successor links.
+- Strengthened implementation added: representative cards with multiple related sessions now show a lineage badge, detail-panel lineage note, suppressed predecessor sessions, and the reason why the current card is the representative. This exposes merged/represented sessions from existing cluster data without inventing hidden successor links.
 
 Goal:
 - Show when a task candidate includes or supersedes older sessions.

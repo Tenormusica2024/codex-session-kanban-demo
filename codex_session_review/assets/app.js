@@ -140,6 +140,10 @@ const I18N = {
     lineage: "前後関係",
     noLineage: "このカードでは代表セッションのみを表示中",
     sourceSessions: "元セッション",
+    suppressedSessions: "非表示にした前後セッション",
+    suppressedReason: "このカードが同じ前後関係の代表として表示されているため、古いセッションは active board から抑制されています。",
+    representativeReason: "代表理由",
+    openSuppressed: "このセッションを見る",
     supersedes: "{count}件を代表表示中",
     mergedHint: "古い関連セッションはこのカードに集約",
     confidence: "確信度",
@@ -334,6 +338,10 @@ const I18N = {
     lineage: "Lineage",
     noLineage: "Only the representative session is shown for this card",
     sourceSessions: "Source sessions",
+    suppressedSessions: "Suppressed predecessor sessions",
+    suppressedReason: "Older sessions are suppressed from the active board because this card represents the same task lineage.",
+    representativeReason: "Representative reason",
+    openSuppressed: "Open this session",
     supersedes: "Represents {count} sessions",
     mergedHint: "Older related sessions are merged into this card",
     confidence: "confidence",
@@ -753,6 +761,19 @@ function relatedTaskMap(session, displaySessions) {
     .filter((item) => (item.task_cluster_family || item.task_cluster_label) !== family)
     .slice(0, 5);
   return { sameLineage, sameRepoOtherTasks };
+}
+
+function buildSuppressedLineage(session, mergedSessions) {
+  const ids = new Set(session.related_session_ids || []);
+  const family = session.task_cluster_family || session.task_cluster_label;
+  const rows = mergedSessions
+    .filter((item) => item.session_id !== session.session_id)
+    .filter((item) => ids.has(item.session_id) || ((item.task_cluster_family || item.task_cluster_label) === family && family))
+    .sort((a, b) => new Date(b.end_at || b.start_at || 0) - new Date(a.end_at || a.start_at || 0));
+  const representativeReason = session.overrideLock
+    ? (state.lang === "ja" ? "human lock 済みのセッションを代表にしています。" : "A human-locked session is used as the representative.")
+    : (state.lang === "ja" ? "同じ前後関係の中で、より新しい/優先度の高いセッションを代表にしています。" : "The newest or highest-priority session in the same lineage is used as the representative.");
+  return { rows, representativeReason };
 }
 
 function localizeAutonomyMode(value) {
@@ -1640,6 +1661,7 @@ function renderDetail() {
   const rationale = buildCardRationale(session, relatedSessions);
   const detailLineage = lineageInfo(session, relatedSessions);
   const taskMap = relatedTaskMap(session, displaySessions);
+  const suppressedLineage = buildSuppressedLineage(session, merged);
   const quality = auditExtractionQuality(session);
   const evidenceCategories = buildEvidenceCategories(session);
 
@@ -1803,6 +1825,28 @@ function renderDetail() {
               .join("")}</div>`
           : `<p>${escapeHtml(t("representativeOnly"))}</p>`
       }
+    </div>
+
+    <div class="detail-section">
+      <h3>${escapeHtml(t("suppressedSessions"))}</h3>
+      <div class="reason-box suppressed-box">
+        <div><strong>${escapeHtml(t("representativeReason"))}:</strong> ${escapeHtml(suppressedLineage.representativeReason)}</div>
+        <p class="small">${escapeHtml(t("suppressedReason"))}</p>
+        ${
+          suppressedLineage.rows.length
+            ? `<div class="suppressed-session-list">${suppressedLineage.rows
+                .slice(0, 8)
+                .map(
+                  (item) => `
+                    <button class="suppressed-session" data-related-id="${escapeHtml(item.session_id)}">
+                      <span>${escapeHtml(displayTaskTitle(item))}</span>
+                      <small>${escapeHtml(formatTimelineDate(item.end_at || item.start_at))} / sid ${escapeHtml(shortSessionId(item.session_id))} / ${escapeHtml(statusLabel(item.currentStatus || item.suggested_status))}</small>
+                    </button>`
+                )
+                .join("")}</div>`
+            : `<p>${escapeHtml(t("representativeOnly"))}</p>`
+        }
+      </div>
     </div>
 
     <div class="detail-section">
