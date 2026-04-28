@@ -78,6 +78,10 @@ const I18N = {
     copyEffectiveSummary: "反映済み要約をコピー",
     copyReviewSummary: "レビュー要約をコピー",
     importOverrides: "手動修正を読み込み",
+    importSessionData: "session JSONを読み込み",
+    resetDemoData: "デモデータに戻す",
+    importedSessionData: "session JSONを読み込みました: {count}件",
+    invalidSessionData: "sessions 配列を含むJSONを指定してください",
     clearOverrides: "手動修正を全消去",
     overridePanelTitle: "手動修正の保存/復元",
     overridePanelBody:
@@ -290,6 +294,10 @@ const I18N = {
     copyEffectiveSummary: "Copy effective summary",
     copyReviewSummary: "Copy review summary",
     importOverrides: "Import overrides",
+    importSessionData: "Import session JSON",
+    resetDemoData: "Reset demo data",
+    importedSessionData: "Imported session JSON: {count} sessions",
+    invalidSessionData: "Choose JSON with a sessions array",
     clearOverrides: "Clear all overrides",
     overridePanelTitle: "Override backup / restore",
     overridePanelBody:
@@ -440,6 +448,7 @@ const I18N = {
 
 const state = {
   boardData: null,
+  originalBoardData: null,
   sessions: [],
   overrides: {},
   search: "",
@@ -2327,6 +2336,140 @@ async function copyEffectiveSummary() {
   alert(t("copiedEffectiveSummary"));
 }
 
+function normalizeImportedBoardData(raw) {
+  const sessions = Array.isArray(raw) ? raw : raw?.sessions;
+  if (!Array.isArray(sessions)) {
+    throw new Error(t("invalidSessionData"));
+  }
+  const board = {
+    ...(Array.isArray(raw) ? {} : raw),
+    generated_at: raw?.generated_at || new Date().toISOString(),
+    source: raw?.source || "local-import",
+    surface_mode: raw?.surface_mode || "personal",
+    sessions: sessions.map((item, index) => ({
+      session_id: item.session_id || `imported-${index + 1}`,
+      title: item.title || item.title_ja || item.title_en || `Imported session ${index + 1}`,
+      summary: item.summary || item.summary_ja || item.summary_en || "",
+      suggested_status: item.suggested_status || item.currentStatus || "Need Review",
+      primary_repo: item.primary_repo || item.repo || "unknown",
+      start_at: item.start_at || item.created_at || item.end_at || new Date().toISOString(),
+      end_at: item.end_at || item.updated_at || item.start_at || new Date().toISOString(),
+      evidence_messages: Array.isArray(item.evidence_messages) ? item.evidence_messages : [],
+      ...item,
+    })),
+  };
+  if (!Array.isArray(board.task_clusters)) {
+    board.task_clusters = deriveClientTaskClusters(board.sessions);
+  }
+  if (!Array.isArray(board.suggested_tasks)) {
+    board.suggested_tasks = deriveClientSuggestedTasks(board.task_clusters);
+  }
+  return board;
+}
+
+function deriveClientTaskClusters(sessions) {
+  const groups = new Map();
+  for (const session of sessions) {
+    const label = session.topic_label || session.task_cluster_family || session.task_cluster_label || session.primary_repo || "Imported sessions";
+    const key = session.topic_key || session.lineage_key || session.task_cluster_key || label;
+    const row = groups.get(key) || {
+      cluster_key: key,
+      cluster_label: label,
+      primary_repos: [],
+      session_ids: [],
+      status_counts: {},
+      representative_titles: [],
+      max_confidence: 0,
+      latest_end_at: null,
+      latest_status: null,
+      latest_title: null,
+      latest_blocker: null,
+      latest_meaningful_change: null,
+    };
+    row.session_ids.push(session.session_id);
+    if (session.primary_repo && !row.primary_repos.includes(session.primary_repo)) row.primary_repos.push(session.primary_repo);
+    if (session.title && !row.representative_titles.includes(session.title) && row.representative_titles.length < 3) row.representative_titles.push(session.title);
+    const status = session.suggested_status || "Need Review";
+    row.status_counts[status] = (row.status_counts[status] || 0) + 1;
+    row.max_confidence = Math.max(row.max_confidence, Number(session.suggested_confidence || 0));
+    const endAt = session.end_at || session.start_at;
+    if (endAt && (!row.latest_end_at || new Date(endAt) > new Date(row.latest_end_at))) {
+      row.latest_end_at = endAt;
+      row.latest_status = status;
+      row.latest_title = session.title;
+      row.latest_blocker = session.blocker || session.blocker_en || null;
+      row.latest_meaningful_change = session.latest_meaningful_change || session.latest_meaningful_change_en || session.summary || "";
+    }
+    groups.set(key, row);
+  }
+  return [...groups.values()].map((row) => {
+    const statusEntries = Object.entries(row.status_counts).sort((a, b) => b[1] - a[1]);
+    return {
+      ...row,
+      session_count: row.session_ids.length,
+      dominant_status: statusEntries[0]?.[0] || "Need Review",
+    };
+  });
+}
+
+function deriveClientSuggestedTasks(taskClusters) {
+  return taskClusters
+    .filter((cluster) => cluster.dominant_status !== "Done")
+    .map((cluster) => {
+      const status = cluster.latest_status || cluster.dominant_status || "Need Review";
+      return {
+        task_id: String(cluster.cluster_key || cluster.cluster_label || "task").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "task",
+        cluster_key: cluster.cluster_key,
+        title_ja: cluster.latest_title || cluster.cluster_label || "Imported task",
+        title_en: cluster.latest_title || cluster.cluster_label || "Imported task",
+        task_size_ja: cluster.session_count >= 3 || (cluster.primary_repos || []).length >= 2 ? "大タスク" : "中タスク",
+        "推奨列": status,
+        "理由": `${cluster.session_count || 1} sessions / ${cluster.primary_repos?.join(", ") || "unknown repo"}`,
+        "状態判断理由": `Imported latest status: ${status}`,
+        "次の一手": "Review the representative session and choose the next status.",
+        cluster_label: cluster.cluster_label,
+        primary_repos: cluster.primary_repos || [],
+        session_count: cluster.session_count || 1,
+        representative_titles: cluster.representative_titles || [],
+        priority_score: ({ Blocked: 100, "Need Review": 80, "In Progress": 60, Pending: 40 }[status] || 20) + (cluster.session_count || 1) * 10,
+      };
+    })
+    .sort((a, b) => Number(b.priority_score || 0) - Number(a.priority_score || 0));
+}
+
+function applyBoardData(boardData) {
+  state.boardData = boardData;
+  state.sessions = state.boardData.sessions || [];
+  state.selectedId = state.sessions[0]?.session_id || null;
+  state.repo = "all";
+  state.status = "all";
+  state.cluster = "all";
+  state.search = "";
+  updateHeroMeta();
+  renderRepoFilter();
+  renderStatusFilter();
+  renderClusterFilter();
+  renderAttentionFilter();
+  renderCandidateStrip();
+  renderBoard();
+  renderDetail();
+}
+
+function importSessionData(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const imported = normalizeImportedBoardData(JSON.parse(reader.result));
+      applyBoardData(imported);
+      alert(t("importedSessionData", { count: imported.sessions.length }));
+    } catch (error) {
+      alert(t("invalidJson", { message: error.message }));
+    }
+  };
+  reader.readAsText(file);
+}
+
 function importOverrides(file) {
   if (!file) return;
   const reader = new FileReader();
@@ -2354,6 +2497,7 @@ function escapeHtml(value) {
 
 function init() {
   state.boardData = loadBootstrap();
+  state.originalBoardData = JSON.parse(JSON.stringify(state.boardData));
   state.sessions = state.boardData.sessions || [];
   state.overrides = loadOverrides();
   state.selectedId = state.sessions[0]?.session_id || null;
@@ -2439,6 +2583,14 @@ function init() {
   });
   document.getElementById("import-file").addEventListener("change", (event) => {
     importOverrides(event.target.files?.[0]);
+    event.target.value = "";
+  });
+  document.getElementById("import-session-file")?.addEventListener("change", (event) => {
+    importSessionData(event.target.files?.[0]);
+    event.target.value = "";
+  });
+  document.getElementById("reset-demo-data")?.addEventListener("click", () => {
+    applyBoardData(JSON.parse(JSON.stringify(state.originalBoardData)));
   });
   document.getElementById("clear-overrides").addEventListener("click", () => {
     state.overrides = {};

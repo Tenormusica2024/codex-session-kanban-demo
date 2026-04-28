@@ -312,6 +312,20 @@ Why:
 Risk to avoid:
 - Keep sample data synthetic and fixture-only; never use personal `.codex` logs in the public demo.
 
+### 14. Local session JSON import
+
+Status:
+- Initial implementation added: the static UI can import a local sessions JSON file, derive minimal task clusters/candidates when they are missing, and reset back to the embedded demo fixture. Overrides remain localStorage-based and separate from imported session data.
+
+Goal:
+- Let users try their own sanitized/exported session data without rebuilding the HTML.
+
+Why:
+- This makes the public demo more useful as a distributable local tool while preserving fixture-only public hosting.
+
+Risk to avoid:
+- Do not persist imported private session data into public builds or remote storage.
+
 ## P2 / defer unless clearly needed
 
 - Built-in code diff review
