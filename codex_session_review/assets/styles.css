@@ -748,6 +748,18 @@ button.secondary,
   background: rgba(138, 125, 255, 0.07);
 }
 
+.tag.quality-ok {
+  color: var(--success);
+  border: 1px solid rgba(66, 211, 146, 0.22);
+  background: rgba(66, 211, 146, 0.07);
+}
+
+.tag.quality-review {
+  color: var(--warning);
+  border: 1px solid rgba(255, 184, 77, 0.28);
+  background: rgba(255, 184, 77, 0.08);
+}
+
 .detail-panel {
   position: sticky;
   top: 22px;
@@ -931,6 +943,16 @@ button.secondary,
 
 .rationale-box ul {
   margin-top: 6px;
+}
+
+.quality-box.review {
+  border: 1px solid rgba(255, 184, 77, 0.22);
+  background: rgba(255, 184, 77, 0.045);
+}
+
+.quality-box.ok {
+  border: 1px solid rgba(66, 211, 146, 0.18);
+  background: rgba(66, 211, 146, 0.04);
 }
 
 @media (max-width: 1440px) {

@@ -160,6 +160,15 @@ const I18N = {
     lastAssistantRecap: "最後のassistant要約",
     source: "Source",
     provider: "provider",
+    qualityCheck: "抽出品質チェック",
+    qualityOk: "品質OK",
+    qualityReview: "要品質確認",
+    qualityIssues: "検出事項",
+    qualityGenericTitle: "タイトルが汎用的すぎる可能性",
+    qualityRawBody: "本文がraw発言寄りの可能性",
+    qualityWeakEvidence: "根拠メッセージが少ない",
+    qualityConflictRisk: "topic conflict / task shift の確認余地",
+    qualityLineageRisk: "複数セッション統合の確認余地",
     owner: "owner",
     on: "on",
     off: "off",
@@ -325,6 +334,15 @@ const I18N = {
     lastAssistantRecap: "Last assistant recap",
     source: "Source",
     provider: "provider",
+    qualityCheck: "Extraction quality check",
+    qualityOk: "Quality OK",
+    qualityReview: "Needs quality review",
+    qualityIssues: "Detected issues",
+    qualityGenericTitle: "Title may be too generic",
+    qualityRawBody: "Body may still look like a raw message",
+    qualityWeakEvidence: "Few evidence messages",
+    qualityConflictRisk: "Possible topic conflict / task shift",
+    qualityLineageRisk: "Merged-session lineage should be reviewed",
     owner: "owner",
     on: "on",
     off: "off",
@@ -616,6 +634,54 @@ function localizeAutonomyMode(value) {
 
 function providerLabel(item) {
   return item?.provider || item?.session_provider || state.boardData?.provider || "codex";
+}
+
+function auditExtractionQuality(session) {
+  const issues = [];
+  const title = displayTaskTitle(session);
+  const summary = displayTaskSummary(session);
+  const evidence = displayEvidenceMessages(session);
+  const titleLower = String(title || "").toLowerCase();
+  const genericTitleTokens = [
+    "内容確認",
+    "差分確認",
+    "進捗確認",
+    "状態確認",
+    "確認",
+    "review",
+    "check",
+    "status",
+    "progress",
+  ];
+  if (genericTitleTokens.some((token) => titleLower.includes(token.toLowerCase())) && String(title || "").length < 28) {
+    issues.push(t("qualityGenericTitle"));
+  }
+  const rawBodyPatterns = [
+    /https?:\/\//,
+    /\/\s*現状[:：]/,
+    /follow-up\s*\d+/i,
+    /送信元[:：]/,
+    /宛先[:：]/,
+    /つまり、/,
+    /できます/,
+  ];
+  if (rawBodyPatterns.some((pattern) => pattern.test(String(summary || "")))) {
+    issues.push(t("qualityRawBody"));
+  }
+  if (evidence.length < 2) {
+    issues.push(t("qualityWeakEvidence"));
+  }
+  if (session.task_shift_signal || /topic|shift|分裂|別タスク|本題|前後関係/.test(String(session.latest_meaningful_change || session.summary || ""))) {
+    issues.push(t("qualityConflictRisk"));
+  }
+  if (Number(session.related_session_count || 1) > 1 && !session.overrideLock) {
+    issues.push(t("qualityLineageRisk"));
+  }
+  return {
+    ok: issues.length === 0,
+    score: Math.max(0, 100 - issues.length * 18),
+    issues: [...new Set(issues)],
+  };
 }
 
 function applyStaticI18n() {
@@ -1167,6 +1233,7 @@ function renderBoard() {
 
     columnSessions.forEach((session) => {
       const cardLineage = lineageInfo(session);
+      const quality = auditExtractionQuality(session);
       const card = document.createElement("article");
       card.className = `session-card${session.session_id === state.selectedId ? " selected" : ""}`;
       card.draggable = true;
@@ -1184,6 +1251,7 @@ function renderBoard() {
           ${session.clusterCard ? `<span class="tag">${escapeHtml(t("cluster"))}</span>` : ""}
           ${attentionSignals(session).needsInput ? `<span class="tag attention">${escapeHtml(t("needsInput"))}</span>` : ""}
           ${cardLineage.hasMerged ? `<span class="tag lineage">${escapeHtml(cardLineage.badge)}</span>` : ""}
+          <span class="tag ${quality.ok ? "quality-ok" : "quality-review"}">${escapeHtml(quality.ok ? t("qualityOk") : t("qualityReview"))}</span>
           ${session.overrideLock ? `<span class="tag override">${escapeHtml(t("humanLock"))}</span>` : ""}
           ${session.orderLock ? `<span class="tag override">${escapeHtml(t("manualOrder"))}</span>` : ""}
         </div>
@@ -1402,6 +1470,7 @@ function renderDetail() {
   const rationale = buildCardRationale(session, relatedSessions);
   const detailLineage = lineageInfo(session, relatedSessions);
   const taskMap = relatedTaskMap(session, displaySessions);
+  const quality = auditExtractionQuality(session);
 
   panel.innerHTML = `
     <h2>${escapeHtml(displayTaskTitle(session))}</h2>
@@ -1412,6 +1481,7 @@ function renderDetail() {
       <span class="tag ${escapeHtml(session.autonomy_mode || "")}">${escapeHtml(localizeAutonomyMode(session.autonomy_mode))}</span>
       ${attentionSignals(session).needsInput ? `<span class="tag attention">${escapeHtml(t("needsInput"))}</span>` : ""}
       ${detailLineage.hasMerged ? `<span class="tag lineage">${escapeHtml(detailLineage.badge)}</span>` : ""}
+      <span class="tag ${quality.ok ? "quality-ok" : "quality-review"}">${escapeHtml(quality.ok ? t("qualityOk") : t("qualityReview"))} ${quality.score}</span>
       <span class="tag">${escapeHtml(session.statusOwner || "ai")} ${escapeHtml(t("owner"))}</span>
       <span class="tag">${escapeHtml(displayClusterLabel(session.task_cluster_family || session.task_cluster_label || "misc"))} / ${session.related_session_count || 1} ${escapeHtml(t("sessions"))}</span>
       <span class="tag mono">sid ${escapeHtml(shortSessionId(session.session_id))}</span>
@@ -1449,6 +1519,17 @@ function renderDetail() {
           <strong>${escapeHtml(t("lineage"))}:</strong>
           <ul>${rationale.lineage.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
           ${detailLineage.hasMerged ? `<p class="small">${escapeHtml(detailLineage.hint)}</p>` : ""}
+        </div>
+      </div>
+    </div>
+
+    <div class="detail-section">
+      <h3>${escapeHtml(t("qualityCheck"))}</h3>
+      <div class="reason-box quality-box ${quality.ok ? "ok" : "review"}">
+        <div><strong>${escapeHtml(quality.ok ? t("qualityOk") : t("qualityReview"))}</strong> / score ${quality.score}</div>
+        <div>
+          <strong>${escapeHtml(t("qualityIssues"))}:</strong>
+          <ul>${quality.issues.map((item) => `<li>${escapeHtml(item)}</li>`).join("") || `<li>${escapeHtml(t("qualityOk"))}</li>`}</ul>
         </div>
       </div>
     </div>

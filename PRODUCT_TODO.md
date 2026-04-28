@@ -151,6 +151,25 @@ Risk to avoid:
 
 ## P1 TODOs
 
+### 6.5 Extraction quality self-audit
+
+Status:
+- Initial implementation added: each card gets a heuristic quality badge and detail-panel audit. It flags generic titles, raw-message-like bodies, weak evidence, topic-shift risk, and multi-session lineage review risk.
+
+Goal:
+- Detect extraction problems before the user has to spot them visually:
+  - generic title
+  - raw message body
+  - weak evidence
+  - topic conflict
+  - stale/merged lineage risk
+
+Why:
+- This directly strengthens the product wedge: session-to-task extraction quality.
+
+Risk to avoid:
+- Do not treat the audit as ground truth. It is a review hint, not an automatic correction.
+
 ### 7. Parent/child or related task display
 
 Status:
