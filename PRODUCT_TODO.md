@@ -46,7 +46,7 @@ If the answer is unclear, keep the feature as a backlog idea rather than impleme
 ### 1. Candidate backlog cleanup
 
 Status:
-- Extended with an initial candidate review panel: the UI now summarizes open candidates, fixed candidates, quality-review cards, and multi-session representatives before/after promotion.
+- Extended with an initial candidate review panel: the UI now summarizes open candidates, fixed candidates, quality-review cards, and multi-session representatives before/after promotion. Candidate click now opens a detail preview without fixing it to the board; only explicit target-column promotion creates the human override lock.
 
 Goal:
 - Treat "Kanban追加候補" as a staging backlog.

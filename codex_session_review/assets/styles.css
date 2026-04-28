@@ -1156,3 +1156,20 @@ button.secondary,
 .debug-card ul {
   padding-left: 18px;
 }
+
+.candidate-detail-card {
+  margin: 14px 0;
+  padding: 14px;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(100, 210, 255, 0.16);
+  background: linear-gradient(135deg, rgba(100, 210, 255, 0.055), rgba(255, 255, 255, 0.025));
+}
+
+.candidate-detail-card h3 {
+  margin: 0 0 8px;
+}
+
+.candidate-detail-card p {
+  color: var(--muted);
+  line-height: 1.65;
+}

@@ -38,7 +38,7 @@ const I18N = {
     guideDone: "完了履歴。通常は折りたたみ、必要な時だけ見る。",
     guideNoteStatus: "判断目安: レビュー中 = 進行中 / レビュー待ち = 要確認。",
     guideNoteCandidates:
-      "候補一覧は staging。`推奨列へ追加` か `要確認へ仮追加して選択` で初めてボードに固定され、固定済み候補は候補一覧から消えます。",
+      "候補一覧は staging。候補クリックは詳細確認のみで、追加先の列を選んで保存した時だけボードに固定されます。固定済み候補は候補一覧から消えます。",
     guideNoteSchedule:
       "配布版は sample fixture だけから GitHub Actions で生成します。外部 LLM API や実セッションは使いません。",
     guideKeyboard:
@@ -103,6 +103,12 @@ const I18N = {
     nextAction: "次の一手",
     addRecommended: "推奨列へ追加",
     addNeedReview: "要確認へ仮追加して選択",
+    previewCandidate: "詳細を確認",
+    candidateDetailTitle: "追加候補の詳細",
+    candidatePromoteTo: "追加先の列",
+    candidatePromote: "この列へ追加",
+    candidateRepresentative: "代表セッション",
+    candidatePreviewHint: "ここではまだボードに固定しません。追加先を選んで保存すると human override lock として固定されます。",
     show: "表示",
     collapse: "折りたたむ",
     archiveCollapsed: "{status} {count}件を折りたたみ中",
@@ -244,7 +250,7 @@ const I18N = {
     guideDone: "Completion history. Usually collapsed and opened only when needed.",
     guideNoteStatus: "Rule of thumb: reviewing while fixing = In Progress / waiting for review = Need Review.",
     guideNoteCandidates:
-      "The candidate list is staging. A card is fixed to the board only after adding it to the recommended column or temporarily adding it to Need Review.",
+      "The candidate list is staging. Clicking a candidate only previews it; it is fixed to the board only after choosing a target column and saving.",
     guideNoteSchedule:
       "The public demo is generated from sample fixtures by GitHub Actions. It uses no external LLM API and no real session logs.",
     guideKeyboard:
@@ -309,6 +315,12 @@ const I18N = {
     nextAction: "Next action",
     addRecommended: "Add to recommended column",
     addNeedReview: "Add to Need Review and select",
+    previewCandidate: "Review details",
+    candidateDetailTitle: "Candidate detail",
+    candidatePromoteTo: "Add to column",
+    candidatePromote: "Add to this column",
+    candidateRepresentative: "Representative session",
+    candidatePreviewHint: "This does not fix the card to the board yet. Choose a target column and save to create a human override lock.",
     show: "Show",
     collapse: "Collapse",
     archiveCollapsed: "{status} {count} items collapsed",
@@ -1256,36 +1268,72 @@ function revealBoardSession(sessionId) {
 }
 
 function focusCandidateTask(task) {
+  renderCandidateDetail(task);
+}
+
+function addCandidateTask(task, targetStatus = null) {
   const representative = findRepresentativeForTask(task);
   if (!representative) {
     alert(t("noRepresentative"));
     return;
   }
-  if (!state.overrides[representative.session_id]?.status) {
-    setOverride(representative.session_id, {
-      status: "Need Review",
-      notes:
-        representative.reviewNotes ||
-        `Added from Kanban candidates: ${displayTaskTitle(task)} -> ${statusLabel("Need Review")}.`,
-    });
-  }
+  const status = targetStatus || task["推奨列"] || representative.suggested_status || "Need Review";
+  setOverride(representative.session_id, {
+    status,
+    notes:
+      representative.reviewNotes ||
+      `Added from Kanban candidates: ${displayTaskTitle(task)} -> ${statusLabel(status)}.`,
+  });
   revealBoardSession(representative.session_id);
 }
 
-function addCandidateTask(task) {
+function renderCandidateDetail(task) {
+  const panel = document.getElementById("detail-panel");
   const representative = findRepresentativeForTask(task);
   if (!representative) {
-    alert(t("noRepresentative"));
+    panel.innerHTML = `<p class="detail-empty">${escapeHtml(t("noRepresentative"))}</p>`;
     return;
   }
   const targetStatus = task["推奨列"] || representative.suggested_status || "Need Review";
-  setOverride(representative.session_id, {
-    status: targetStatus,
-    notes:
-      representative.reviewNotes ||
-      `Added from Kanban candidates: ${displayTaskTitle(task)} -> ${statusLabel(targetStatus)}.`,
+  const cluster = findClusterForTask(task);
+  panel.innerHTML = `
+    <h2>${escapeHtml(t("candidateDetailTitle"))}</h2>
+    <div class="detail-meta">
+      <span class="tag">${escapeHtml(displayTaskSize(task.task_size_ja))}</span>
+      <span class="tag">${escapeHtml(statusLabel(targetStatus))}</span>
+      <span class="tag">${escapeHtml(t("priority"))} ${escapeHtml(task.priority_score ?? "")}</span>
+      <span class="tag">${escapeHtml(displayClusterLabel(task.cluster_label || cluster?.cluster_label || "misc"))}</span>
+    </div>
+    <div class="candidate-detail-card">
+      <h3>${escapeHtml(displayTaskTitle(task))}</h3>
+      <p>${escapeHtml(displayTaskSummary(task))}</p>
+      <p class="small">${escapeHtml(t("statusReason"))}: ${escapeHtml(displayReason(task))}</p>
+      <p class="small">${escapeHtml(t("nextAction"))}: ${escapeHtml(displayNextAction(task))}</p>
+    </div>
+    <div class="session-id-box">
+      <div>
+        <span class="small">${escapeHtml(t("candidateRepresentative"))}</span>
+        <div class="mono">${escapeHtml(representative.session_id)}</div>
+      </div>
+      <button class="secondary tiny" id="candidate-copy-session-id">${escapeHtml(t("copySessionId"))}</button>
+    </div>
+    <div class="quick-status-bar">
+      <label>
+        <span class="small">${escapeHtml(t("candidatePromoteTo"))}</span>
+        <select id="candidate-status">
+          ${STATUSES.map((status) => `<option value="${escapeHtml(status)}"${status === targetStatus ? " selected" : ""}>${escapeHtml(statusLabel(status))}</option>`).join("")}
+        </select>
+      </label>
+      <button id="candidate-promote">${escapeHtml(t("candidatePromote"))}</button>
+    </div>
+    <p class="small">${escapeHtml(t("candidatePreviewHint"))}</p>
+  `;
+  document.getElementById("candidate-promote")?.addEventListener("click", () => {
+    addCandidateTask(task, document.getElementById("candidate-status").value);
   });
-  revealBoardSession(representative.session_id);
+  document.getElementById("candidate-copy-session-id")?.addEventListener("click", () => {
+    navigator.clipboard.writeText(representative.session_id).catch((error) => alert(t("copyFailed", { message: error.message })));
+  });
 }
 
 function renderCandidateStrip() {
@@ -1329,7 +1377,7 @@ function renderCandidateStrip() {
       <p class="small candidate-next">${escapeHtml(t("nextAction"))}: ${escapeHtml(displayNextAction(task))}</p>
       <div class="candidate-actions">
         <button class="candidate-add" data-candidate-action="add">${escapeHtml(t("addRecommended"))}</button>
-        <button class="secondary candidate-view" data-candidate-action="view">${escapeHtml(t("addNeedReview"))}</button>
+        <button class="secondary candidate-view" data-candidate-action="view">${escapeHtml(t("previewCandidate"))}</button>
       </div>
     `;
     card.addEventListener("click", () => {
