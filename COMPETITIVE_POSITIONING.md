@@ -210,3 +210,8 @@ This section is intentionally practical: features that can be borrowed without c
 8. Parent/child relation display for legitimate parallel tasks.
 
 The main rule: borrow workflow affordances, not the entire agent-orchestration product category.
+
+## Implementation backlog
+
+The active implementation checklist is maintained in [PRODUCT_TODO.md](./PRODUCT_TODO.md). Use it to decide whether a competitor-inspired feature strengthens or dilutes the product wedge.
+

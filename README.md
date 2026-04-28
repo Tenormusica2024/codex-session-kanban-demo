@@ -14,7 +14,7 @@ The project focuses on:
 - **Human override lock**: when a user moves or edits a card, later AI sync should not silently revert that decision.
 - **Static/private-safe distribution**: public demos use fixture data only; real `.codex` logs stay local/private.
 
-See [`COMPETITIVE_POSITIONING.md`](./COMPETITIVE_POSITIONING.md) for competitor notes and product direction.
+See [`COMPETITIVE_POSITIONING.md`](./COMPETITIVE_POSITIONING.md) for competitor notes and product direction. See [`PRODUCT_TODO.md`](./PRODUCT_TODO.md) for the implementation backlog and adoption policy.
 
 ## Public demo
 
@@ -44,3 +44,4 @@ For public repositories, set:
 - Settings → Pages → Source: GitHub Actions
 
 Then run the workflow.
+
