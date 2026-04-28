@@ -153,6 +153,9 @@ const I18N = {
     firstUserRequest: "最初の依頼",
     recentUserMessages: "直近のユーザー発言",
     relatedSessionsTitle: "同じタスクまとまりの関連セッション",
+    relatedTaskMap: "関連タスク",
+    sameLineage: "同じ前後関係",
+    sameProjectOtherTasks: "同じRepoの別タスク候補",
     representativeOnly: "このまとまりでは今のところこのセッションが代表です。",
     lastAssistantRecap: "最後のassistant要約",
     source: "Source",
@@ -314,6 +317,9 @@ const I18N = {
     firstUserRequest: "First user request",
     recentUserMessages: "Recent user messages",
     relatedSessionsTitle: "Related sessions in the same task cluster",
+    relatedTaskMap: "Related task map",
+    sameLineage: "Same lineage",
+    sameProjectOtherTasks: "Other tasks in the same repo",
     representativeOnly: "This session is currently the representative for this cluster.",
     lastAssistantRecap: "Last assistant recap",
     source: "Source",
@@ -580,6 +586,20 @@ function lineageInfo(session, relatedSessions = []) {
     badge: hasMerged ? t("supersedes", { count: relatedCount }) : "",
     hint: hasMerged ? t("mergedHint") : t("noLineage"),
   };
+}
+
+function relatedTaskMap(session, displaySessions) {
+  const family = session.task_cluster_family || session.task_cluster_label;
+  const sameLineage = displaySessions
+    .filter((item) => item.session_id !== session.session_id)
+    .filter((item) => (item.task_cluster_family || item.task_cluster_label) === family)
+    .slice(0, 5);
+  const sameRepoOtherTasks = displaySessions
+    .filter((item) => item.session_id !== session.session_id)
+    .filter((item) => item.primary_repo && item.primary_repo === session.primary_repo)
+    .filter((item) => (item.task_cluster_family || item.task_cluster_label) !== family)
+    .slice(0, 5);
+  return { sameLineage, sameRepoOtherTasks };
 }
 
 function localizeAutonomyMode(value) {
@@ -1374,6 +1394,7 @@ function renderDetail() {
     .slice(0, 6);
   const rationale = buildCardRationale(session, relatedSessions);
   const detailLineage = lineageInfo(session, relatedSessions);
+  const taskMap = relatedTaskMap(session, displaySessions);
 
   panel.innerHTML = `
     <h2>${escapeHtml(displayTaskTitle(session))}</h2>
@@ -1492,6 +1513,44 @@ function renderDetail() {
               .join("")}</div>`
           : `<p>${escapeHtml(t("representativeOnly"))}</p>`
       }
+    </div>
+
+    <div class="detail-section">
+      <h3>${escapeHtml(t("relatedTaskMap"))}</h3>
+      <div class="related-task-map">
+        <div>
+          <strong>${escapeHtml(t("sameLineage"))}</strong>
+          ${
+            taskMap.sameLineage.length
+              ? `<div class="related-session-list">${taskMap.sameLineage
+                  .map(
+                    (item) => `
+                      <button class="related-session" data-related-id="${escapeHtml(item.session_id)}">
+                        ${escapeHtml(displayTaskTitle(item))}
+                        <small>${escapeHtml(statusLabel(item.currentStatus))} / ${escapeHtml(displayClusterLabel(item.task_cluster_family || item.task_cluster_label || "misc"))}</small>
+                      </button>`
+                  )
+                  .join("")}</div>`
+              : `<p>${escapeHtml(t("noLineage"))}</p>`
+          }
+        </div>
+        <div>
+          <strong>${escapeHtml(t("sameProjectOtherTasks"))}</strong>
+          ${
+            taskMap.sameRepoOtherTasks.length
+              ? `<div class="related-session-list">${taskMap.sameRepoOtherTasks
+                  .map(
+                    (item) => `
+                      <button class="related-session" data-related-id="${escapeHtml(item.session_id)}">
+                        ${escapeHtml(displayTaskTitle(item))}
+                        <small>${escapeHtml(statusLabel(item.currentStatus))} / ${escapeHtml(displayClusterLabel(item.task_cluster_family || item.task_cluster_label || "misc"))}</small>
+                      </button>`
+                  )
+                  .join("")}</div>`
+              : `<p>${escapeHtml(t("representativeOnly"))}</p>`
+          }
+        </div>
+      </div>
     </div>
 
     <div class="detail-section">

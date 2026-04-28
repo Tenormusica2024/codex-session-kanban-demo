@@ -153,6 +153,9 @@ Risk to avoid:
 
 ### 7. Parent/child or related task display
 
+Status:
+- Initial implementation added: detail view now shows a lightweight related task map split into same-lineage sessions and other tasks in the same repo. This intentionally avoids a full PM dependency graph.
+
 Goal:
 - Show legitimate parallel tasks inside a larger project without merging them incorrectly.
 

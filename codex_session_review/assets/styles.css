@@ -858,6 +858,24 @@ button.secondary,
   gap: 8px;
 }
 
+.related-task-map {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.related-task-map > div {
+  padding: 10px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(151, 169, 195, 0.14);
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.related-task-map strong {
+  display: block;
+  margin-bottom: 8px;
+}
+
 .related-session {
   width: 100%;
   text-align: left;
