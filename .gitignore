@@ -1,5 +1,6 @@
 __pycache__/
 *.pyc
+node_modules/
 codex_session_review/fixture_snapshot/
 codex_session_review/github_pages/
 codex_session_review/distribution_snapshot/

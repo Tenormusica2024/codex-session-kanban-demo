@@ -438,6 +438,20 @@ Why:
 Risk to avoid:
 - Keep this as a cheap artifact smoke test, not a full browser/E2E test that slows down every push.
 
+### 23. Browser operation and visible text smoke test
+
+Status:
+- Initial implementation added: `codex_session_review/smoke_browser_surface.mjs` and npm scripts for Pages/local HTML browser checks. The test loads the page with Playwright, verifies board/candidate/detail mount points, switches to English, checks common static UI labels are translated, promotes one candidate into the board, and verifies the resulting card/detail/human-lock controls.
+
+Goal:
+- Make browser operation and visible text regressions testable without requiring CiC for every run.
+
+Why:
+- The product is UI-heavy; static HTML validation alone cannot catch broken rendering, missing buttons, language-mode regressions, or candidate promotion failures.
+
+Risk to avoid:
+- Do not put this heavy browser check on every Pages deploy until CI cost/time is intentionally accepted. Use it as local/pre-release smoke first; keep CiC for logged-in or subjective visual review.
+
 ## P2 / defer unless clearly needed
 
 - Built-in code diff review
