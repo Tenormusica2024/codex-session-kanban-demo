@@ -659,7 +659,7 @@ function displayTaskSize(value) {
   return { "大タスク": "Major task", "中タスク": "Mid task", "小タスク": "Small task" }[value] || "Mid task";
 }
 
-function displayOriginalText(value, fallback = "Original source text is Japanese; switch to 日本語 to read it.", enValue = null) {
+function displayOriginalText(value, fallback = "Original source text is Japanese; switch to Japanese mode to read it.", enValue = null) {
   if (state.lang === "en" && enValue) return enValue;
   if (state.lang === "ja" || !hasJapanese(value)) return value || "n/a";
   return fallback;

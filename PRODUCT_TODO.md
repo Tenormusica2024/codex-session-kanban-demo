@@ -396,6 +396,20 @@ Why:
 Risk to avoid:
 - Do not imply artifact use makes private data safe to publish; it is local/offline unless the user shares it.
 
+### 20. Fixture input enrichment and EN smoke check
+
+Status:
+- Initial implementation added: `build_review_surface.py --input-json` now enriches fixture/session JSON with task clusters, suggested tasks, and quality report when those sections are missing. EN-mode smoke check was run against the built fixture; remaining Japanese text is limited to the language-switch label.
+
+Goal:
+- Ensure public fixture JSON renders meaningful candidates/board state instead of an empty board, and keep English demo output reasonably clean.
+
+Why:
+- Public fixture data may be hand-authored, so the builder should fill derived review structures consistently.
+
+Risk to avoid:
+- Do not mutate source fixture files during build; enrichment happens in the output bundle.
+
 ## P2 / defer unless clearly needed
 
 - Built-in code diff review

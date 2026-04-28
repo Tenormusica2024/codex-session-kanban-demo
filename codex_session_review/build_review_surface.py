@@ -2649,6 +2649,13 @@ def main() -> None:
     root = Path(__file__).resolve().parent
     if args.input_json:
         bundle = json.loads(args.input_json.read_text(encoding="utf-8"))
+        sessions = bundle.get("sessions", [])
+        if sessions and not bundle.get("task_clusters"):
+            bundle["task_clusters"] = enrich_task_clusters(sessions)
+        if bundle.get("task_clusters") and not bundle.get("suggested_tasks"):
+            bundle["suggested_tasks"] = build_suggested_tasks(bundle["task_clusters"])
+        if sessions and bundle.get("task_clusters") and bundle.get("suggested_tasks") and not bundle.get("quality_report"):
+            bundle["quality_report"] = build_quality_report(sessions, bundle["task_clusters"], bundle["suggested_tasks"])
     else:
         bundle = collect_sessions(
             codex_home=args.codex_home,
