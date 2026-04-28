@@ -11,6 +11,14 @@ on:
         options:
           - "false"
           - "true"
+      run_browser_smoke:
+        description: "Run optional Playwright browser smoke test against the built artifact."
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
   push:
     branches:
       - master
@@ -21,8 +29,11 @@ on:
       - "codex_session_review/build_review_surface.py"
       - "codex_session_review/validate_session_data.py"
       - "codex_session_review/smoke_public_build.py"
+      - "codex_session_review/smoke_browser_surface.mjs"
       - "docs/**"
       - "README.md"
+      - "package.json"
+      - "package-lock.json"
       - ".github/workflows/codex-session-kanban-pages.yml"
 
 env:
@@ -70,6 +81,16 @@ jobs:
 
       - name: Smoke test public artifact
         run: python codex_session_review/smoke_public_build.py codex_session_review/github_pages/index.html --docs-dir codex_session_review/github_pages/docs --distribution
+
+      - name: Install browser smoke dependencies
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_browser_smoke == 'true' }}
+        run: |
+          npm ci
+          npx playwright install chromium
+
+      - name: Browser smoke test public artifact
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_browser_smoke == 'true' }}
+        run: npm run smoke:browser -- --file codex_session_review/github_pages/index.html
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
