@@ -508,6 +508,20 @@ Why:
 Risk to avoid:
 - Do not encourage generic feature requests that pull the project away from session-to-task review.
 
+### 28. Public README positioning and quick start
+
+Status:
+- Initial implementation added a stronger README opening, target-user section, privacy stance, public-demo fast path, and quick start commands. Demo usage docs now start with a short guided review flow.
+
+Goal:
+- Help first-time visitors understand what the project is, who it is for, and what to click first.
+
+Why:
+- The project is differentiated by extraction/lineage/review behavior, not by being another Kanban. The README should make that clear before listing implementation details.
+
+Risk to avoid:
+- Keep the pitch accurate: this is a static fixture demo and local/private review tool, not a hosted task-management service.
+
 ## P2 / defer unless clearly needed
 
 - Built-in code diff review

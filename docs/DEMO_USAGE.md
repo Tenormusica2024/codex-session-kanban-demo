@@ -1,5 +1,14 @@
 # Demo Usage Guide
 
+## Fast path
+
+1. Open the public demo.
+2. Look at **Kanban candidates** first.
+3. Promote one candidate into the recommended column.
+4. Open the promoted card.
+5. Inspect why it exists and whether the suggested status makes sense.
+6. Move it to the status you would actually use. That creates a human override lock.
+
 ## What this demo shows
 
 Codex Session Kanban is not a generic project-management Kanban. It is a review surface for turning long AI coding sessions into task candidates.

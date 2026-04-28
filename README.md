@@ -2,7 +2,33 @@
 
 Public fixture demo for **Codex Session Kanban**.
 
-Codex Session Kanban is a static, privacy-aware Kanban review surface for AI coding workflows. Its main goal is not just to list sessions, but to turn messy, long-running AI coding sessions into reviewable task candidates.
+Codex Session Kanban is a static, privacy-aware review surface that turns long AI coding sessions into **deduplicated task candidates**.
+
+It is **not** a generic Kanban board and it is **not** an agent runner. The core job is narrower: help a human quickly review what recent AI sessions were actually doing, which tasks are still active, which older sessions were superseded, and which manual board decisions must not be reverted by later AI sync.
+
+## Try it
+
+Open the fixture-only public demo:
+
+https://tenormusica2024.github.io/codex-session-kanban-demo/
+
+In the demo, try this flow:
+
+1. Review the **Kanban candidates** section.
+2. Promote a candidate into the recommended column.
+3. Open the card detail panel.
+4. Check **Why this card exists**, evidence categories, extraction timeline, and suppressed predecessor sessions.
+5. Move the card status and confirm it becomes a human override lock.
+
+## Who this is for
+
+This is useful if you:
+
+- run many Codex / AI-coding sessions and lose track of the real task state
+- want an AI secretary to propose a board, but still treat human edits as authoritative
+- need to distinguish "needs review", "blocked by user input", "still active", "done", and "dropped"
+- care about why a card exists, not only that a transcript summary exists
+- want a static/local-first workflow where private logs do not need to leave your machine
 
 ## License
 
@@ -14,16 +40,16 @@ MIT. See [LICENSE](./LICENSE).
 - [Security policy](./SECURITY.md)
 - [Changelog](./CHANGELOG.md)
 
-## Public demo
+## Privacy stance
 
-https://tenormusica2024.github.io/codex-session-kanban-demo/
-
-This repository is fixture-only:
+This public repository is fixture-only:
 
 - no real `.codex` session logs
 - no local user paths
 - no private repository data
 - no Vercel bypass tokens
+
+Real session data should stay local or in a private repository. The public demo and screenshots are generated from synthetic fixture data only.
 
 ## Core differentiation
 
@@ -33,6 +59,41 @@ This repository is fixture-only:
 - **Human override lock**: when a user moves or edits a card, later AI sync should not silently revert that decision.
 - **Inspectable extraction**: detail panels expose evidence categories, extraction timeline, suppressed predecessor sessions, and extraction debug hints.
 - **Static/private-safe distribution**: public demos use fixture data only; real `.codex` logs stay local/private.
+
+## Quick start
+
+### View the public demo
+
+Open:
+
+```text
+https://tenormusica2024.github.io/codex-session-kanban-demo/
+```
+
+### Build the fixture locally
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\codex_session_review\build_fixture_snapshot.ps1 -Distribution
+```
+
+Output:
+
+```text
+codex_session_review/fixture_snapshot/index.html
+```
+
+### Run the release checks
+
+```powershell
+npm install
+npm run release:check
+```
+
+To also verify the deployed Pages URL:
+
+```powershell
+npm run release:check:pages
+```
 
 ## Screenshots
 
@@ -56,18 +117,6 @@ This repository is fixture-only:
 - [Product TODO / adoption policy](./PRODUCT_TODO.md)
 - [Distribution build notes](./codex_session_review/DISTRIBUTION_BUILD.md)
 - [GitHub distribution notes](./codex_session_review/GITHUB_DISTRIBUTION.md)
-
-## Local build
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\codex_session_review\build_fixture_snapshot.ps1 -Distribution
-```
-
-Output:
-
-```text
-codex_session_review/fixture_snapshot/index.html
-```
 
 ## Smoke tests
 
