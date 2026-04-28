@@ -20,6 +20,8 @@ on:
       - "codex_session_review/sample_data/**"
       - "codex_session_review/build_review_surface.py"
       - "codex_session_review/validate_session_data.py"
+      - "docs/**"
+      - "README.md"
       - ".github/workflows/codex-session-kanban-pages.yml"
 
 permissions:
@@ -53,6 +55,7 @@ jobs:
             --input-json codex_session_review/sample_data/recent_sessions.sample.json \
             --output codex_session_review/github_pages/index.html \
             --distribution
+          cp -R docs codex_session_review/github_pages/docs
           touch codex_session_review/github_pages/.nojekyll
           cat > codex_session_review/github_pages/README_LOCAL_DEMO.txt <<'EOF'
           Codex Session Kanban Demo

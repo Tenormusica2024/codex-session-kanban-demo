@@ -46,6 +46,10 @@ $items = @(
   (Join-Path $absoluteOutputDir "index.html"),
   (Join-Path $absoluteOutputDir "README_LOCAL_DEMO.txt")
 )
+$docsPath = Join-Path $absoluteOutputDir "docs"
+if (Test-Path $docsPath) {
+  $items += $docsPath
+}
 
 Compress-Archive -Path $items -DestinationPath $packagePath -Force
 

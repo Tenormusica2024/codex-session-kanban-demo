@@ -368,6 +368,20 @@ Why:
 Risk to avoid:
 - Keep screenshots generated from public fixture data only.
 
+### 18. Pages/artifact docs packaging
+
+Status:
+- Initial implementation added: fixture/distribution builds now copy public `docs/` into the output folder, package zips include docs, and the GitHub Pages workflow copies docs so in-app schema links work on the public site/artifact. Workflow path triggers now include README/docs changes.
+
+Goal:
+- Keep public demo links functional in GitHub Pages, local fixture builds, and downloadable artifacts.
+
+Why:
+- Import/schema documentation is part of the product onboarding, so it must ship with the static demo.
+
+Risk to avoid:
+- Only copy public docs/assets; never copy personal/local session data.
+
 ## P2 / defer unless clearly needed
 
 - Built-in code diff review

@@ -13,11 +13,12 @@ The workflow:
 1. Uses `sample_data/recent_sessions.sample.json` only.
 2. Runs `build_review_surface.py --distribution`.
 3. Generates `codex_session_review/github_pages/index.html`.
-4. Uploads a GitHub Pages artifact.
-5. Uploads the same output as a downloadable Actions artifact.
-6. Uploads the downloadable artifact on every run.
-7. Runs strict fixture validation before building.
-8. Deploys to GitHub Pages on `master` push when Pages is available. Manual `deploy_pages=true` remains available.
+4. Copies public `docs/` into the Pages/artifact output so in-app schema links work.
+5. Uploads a GitHub Pages artifact.
+6. Uploads the same output as a downloadable Actions artifact.
+7. Uploads the downloadable artifact on every run.
+8. Runs strict fixture validation before building.
+9. Deploys to GitHub Pages on `master` push when Pages is available. Manual `deploy_pages=true` remains available.
 
 The push trigger targets `master`, matching this repository default branch. Manual execution is available via `workflow_dispatch`.
 
