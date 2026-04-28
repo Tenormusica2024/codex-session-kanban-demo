@@ -4,6 +4,17 @@ All notable public-demo changes are tracked here.
 
 This project is still pre-1.0. Entries focus on public distribution, fixture safety, and the session-to-task review workflow.
 
+## 0.1.10 - 2026-04-29
+
+### Changed
+
+- Browser smoke now exercises keyboard triage after candidate promotion:
+  - number shortcut moves the selected card to `In Progress`
+  - selected card remains visible
+  - human-lock marker remains present
+  - copy shortcut targets the selected `session_id` when the clipboard shim is available
+- Testing and distribution docs now mention keyboard-triage smoke coverage.
+
 ## 0.1.9 - 2026-04-29
 
 ### Changed

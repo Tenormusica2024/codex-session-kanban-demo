@@ -97,6 +97,8 @@ The browser smoke test checks:
 - promotion creates a human-lock marker
 - `session_id` is visible in the detail panel
 - status controls are present after promotion
+- keyboard triage can move the selected card to `In Progress`
+- keyboard copy shortcut targets the selected `session_id` when clipboard access is available
 
 Japanese may still appear in source/session data. The English check is scoped to static UI labels, not arbitrary user-authored content.
 

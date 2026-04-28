@@ -62,6 +62,23 @@ async function main() {
   const page = await browser.newPage({ viewport, isMobile: mobile });
   const errors = [];
 
+  await page.addInitScript(() => {
+    window.__copiedText = null;
+    try {
+      Object.defineProperty(navigator, "clipboard", {
+        configurable: true,
+        value: {
+          writeText: async (text) => {
+            window.__copiedText = String(text);
+          },
+        },
+      });
+    } catch {
+      // Some browsers may not allow overriding clipboard; the smoke will skip
+      // clipboard assertion if the shim is unavailable.
+    }
+  });
+
   page.on("pageerror", (error) => errors.push(`pageerror: ${error.message}`));
   page.on("console", (message) => {
     if (message.type() === "error") {
@@ -145,6 +162,33 @@ async function main() {
     errors.push(`horizontal overflow after interaction: viewport=${viewport.width}, scrollWidth=${promoted.scrollWidth}`);
   }
 
+  await page.keyboard.press("3");
+  await page.waitForTimeout(100);
+  await page.keyboard.press("c");
+  const keyboardTriage = await page.evaluate(() => {
+    const selectedCard = document.querySelector(".session-card.selected");
+    const selectedId = document.querySelector(".session-id-box .mono")?.textContent?.trim() || "";
+    return {
+      quickStatus: document.querySelector("#quick-status")?.value || "",
+      selectedCardText: selectedCard?.textContent?.trim().slice(0, 240) || "",
+      hasHumanLock: /human lock|手動固定/.test(document.body.textContent),
+      copiedText: window.__copiedText || "",
+      selectedId,
+    };
+  });
+  if (keyboardTriage.quickStatus !== "In Progress") {
+    errors.push(`keyboard status shortcut did not move selected card to In Progress: ${keyboardTriage.quickStatus}`);
+  }
+  if (!keyboardTriage.selectedCardText) {
+    errors.push("keyboard triage left no selected session card");
+  }
+  if (!keyboardTriage.hasHumanLock) {
+    errors.push("keyboard status shortcut did not preserve/create a human lock marker");
+  }
+  if (keyboardTriage.selectedId && keyboardTriage.copiedText && keyboardTriage.copiedText !== keyboardTriage.selectedId) {
+    errors.push("keyboard copy shortcut copied the wrong session_id");
+  }
+
   await browser.close();
 
   const result = {
@@ -152,6 +196,7 @@ async function main() {
     targetUrl,
     initial,
     promoted,
+    keyboardTriage,
     note: promoted.visibleTextHasJapanese
       ? "Japanese may remain in source/session data; static English UI labels were checked separately."
       : "No Japanese text found in visible page text.",

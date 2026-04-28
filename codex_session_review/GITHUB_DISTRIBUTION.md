@@ -49,7 +49,7 @@ For a release verification run:
 4. Set `run_browser_smoke=true`.
 5. Set `deploy_pages=true` only if you also want to redeploy Pages from that manual run.
 
-The browser smoke checks that the built artifact can render candidate cards, switch language mode, promote a candidate, show a human lock, expose `session_id`, display status controls, and avoid horizontal overflow in the mobile viewport.
+The browser smoke checks that the built artifact can render candidate cards, switch language mode, promote a candidate, show a human lock, expose `session_id`, display status controls, exercise keyboard triage, and avoid horizontal overflow in the mobile viewport.
 
 ## Privacy rule
 
