@@ -4,6 +4,15 @@ Public fixture demo for **Codex Session Kanban**.
 
 Codex Session Kanban is a static, privacy-aware Kanban review surface for AI coding workflows. Its main goal is not just to list sessions, but to turn messy, long-running AI coding sessions into reviewable task candidates.
 
+## License
+
+MIT. See [LICENSE](./LICENSE).
+
+## Contributing / security
+
+- [Contributing guide](./CONTRIBUTING.md)
+- [Security policy](./SECURITY.md)
+
 ## Public demo
 
 https://tenormusica2024.github.io/codex-session-kanban-demo/

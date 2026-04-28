@@ -66,4 +66,5 @@ npm run smoke:browser:local
 - [ ] README explains that this is a session-to-task extraction review surface, not a generic Kanban.
 - [ ] README screenshots are regenerated after major UI changes.
 - [ ] README links to usage guide, import schema, competitive positioning, and TODO/adoption policy.
+- [ ] LICENSE, CONTRIBUTING, and SECURITY docs are present and still match the public fixture/privacy stance.
 - [ ] Demo fixture shows the product wedge without real personal task data.

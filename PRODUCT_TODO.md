@@ -480,6 +480,20 @@ Why:
 Risk to avoid:
 - Keep npm scripts as wrappers around the canonical PowerShell release check, not a second divergent test path.
 
+### 26. Public OSS repository hygiene
+
+Status:
+- Initial implementation added MIT `LICENSE`, `CONTRIBUTING.md`, and `SECURITY.md`, plus README/release-checklist links. The contribution/security docs emphasize fixture-only public data and local/private handling of real session logs.
+
+Goal:
+- Make the public repository usable and safer for external readers or contributors.
+
+Why:
+- Publicizing the project is part of the direction, and a public repo without license/contribution/security guidance is ambiguous.
+
+Risk to avoid:
+- Keep these docs aligned with the privacy boundary; do not encourage users to upload real `.codex` logs to the public repo.
+
 ## P2 / defer unless clearly needed
 
 - Built-in code diff review
