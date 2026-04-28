@@ -59,6 +59,12 @@ codex_session_review/fixture_snapshot/index.html
 
 ## Smoke tests
 
+Recommended full local check:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\codex_session_review\run_public_release_checks.ps1
+```
+
 Static artifact check:
 
 ```powershell

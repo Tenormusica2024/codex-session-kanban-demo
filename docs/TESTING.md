@@ -2,6 +2,28 @@
 
 This project has two levels of public-demo smoke tests.
 
+## Recommended one-command local check
+
+Before sharing a release, run:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\codex_session_review\run_public_release_checks.ps1
+```
+
+This runs fixture validation, distribution build, static artifact smoke, Python compile checks, and local browser smoke.
+
+To also verify the deployed GitHub Pages URL:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\codex_session_review\run_public_release_checks.ps1 -PagesSmoke
+```
+
+If Playwright/browser dependencies are not available and you only want the cheap checks:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\codex_session_review\run_public_release_checks.ps1 -SkipBrowserSmoke
+```
+
 ## 1. Static artifact smoke
 
 Use this for every public/distribution build.

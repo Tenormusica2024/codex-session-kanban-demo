@@ -13,6 +13,12 @@ Use this checklist before sharing the public demo URL or release artifact.
 
 ## Build
 
+- [ ] One-command local release check passes:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\codex_session_review\run_public_release_checks.ps1
+```
+
 - [ ] Distribution fixture builds locally:
 
 ```powershell

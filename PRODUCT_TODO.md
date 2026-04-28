@@ -452,6 +452,20 @@ Why:
 Risk to avoid:
 - Do not put this heavy browser check on every Pages deploy until CI cost/time is intentionally accepted. Use it as local/pre-release smoke first; keep CiC for logged-in or subjective visual review.
 
+### 24. One-command public release checks
+
+Status:
+- Initial implementation added: `codex_session_review/run_public_release_checks.ps1` runs public fixture validation, distribution build, static artifact smoke, Python compile checks, local browser smoke, and optionally Pages static/browser smoke. README, testing docs, and release checklist now point to this command.
+
+Goal:
+- Make pre-release verification easy enough to run before every public update.
+
+Why:
+- The project now has multiple cheap and browser-level checks; a single entry point reduces skipped verification and makes future contributors less likely to publish an empty or broken demo.
+
+Risk to avoid:
+- Keep this as a local/pre-release helper. Do not hide individual commands or make CI unexpectedly slow.
+
 ## P2 / defer unless clearly needed
 
 - Built-in code diff review
