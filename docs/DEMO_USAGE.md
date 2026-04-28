@@ -48,3 +48,7 @@ Shortcuts are disabled while typing in inputs or textareas.
 This public demo is generated from sample fixture data only.
 
 Personal/local builds can use real session summaries, but should stay private unless sanitized.
+
+## Downloadable artifact
+
+If GitHub Pages is unavailable, download the `codex-session-kanban-demo` artifact from the latest successful Actions run and open `index.html`. See [Downloadable artifact usage](./ARTIFACT_USAGE.md).

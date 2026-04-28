@@ -382,6 +382,20 @@ Why:
 Risk to avoid:
 - Only copy public docs/assets; never copy personal/local session data.
 
+### 19. Artifact usage guide
+
+Status:
+- Initial implementation added: `docs/ARTIFACT_USAGE.md` explains how to download the GitHub Actions artifact, open `index.html`, import local session JSON, preserve overrides, reset demo data, and avoid publishing private logs. README, demo usage docs, and release checklist link/check this path.
+
+Goal:
+- Make the non-Pages distribution path understandable for users.
+
+Why:
+- GitHub Pages can depend on repo visibility/plan/settings, so the artifact fallback must be first-class.
+
+Risk to avoid:
+- Do not imply artifact use makes private data safe to publish; it is local/offline unless the user shares it.
+
 ## P2 / defer unless clearly needed
 
 - Built-in code diff review

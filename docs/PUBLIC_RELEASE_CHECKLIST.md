@@ -40,6 +40,7 @@ powershell -ExecutionPolicy Bypass -File .\codex_session_review\open_distributio
 - [ ] Settings → Pages → Source is GitHub Actions.
 - [ ] Workflow `Codex Session Kanban Demo Pages` passes.
 - [ ] If Pages is unavailable, use the downloadable Actions artifact instead.
+- [ ] Artifact contains `index.html`, `README_LOCAL_DEMO.txt`, and `docs/`.
 
 ## Positioning
 
