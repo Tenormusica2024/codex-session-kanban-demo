@@ -4,6 +4,14 @@ All notable public-demo changes are tracked here.
 
 This project is still pre-1.0. Entries focus on public distribution, fixture safety, and the session-to-task review workflow.
 
+## 0.1.13 - 2026-04-29
+
+### Added
+
+- Provider import normalization for lightweight Claude Code / Cursor / Gemini-style JSON shapes.
+- Provider-native sample import fixture and schema documentation for accepted aliases.
+- Release checks now include a provider import normalization smoke test.
+
 ## 0.1.12 - 2026-04-29
 
 ### Added

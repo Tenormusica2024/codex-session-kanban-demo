@@ -23,6 +23,7 @@ The public fixture demo currently includes:
 - static artifact smoke and Playwright browser smoke
 - one-command release checks
 - local update helper for fixture refresh, browser smoke, optional package smoke, and manual/Task Scheduler use
+- provider import normalization for lightweight Claude Code / Cursor / Gemini-style JSON shapes
 
 ## Near-term focus
 
@@ -71,7 +72,7 @@ Keep the fixture demo useful without exposing private data:
 These are useful, but should be implemented only if they strengthen the core review workflow.
 
 - Lightweight token/session stats if they help prioritization
-- More provider import compatibility for Claude Code, Gemini, Cursor, etc.
+- Broader provider import adapters after real-world export samples are reviewed
 - Better fixture examples for topic conflict and cross-session lineage
 - Optional Task Scheduler recipe refinements for personal/private imports
 - More keyboard-first triage actions

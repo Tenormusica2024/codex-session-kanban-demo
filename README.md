@@ -70,6 +70,7 @@ Real session data should stay local or in a private repository. The public demo 
 - **Human override lock**: when a user moves or edits a card, later AI sync should not silently revert that decision.
 - **Inspectable extraction**: detail panels expose evidence categories, extraction timeline, suppressed predecessor sessions, and extraction debug hints.
 - **Static/private-safe distribution**: public demos use fixture data only; real `.codex` logs stay local/private.
+- **Provider import normalization**: lightweight Claude Code / Cursor / Gemini-style exports can be normalized into the common review schema without adding agent execution scope.
 
 ## Quick start
 

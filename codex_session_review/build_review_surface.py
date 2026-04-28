@@ -2599,6 +2599,181 @@ def render_markdown(bundle: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+
+
+def slugify(value: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "-", value.lower()).strip("-")
+
+
+def provider_status(value: Any) -> str:
+    raw = str(value or "").strip().lower()
+    if raw in {"done", "completed", "complete", "success", "closed"}:
+        return "Done"
+    if raw in {"dropped", "cancelled", "canceled", "wontfix", "archived"}:
+        return "Dropped"
+    if raw in {"blocked", "error", "failed", "waiting-on-user"}:
+        return "Blocked"
+    if raw in {"pending", "waiting", "paused", "todo", "backlog"}:
+        return "Pending"
+    if raw in {"in progress", "in_progress", "active", "running", "working"}:
+        return "In Progress"
+    if value in STATUS_ORDER:
+        return str(value)
+    return "Need Review"
+
+
+def infer_provider(item: dict[str, Any], board_provider: str | None = None) -> str:
+    explicit = item.get("provider") or item.get("source_tool") or item.get("tool") or board_provider
+    if explicit:
+        return str(explicit)
+    keys = set(item.keys())
+    if {"uuid", "cwd"} & keys and ("messages" in keys or "transcript" in keys):
+        return "claude-code"
+    if {"workspace", "conversation"} & keys or "cursor_session_id" in keys:
+        return "cursor-agent"
+    if {"history", "model"} <= keys or "gemini_session_id" in keys:
+        return "gemini-cli"
+    return "generic-ai-session"
+
+
+def text_from_provider_content(content: Any) -> str:
+    if content is None:
+        return ""
+    if isinstance(content, str):
+        return content.strip()
+    if isinstance(content, list):
+        chunks: list[str] = []
+        for part in content:
+            if isinstance(part, str):
+                chunks.append(part)
+            elif isinstance(part, dict):
+                chunks.append(str(part.get("text") or part.get("content") or part.get("value") or ""))
+        return "\n".join(chunk for chunk in chunks if chunk).strip()
+    if isinstance(content, dict):
+        if "parts" in content:
+            return text_from_provider_content(content.get("parts"))
+        return str(content.get("text") or content.get("content") or content.get("message") or content.get("value") or "").strip()
+    return str(content).strip()
+
+
+def provider_messages(item: dict[str, Any]) -> list[tuple[str, str]]:
+    raw_messages = (
+        item.get("timeline_messages")
+        or item.get("messages")
+        or item.get("conversation")
+        or item.get("turns")
+        or item.get("history")
+        or item.get("events")
+        or []
+    )
+    messages: list[tuple[str, str]] = []
+    if not isinstance(raw_messages, list):
+        return messages
+    for raw in raw_messages:
+        if isinstance(raw, (list, tuple)) and len(raw) >= 2:
+            role = str(raw[0] or "user").lower()
+            text = text_from_provider_content(raw[1])
+        elif isinstance(raw, dict):
+            role = str(raw.get("role") or raw.get("speaker") or raw.get("type") or "user").lower()
+            text = text_from_provider_content(raw.get("content") or raw.get("message") or raw.get("text") or raw.get("parts"))
+        else:
+            role = "user"
+            text = text_from_provider_content(raw)
+        if not text:
+            continue
+        if role in {"assistant", "model", "agent", "ai"}:
+            role = "assistant"
+        elif role in {"system", "tool", "function"}:
+            role = "system"
+        else:
+            role = "user"
+        messages.append((role, text))
+    return messages
+
+
+def repo_from_provider_item(item: dict[str, Any]) -> str:
+    value = item.get("primary_repo") or item.get("repo") or item.get("repository") or item.get("project") or item.get("workspace_name")
+    if value:
+        return str(value)
+    path_value = item.get("workspace") or item.get("cwd") or item.get("session_cwd") or item.get("project_path")
+    if path_value:
+        normalized = str(path_value).replace("\\", "/").rstrip("/")
+        name = normalized.split("/")[-1]
+        return name or "unknown"
+    return "unknown"
+
+
+def normalize_provider_session(item: dict[str, Any], index: int, board_provider: str | None = None) -> dict[str, Any]:
+    if not isinstance(item, dict):
+        item = {"summary": str(item)}
+    provider = infer_provider(item, board_provider)
+    messages = provider_messages(item)
+    user_messages = [text for role, text in messages if role == "user"]
+    assistant_messages = [text for role, text in messages if role == "assistant"]
+    evidence = item.get("evidence_messages") if isinstance(item.get("evidence_messages"), list) else []
+    if not evidence:
+        evidence = [clip(text, 180) for text in (user_messages + assistant_messages)[:4] if text]
+    title = item.get("title") or item.get("title_ja") or item.get("title_en") or item.get("current_goal") or item.get("goal")
+    if not title:
+        title = clip(user_messages[-1] if user_messages else (item.get("summary") or item.get("prompt") or f"Imported {provider} session {index + 1}"), 80)
+    summary = item.get("summary") or item.get("summary_ja") or item.get("summary_en") or item.get("current_goal") or item.get("goal")
+    if not summary:
+        source = item.get("description") or item.get("prompt") or (" / ".join(evidence[:2]) if evidence else title)
+        summary = clip(str(source), 220)
+    start_at = item.get("start_at") or item.get("created_at") or item.get("createdAt") or item.get("timestamp") or item.get("startTime") or item.get("end_at") or datetime.now(JST).isoformat(timespec="seconds")
+    end_at = item.get("end_at") or item.get("updated_at") or item.get("updatedAt") or item.get("lastUpdated") or item.get("endTime") or start_at
+    session_id = item.get("session_id") or item.get("id") or item.get("uuid") or item.get("conversation_id") or item.get("cursor_session_id") or item.get("gemini_session_id") or item.get("name") or f"imported-{provider}-{index + 1}"
+    normalized = {
+        **item,
+        "session_id": str(session_id),
+        "title": str(title),
+        "summary": str(summary),
+        "suggested_status": provider_status(item.get("suggested_status") or item.get("currentStatus") or item.get("status") or item.get("state")),
+        "primary_repo": repo_from_provider_item(item),
+        "start_at": str(start_at),
+        "end_at": str(end_at),
+        "evidence_messages": evidence,
+        "first_user_message": item.get("first_user_message") or (user_messages[0] if user_messages else ""),
+        "last_assistant_message": item.get("last_assistant_message") or (assistant_messages[-1] if assistant_messages else ""),
+        "user_message_count": item.get("user_message_count") or len(user_messages),
+        "assistant_message_count": item.get("assistant_message_count") or len(assistant_messages),
+        "command_count": item.get("command_count") or len([role for role, _ in messages if role == "system"]),
+        "activity_score": item.get("activity_score") or max(1, len(messages) * 8 + len(evidence) * 5),
+        "provider": provider,
+        "provider_session_type": item.get("provider_session_type") or item.get("format") or f"{provider}-import",
+        "provider_source": item.get("provider_source") or item.get("source") or "provider-import",
+    }
+    cluster_key = normalized.get("task_cluster_key") or normalized.get("topic_key") or f"{normalized['primary_repo']}:{slugify(str(title)) or normalized['session_id']}"
+    normalized.setdefault("task_cluster_key", cluster_key)
+    normalized.setdefault("topic_key", cluster_key)
+    normalized.setdefault("lineage_key", cluster_key)
+    normalized.setdefault("task_cluster_label", normalized.get("topic_label") or str(title))
+    normalized.setdefault("topic_label", normalized.get("task_cluster_label"))
+    normalized.setdefault("lineage_label", normalized.get("task_cluster_label"))
+    return normalized
+
+
+def normalize_import_bundle(raw: Any) -> dict[str, Any]:
+    if isinstance(raw, list):
+        board: dict[str, Any] = {"sessions": raw}
+    elif isinstance(raw, dict):
+        board = dict(raw)
+    else:
+        raise SystemExit("input JSON must be an object or an array of sessions")
+    sessions = board.get("sessions") or board.get("conversations") or board.get("items") or []
+    if not isinstance(sessions, list):
+        raise SystemExit("input JSON must contain a sessions array")
+    board_provider = board.get("provider") or board.get("source_tool")
+    board["sessions"] = [normalize_provider_session(item, index, board_provider) for index, item in enumerate(sessions)]
+    board.setdefault("generated_at", datetime.now(JST).isoformat(timespec="seconds"))
+    board.setdefault("source", "provider-import")
+    board.setdefault("schema_version", "0.2.1")
+    providers = sorted({item.get("provider", "generic-ai-session") for item in board["sessions"]})
+    if providers:
+        board.setdefault("supported_providers", providers)
+    return board
+
+
 def render_html(bundle: dict[str, Any], root: Path) -> str:
     template = root.joinpath("templates", "review_template.html").read_text(encoding="utf-8")
     css = root.joinpath("assets", "styles.css").read_text(encoding="utf-8").rstrip()
@@ -2648,7 +2823,7 @@ def main() -> None:
     args = parse_args()
     root = Path(__file__).resolve().parent
     if args.input_json:
-        bundle = json.loads(args.input_json.read_text(encoding="utf-8"))
+        bundle = normalize_import_bundle(json.loads(args.input_json.read_text(encoding="utf-8")))
         sessions = bundle.get("sessions", [])
         if sessions and not bundle.get("task_clusters"):
             bundle["task_clusters"] = enrich_task_clusters(sessions)

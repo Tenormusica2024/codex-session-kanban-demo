@@ -273,10 +273,10 @@ Risk to avoid:
 ### 11. Provider/schema extensibility
 
 Status:
-- Initial implementation added: sample data now includes provider/schema hints, cards display provider badges, and docs clarify that provider support is display/import compatibility only, not agent execution.
+- Extended implementation added: sample data includes provider/schema hints, cards display provider badges, docs clarify that provider support is display/import compatibility only, and importer normalization now accepts lightweight Claude Code / Cursor / Gemini-style aliases for session id, repo, timestamps, status, and message arrays.
 
 Goal:
-- Keep Codex-first while making fields extensible for Claude Code, Gemini, Cursor, etc.
+- Keep Codex-first while making fields and local imports extensible for Claude Code, Gemini, Cursor, etc.
 
 Why:
 - Competitors support many agents; this project can borrow schema flexibility without becoming a runner.

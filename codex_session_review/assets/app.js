@@ -2460,27 +2460,148 @@ function renderImportValidationReport(report) {
   `;
 }
 
+
+function compactText(value, limit = 180) {
+  const text = String(value || "").replace(/\s+/g, " ").trim();
+  if (text.length <= limit) return text;
+  return `${text.slice(0, limit - 1).trim()}…`;
+}
+
+function providerStatus(value) {
+  const raw = String(value || "").trim().toLowerCase();
+  if (["done", "completed", "complete", "success", "closed"].includes(raw)) return "Done";
+  if (["dropped", "cancelled", "canceled", "wontfix", "archived"].includes(raw)) return "Dropped";
+  if (["blocked", "error", "failed", "waiting-on-user"].includes(raw)) return "Blocked";
+  if (["pending", "waiting", "paused", "todo", "backlog"].includes(raw)) return "Pending";
+  if (["in progress", "in_progress", "active", "running", "working"].includes(raw)) return "In Progress";
+  return STATUSES.includes(value) ? value : "Need Review";
+}
+
+function inferProvider(item, boardProvider) {
+  if (item.provider || item.source_tool || item.tool || boardProvider) return item.provider || item.source_tool || item.tool || boardProvider;
+  if ((item.uuid || item.cwd) && (item.messages || item.transcript)) return "claude-code";
+  if ((item.workspace && item.conversation) || item.cursor_session_id) return "cursor-agent";
+  if ((item.history && item.model) || item.gemini_session_id) return "gemini-cli";
+  return "generic-ai-session";
+}
+
+function contentToText(content) {
+  if (!content) return "";
+  if (typeof content === "string") return content.trim();
+  if (Array.isArray(content)) {
+    return content.map((part) => {
+      if (typeof part === "string") return part;
+      if (part && typeof part === "object") return part.text || part.content || part.value || "";
+      return String(part || "");
+    }).filter(Boolean).join("\n").trim();
+  }
+  if (typeof content === "object") {
+    if (Array.isArray(content.parts)) return contentToText(content.parts);
+    return String(content.text || content.content || content.message || content.value || "").trim();
+  }
+  return String(content).trim();
+}
+
+function providerMessages(item) {
+  const rawMessages = item.timeline_messages || item.messages || item.conversation || item.turns || item.history || item.events || [];
+  if (!Array.isArray(rawMessages)) return [];
+  return rawMessages.map((raw) => {
+    let role = "user";
+    let text = "";
+    if (Array.isArray(raw)) {
+      role = String(raw[0] || "user").toLowerCase();
+      text = contentToText(raw[1]);
+    } else if (raw && typeof raw === "object") {
+      role = String(raw.role || raw.speaker || raw.type || "user").toLowerCase();
+      text = contentToText(raw.content || raw.message || raw.text || raw.parts);
+    } else {
+      text = contentToText(raw);
+    }
+    if (["assistant", "model", "agent", "ai"].includes(role)) role = "assistant";
+    else if (["system", "tool", "function"].includes(role)) role = "system";
+    else role = "user";
+    return { role, text };
+  }).filter((item) => item.text);
+}
+
+function repoFromProviderItem(item) {
+  const explicit = item.primary_repo || item.repo || item.repository || item.project || item.workspace_name;
+  if (explicit) return String(explicit);
+  const pathValue = item.workspace || item.cwd || item.session_cwd || item.project_path;
+  if (pathValue) {
+    const parts = String(pathValue).replace(/\\/g, "/").replace(/\/$/, "").split("/");
+    return parts[parts.length - 1] || "unknown";
+  }
+  return "unknown";
+}
+
+function slugify(value) {
+  return String(value || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
+function normalizeProviderSession(item, index, boardProvider) {
+  const source = item && typeof item === "object" ? item : { summary: String(item || "") };
+  const provider = inferProvider(source, boardProvider);
+  const messages = providerMessages(source);
+  const userMessages = messages.filter((msg) => msg.role === "user").map((msg) => msg.text);
+  const assistantMessages = messages.filter((msg) => msg.role === "assistant").map((msg) => msg.text);
+  const evidence = Array.isArray(source.evidence_messages) && source.evidence_messages.length
+    ? source.evidence_messages
+    : [...userMessages, ...assistantMessages].slice(0, 4).map((text) => compactText(text));
+  const title = source.title || source.title_ja || source.title_en || source.current_goal || source.goal || compactText(userMessages[userMessages.length - 1] || source.summary || source.prompt || `Imported ${provider} session ${index + 1}`, 80);
+  const summary = source.summary || source.summary_ja || source.summary_en || source.current_goal || source.goal || compactText(source.description || source.prompt || evidence.slice(0, 2).join(" / ") || title, 220);
+  const sessionId = source.session_id || source.id || source.uuid || source.conversation_id || source.cursor_session_id || source.gemini_session_id || source.name || `imported-${provider}-${index + 1}`;
+  const startAt = source.start_at || source.created_at || source.createdAt || source.timestamp || source.startTime || source.end_at || new Date().toISOString();
+  const endAt = source.end_at || source.updated_at || source.updatedAt || source.lastUpdated || source.endTime || startAt;
+  const primaryRepo = repoFromProviderItem(source);
+  const base = {
+    ...source,
+    session_id: String(sessionId),
+    title: String(title),
+    summary: String(summary),
+    suggested_status: providerStatus(source.suggested_status || source.currentStatus || source.status || source.state),
+    primary_repo: primaryRepo,
+    start_at: String(startAt),
+    end_at: String(endAt),
+    evidence_messages: evidence,
+    first_user_message: source.first_user_message || userMessages[0] || "",
+    last_assistant_message: source.last_assistant_message || assistantMessages[assistantMessages.length - 1] || "",
+    user_message_count: source.user_message_count || userMessages.length,
+    assistant_message_count: source.assistant_message_count || assistantMessages.length,
+    command_count: source.command_count || messages.filter((msg) => msg.role === "system").length,
+    activity_score: source.activity_score || Math.max(1, messages.length * 8 + evidence.length * 5),
+    provider,
+    provider_session_type: source.provider_session_type || source.format || `${provider}-import`,
+    provider_source: source.provider_source || source.source || "provider-import",
+  };
+  const clusterKey = base.task_cluster_key || base.topic_key || `${primaryRepo}:${slugify(title) || base.session_id}`;
+  return {
+    ...base,
+    task_cluster_key: base.task_cluster_key || clusterKey,
+    topic_key: base.topic_key || clusterKey,
+    lineage_key: base.lineage_key || clusterKey,
+    task_cluster_label: base.task_cluster_label || base.topic_label || String(title),
+    topic_label: base.topic_label || base.task_cluster_label || String(title),
+    lineage_label: base.lineage_label || base.task_cluster_label || String(title),
+  };
+}
+
 function normalizeImportedBoardData(raw) {
-  const sessions = Array.isArray(raw) ? raw : raw?.sessions;
+  const sessions = Array.isArray(raw) ? raw : (raw?.sessions || raw?.conversations || raw?.items);
   if (!Array.isArray(sessions)) {
     throw new Error(t("invalidSessionData"));
   }
+  const boardProvider = Array.isArray(raw) ? null : (raw?.provider || raw?.source_tool);
+  const normalizedSessions = sessions.map((item, index) => normalizeProviderSession(item, index, boardProvider));
+  const providers = [...new Set(normalizedSessions.map((item) => item.provider || "generic-ai-session"))].sort();
   const board = {
     ...(Array.isArray(raw) ? {} : raw),
     generated_at: raw?.generated_at || new Date().toISOString(),
     source: raw?.source || "local-import",
+    schema_version: raw?.schema_version || "0.2.1",
+    supported_providers: raw?.supported_providers || providers,
     surface_mode: raw?.surface_mode || "personal",
-    sessions: sessions.map((item, index) => ({
-      session_id: item.session_id || `imported-${index + 1}`,
-      title: item.title || item.title_ja || item.title_en || `Imported session ${index + 1}`,
-      summary: item.summary || item.summary_ja || item.summary_en || "",
-      suggested_status: item.suggested_status || item.currentStatus || "Need Review",
-      primary_repo: item.primary_repo || item.repo || "unknown",
-      start_at: item.start_at || item.created_at || item.end_at || new Date().toISOString(),
-      end_at: item.end_at || item.updated_at || item.start_at || new Date().toISOString(),
-      evidence_messages: Array.isArray(item.evidence_messages) ? item.evidence_messages : [],
-      ...item,
-    })),
+    sessions: normalizedSessions,
   };
   if (!Array.isArray(board.task_clusters)) {
     board.task_clusters = deriveClientTaskClusters(board.sessions);

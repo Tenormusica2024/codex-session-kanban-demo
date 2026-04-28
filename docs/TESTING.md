@@ -162,3 +162,14 @@ npm run local:update:full
 ```
 
 See [Local update helper](./LOCAL_UPDATE_HELPER.md) for direct PowerShell flags and Task Scheduler examples.
+
+## Provider import normalization smoke
+
+The one-command release check runs this smoke test automatically. To verify lightweight Claude Code / Cursor / Gemini-style imports normalize into the common session schema manually:
+
+```powershell
+python .\codex_session_review\build_review_surface.py --input-json .\codex_session_review\sample_data\provider_imports.sample.json --output .\codex_session_review\fixture_snapshot\provider-import.html --json-output .\codex_session_review\fixture_snapshot\provider-import.normalized.json --distribution
+python .\codex_session_review\smoke_public_build.py .\codex_session_review\fixture_snapshot\provider-import.html --distribution
+```
+
+This does not run external agents. It only verifies import/display compatibility.

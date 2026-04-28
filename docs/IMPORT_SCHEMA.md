@@ -8,7 +8,7 @@ Codex Session Kanban is designed around **session-to-task extraction**. Import d
 {
   "generated_at": "2026-04-28T00:00:00+09:00",
   "source": "sample-fixture-public",
-  "schema_version": "0.2.0",
+  "schema_version": "0.2.1",
   "surface_mode": "distribution",
   "supported_providers": ["codex", "claude-code", "gemini-cli", "cursor-agent", "generic-ai-session"],
   "sessions": []
@@ -45,6 +45,30 @@ Codex Session Kanban is designed around **session-to-task extraction**. Import d
 ## Provider metadata fields
 
 Provider support is import/display compatibility only. The static board does not run agents.
+
+The importer also accepts lightweight provider-native shapes and normalizes them into the session fields above. Supported aliases include:
+
+| Canonical field | Accepted aliases/examples |
+| --- | --- |
+| `session_id` | `id`, `uuid`, `conversation_id`, `cursor_session_id`, `gemini_session_id`, `name` |
+| `primary_repo` | `repo`, `repository`, `project`, `workspace_name`, or the basename of `workspace` / `cwd` |
+| `start_at` | `created_at`, `createdAt`, `timestamp`, `startTime` |
+| `end_at` | `updated_at`, `updatedAt`, `lastUpdated`, `endTime` |
+| `suggested_status` | `status`, `state`, `currentStatus`; common values such as `active`, `waiting`, `completed` are mapped to board statuses |
+| messages | `messages`, `conversation`, `turns`, `history`, or `events` with `role`/`speaker` and `content`/`text`/`parts` |
+
+A provider-native sample lives at:
+
+```text
+codex_session_review/sample_data/provider_imports.sample.json
+```
+
+You can normalize and smoke-test it with:
+
+```powershell
+python .\codex_session_review\build_review_surface.py --input-json .\codex_session_review\sample_data\provider_imports.sample.json --output .\codex_session_review\fixture_snapshot\provider-import.html --json-output .\codex_session_review\fixture_snapshot\provider-import.normalized.json --distribution
+python .\codex_session_review\smoke_public_build.py .\codex_session_review\fixture_snapshot\provider-import.html --distribution
+```
 
 | Field | Type | Purpose |
 | --- | --- | --- |

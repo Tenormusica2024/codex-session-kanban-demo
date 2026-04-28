@@ -39,6 +39,15 @@ Invoke-Step "Python compile check" {
         .\codex_session_review\smoke_distribution_package.py
 }
 
+Invoke-Step "Provider import normalization smoke" {
+    python .\codex_session_review\build_review_surface.py `
+        --input-json .\codex_session_review\sample_data\provider_imports.sample.json `
+        --output .\codex_session_review\fixture_snapshot\provider-import.html `
+        --json-output .\codex_session_review\fixture_snapshot\provider-import.normalized.json `
+        --distribution
+    python .\codex_session_review\smoke_public_build.py .\codex_session_review\fixture_snapshot\provider-import.html --distribution
+}
+
 Invoke-Step "Package downloadable distribution" {
     powershell -NoProfile -ExecutionPolicy Bypass -File .\codex_session_review\package_distribution_snapshot.ps1
 }
