@@ -27,56 +27,63 @@ The public fixture demo currently includes:
 
 ## Near-term focus
 
-### 1. Extraction quality
+The initial public-demo hardening pass is largely complete. Next work should be more selective and evidence-driven rather than adding generic Kanban features.
 
-Improve how cards are titled and summarized when sessions include:
+### 1. Lightweight prioritization stats
 
-- preflight phrases such as "check progress" or "review this"
-- setup/tooling detours
-- multiple topics inside one session
-- old context that is only safe to suppress after newer context reconciles it
+Add small, review-oriented stats only if they help decide what to inspect first:
 
-The goal is to reduce cards that look like raw prompts or vague review requests.
+- session count per card / cluster
+- command count and activity score already present on cards
+- optional estimated text/token size if it can be computed cheaply from local/session JSON
+- optional "large session" or "high activity" badge
 
-### 2. Lineage clarity
+This should stay lightweight. Do not turn it into a heavy cost analytics dashboard.
 
-Make it easier to understand:
+### 2. Real-world provider adapter refinement
 
-- why a newer card represents older sessions
-- which sessions were suppressed
-- whether related sessions are same-lineage or parallel tasks inside the same project
+The current importer normalizes lightweight Claude Code / Cursor / Gemini-style shapes. Broader adapters should wait for real export samples or concrete user data shapes.
 
-This should remain an explanation layer, not a full dependency graph.
+Useful next steps when samples exist:
 
-### 3. Personal/local workflow
+- add a provider-specific fixture
+- normalize only stable aliases
+- keep provider support as import/display compatibility, not agent execution
 
-Keep improving the static/local workflow before adding backend features:
+### 3. Personal/private scheduled workflow
 
-- safer import validation
-- clearer override backup/restore
-- better local release checks
-- better docs for keeping real session data private
+The public fixture update helper exists. Personal/private scheduling is intentionally separate and should be documented carefully before adding automation.
 
-### 4. Public demo quality
+Potential next work:
 
-Keep the fixture demo useful without exposing private data:
+- Task Scheduler recipe for private local imports
+- explicit private input/output path examples
+- backup/restore guidance for overrides
+- guardrails that prevent real logs from entering public fixture builds
 
-- maintain representative synthetic examples, currently including topic conflict, same-repo parallel tasks, provider import, and cross-session predecessor suppression
-- cover topic conflict, same-repo parallel tasks, and provider import/display examples
-- keep screenshots current
-- keep release notes and smoke tests aligned
-- keep onboarding concise
+### 4. Extraction quality maintenance
+
+Do not add more synthetic fixture cases by default. Add fixtures only when a new real misclassification appears, such as:
+
+- a new topic-conflict pattern
+- a same-repo parallel task that incorrectly merges
+- a predecessor session that is suppressed without enough newer context
+- a provider export shape that loses title/body/status evidence
+
+### 5. UI polish by evidence
+
+Keyboard and desktop/mobile/narrow smoke coverage now exists. Further UI work should be triggered by screenshots, smoke failures, or a specific manual-review bottleneck.
 
 ## Candidate future work
 
 These are useful, but should be implemented only if they strengthen the core review workflow.
 
-- Lightweight token/session stats if they help prioritization
-- Broader provider import adapters after real-world export samples are reviewed
-- More fixture examples only when they demonstrate a new extraction/lineage failure mode
-- Optional Task Scheduler recipe refinements for personal/private imports
-- More keyboard-first triage actions when they remove a real drag/click bottleneck
-- Further mobile/narrow-width polish only when screenshots or smoke tests reveal a concrete regression
+1. Lightweight token/session stats for prioritization.
+2. Broader provider import adapters after real-world export samples are reviewed.
+3. Optional Task Scheduler recipe refinements for personal/private imports.
+4. More fixture examples only when they demonstrate a new extraction/lineage failure mode.
+5. More keyboard-first triage actions when they remove a real drag/click bottleneck.
+6. Further mobile/narrow-width polish only when screenshots or smoke tests reveal a concrete regression.
 
 ## Deferred by default
 

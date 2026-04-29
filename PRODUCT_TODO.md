@@ -620,6 +620,78 @@ Why:
 Risk to avoid:
 - Keep this separate from private data collection. The public helper builds fixture data only; personal/private session import recipes should remain explicit and local.
 
+## P1 remaining / next candidates
+
+### 35. Lightweight prioritization stats
+
+Status:
+- Not implemented yet. Cards already expose command count and activity score; the next step is to decide whether small text/session-size stats improve triage enough to add.
+
+Goal:
+- Add lightweight signals that help decide what to inspect first, such as session count, estimated text/token size, high-activity badge, or large-session warning.
+
+Why:
+- This can improve review prioritization without turning the project into a cost dashboard.
+
+Risk to avoid:
+- Do not add heavy token/cost analytics, cloud billing concepts, or noisy metrics that distract from session-to-task review.
+
+### 36. Real-world provider adapter samples
+
+Status:
+- Lightweight provider import normalization exists for Claude Code / Cursor / Gemini-style shapes. No broader provider adapter should be added until real export samples or concrete schema needs appear.
+
+Goal:
+- Improve provider import compatibility only from observed data shapes.
+
+Why:
+- Provider support is useful, but speculative adapters can create false compatibility and maintenance burden.
+
+Risk to avoid:
+- Do not add agent execution or provider-specific orchestration scope.
+
+### 37. Personal/private Task Scheduler recipe
+
+Status:
+- Public fixture local update helper exists. Personal/private scheduled import is not documented as a complete recipe yet.
+
+Goal:
+- Document a safe private-only scheduled workflow for local session imports, generated review HTML, and override backup/restore.
+
+Why:
+- The intended personal use case benefits from periodic refresh, but the public/private boundary must stay explicit.
+
+Risk to avoid:
+- Do not let real `.codex` logs, local paths, or private session data enter public fixture builds.
+
+### 38. Evidence-driven fixture additions
+
+Status:
+- Current public fixture covers topic conflict, same-repo parallel tasks, provider import, cross-session predecessor suppression, needs-input/blocker, and mobile review control examples.
+
+Goal:
+- Add new fixtures only when a real misclassification pattern appears.
+
+Why:
+- Fixture quality matters, but too many synthetic examples can make the demo noisy.
+
+Risk to avoid:
+- Do not add fixture cases just for volume; each case should demonstrate a distinct extraction/lineage behavior.
+
+### 39. Evidence-driven UI/keyboard polish
+
+Status:
+- Board and candidate keyboard triage exist. Desktop, mobile, and 320px narrow smoke paths exist.
+
+Goal:
+- Add shortcuts or UI refinements only when manual review shows a concrete bottleneck.
+
+Why:
+- The UI should stay fast and focused without becoming a generic PM interface.
+
+Risk to avoid:
+- Do not overload keyboard shortcuts or hide evidence for compactness.
+
 ## P2 / defer unless clearly needed
 
 - Built-in code diff review
@@ -646,11 +718,8 @@ For each feature:
 
 ## Current recommended order
 
-1. Candidate backlog cleanup
-2. Explanation/evidence panel
-3. Needs-input badge/filter
-4. Done/Dropped collapse
-5. Evidence-aware search
-6. Stale predecessor/successor display
-7. Keyboard triage shortcuts
-8. Parent/child related task display
+1. Lightweight prioritization stats, if kept small and review-oriented.
+2. Personal/private Task Scheduler recipe, if local scheduled refresh becomes the next operational need.
+3. Real-world provider adapter refinement, only after concrete export samples are available.
+4. Evidence-driven fixture additions, only after a new misclassification appears.
+5. Evidence-driven UI/keyboard polish, only after a concrete manual-review bottleneck appears.

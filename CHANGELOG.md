@@ -4,6 +4,13 @@ All notable public-demo changes are tracked here.
 
 This project is still pre-1.0. Entries focus on public distribution, fixture safety, and the session-to-task review workflow.
 
+## 0.1.17 - 2026-04-29
+
+### Changed
+
+- Refreshed roadmap and product TODO to reflect the completed public-demo hardening pass.
+- Reordered remaining work around lightweight prioritization stats, private scheduled workflow docs, real provider samples, and evidence-driven fixture/UI additions.
+
 ## 0.1.16 - 2026-04-29
 
 ### Added
