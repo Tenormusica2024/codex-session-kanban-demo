@@ -4,6 +4,13 @@ All notable public-demo changes are tracked here.
 
 This project is still pre-1.0. Entries focus on public distribution, fixture safety, and the session-to-task review workflow.
 
+## 0.1.36 - 2026-04-29
+
+### Changed
+
+- GitHub Pages push deployments now run desktop, mobile, and narrow Playwright browser smoke checks against the built public artifact before deploy.
+- Testing docs, release checklist, and product TODO now reflect that browser smoke is part of the normal push workflow, with manual workflow smoke still available for dispatch-only checks.
+
 ## 0.1.35 - 2026-04-29
 
 ### Added

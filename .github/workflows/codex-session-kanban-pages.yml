@@ -91,18 +91,22 @@ jobs:
         run: python codex_session_review/smoke_distribution_package.py codex_session_review/codex-session-kanban-demo.zip --distribution
 
       - name: Install browser smoke dependencies
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_browser_smoke == 'true' }}
+        if: ${{ github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.run_browser_smoke == 'true') }}
         run: |
           npm ci
           npx playwright install chromium
 
       - name: Browser smoke test public artifact
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_browser_smoke == 'true' }}
+        if: ${{ github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.run_browser_smoke == 'true') }}
         run: npm run smoke:browser -- --file codex_session_review/github_pages/index.html
 
       - name: Mobile browser smoke test public artifact
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_browser_smoke == 'true' }}
+        if: ${{ github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.run_browser_smoke == 'true') }}
         run: npm run smoke:browser:mobile -- --file codex_session_review/github_pages/index.html
+
+      - name: Narrow browser smoke test public artifact
+        if: ${{ github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.run_browser_smoke == 'true') }}
+        run: npm run smoke:browser:narrow -- --file codex_session_review/github_pages/index.html
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v5

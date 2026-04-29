@@ -123,14 +123,15 @@ The normal Pages workflow always runs:
 - public fixture build
 - static artifact smoke
 - downloadable zip package smoke
+- desktop browser smoke on the built artifact
+- mobile browser smoke on the built artifact
+- narrow 320px browser smoke on the built artifact
 
-The heavier browser smoke is optional. Run the workflow manually with:
+Manual workflow runs can also run the browser smoke path without a push by setting:
 
 - `run_browser_smoke=true`
 
-That manual browser smoke runs both desktop and mobile viewport checks.
-
-This keeps push deployments fast while still allowing a reproducible browser check without CiC.
+The manual browser smoke covers desktop, mobile, and narrow viewport checks.
 
 ## When CiC is still useful
 
