@@ -42,7 +42,7 @@ const I18N = {
     guideNoteSchedule:
       "配布版は sample fixture だけから GitHub Actions で生成します。外部 LLM API や実セッションは使いません。",
     guideKeyboard:
-      "ショートカット: / で検索、? で使い方、Esc で使い方を閉じる、x でボードと候補の絞り込み解除。j/k でカード選択移動、Alt+↑/↓ で同列順位変更、1-6 で状態変更、c でsession IDコピー。候補一覧フォーカス中は j/k で候補移動、Enterで詳細、aで推奨列へ追加。入力欄フォーカス中は無効。",
+      "ショートカット: / で検索、? で使い方、Esc で使い方を閉じる、x でボードと候補の絞り込み解除。j/k でカード選択移動、Alt+↑/↓ で同列順位変更、1-6 で状態変更、c でsession IDコピー。候補一覧フォーカス中は j/k で候補移動、Enterで詳細、aで推奨列へ追加。b でカード要約コピー。入力欄フォーカス中は無効。",
     statVisible: "表示中セッション",
     statOverrides: "手動固定",
     statAutoReady: "自動処理候補",
@@ -290,7 +290,7 @@ const I18N = {
     guideNoteSchedule:
       "The public demo is generated from sample fixtures by GitHub Actions. It uses no external LLM API and no real session logs.",
     guideKeyboard:
-      "Shortcuts: / focuses search, ? toggles the guide, and Esc closes it, and x clears board and candidate filters. j/k select cards, Alt+↑/↓ reorder within a column, 1-6 move status, c copy session ID. When the candidate list is focused, j/k move candidates, Enter previews, and a adds to the recommended column. Disabled while typing in inputs.",
+      "Shortcuts: / focuses search, ? toggles the guide, and Esc closes it, and x clears board and candidate filters. j/k select cards, Alt+↑/↓ reorder within a column, 1-6 move status, c copy session ID. When the candidate list is focused, j/k move candidates, Enter previews, and a adds to the recommended column. Press b to copy the selected card brief. Disabled while typing in inputs.",
     statVisible: "Visible sessions",
     statOverrides: "Human overrides",
     statAutoReady: "Auto-ready",
@@ -1947,6 +1947,21 @@ function copySelectedSessionId() {
   navigator.clipboard?.writeText(session.session_id).catch(() => {});
 }
 
+function selectedRelatedSessions(session, mergedSessions = getMergedSessions()) {
+  if (!session) return [];
+  const family = session.task_cluster_family || session.task_cluster_label;
+  return mergedSessions
+    .filter((item) => (item.task_cluster_family || item.task_cluster_label) === family && item.session_id !== session.session_id)
+    .slice(0, 6);
+}
+
+function copySelectedCardBrief() {
+  const merged = getMergedSessions();
+  const session = merged.find((item) => item.session_id === state.selectedId);
+  if (!session) return;
+  navigator.clipboard?.writeText(cardBriefText(session, selectedRelatedSessions(session, merged))).catch(() => {});
+}
+
 function isTypingTarget(target) {
   const tag = String(target?.tagName || "").toLowerCase();
   return tag === "input" || tag === "textarea" || tag === "select" || Boolean(target?.isContentEditable);
@@ -2037,6 +2052,9 @@ function handleKeyboardTriage(event) {
   } else if (event.key.toLowerCase() === "c") {
     event.preventDefault();
     copySelectedSessionId();
+  } else if (event.key.toLowerCase() === "b") {
+    event.preventDefault();
+    copySelectedCardBrief();
   }
 }
 
@@ -2070,9 +2088,7 @@ function renderDetail() {
     panel.innerHTML = `<p class="detail-empty">${escapeHtml(t("detailEmpty"))}</p>`;
     return;
   }
-  const relatedSessions = merged
-    .filter((item) => (item.task_cluster_family || item.task_cluster_label) === (session.task_cluster_family || session.task_cluster_label) && item.session_id !== session.session_id)
-    .slice(0, 6);
+  const relatedSessions = selectedRelatedSessions(session, merged);
   const rationale = buildCardRationale(session, relatedSessions);
   const detailLineage = lineageInfo(session, relatedSessions);
   const taskMap = relatedTaskMap(session, displaySessions);

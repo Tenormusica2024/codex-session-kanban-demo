@@ -285,6 +285,8 @@ async function main() {
   const cardLink = await page.evaluate(() => window.__copiedText || "");
   await page.click("#copy-card-brief");
   const cardBrief = await page.evaluate(() => window.__copiedText || "");
+  await page.keyboard.press("b");
+  const keyboardCardBrief = await page.evaluate(() => window.__copiedText || "");
   if (keyboardTriage.quickStatus !== "In Progress") {
     errors.push(`keyboard status shortcut did not move selected card to In Progress: ${keyboardTriage.quickStatus}`);
   }
@@ -296,6 +298,9 @@ async function main() {
   }
   if (keyboardTriage.selectedId && keyboardTriage.copiedText && keyboardTriage.copiedText !== keyboardTriage.selectedId) {
     errors.push("keyboard copy shortcut copied the wrong session_id");
+  }
+  if (!keyboardCardBrief.includes(keyboardTriage.selectedId) || !/summary:|session_id:|status:/i.test(keyboardCardBrief)) {
+    errors.push("keyboard card-brief shortcut did not copy a usable brief");
   }
 
   await browser.close();
@@ -314,6 +319,7 @@ async function main() {
     keyboardTriage,
     cardLink,
     cardBrief,
+    keyboardCardBrief,
     note: promoted.visibleTextHasJapanese
       ? "Japanese may remain in source/session data; static English UI labels were checked separately."
       : "No Japanese text found in visible page text.",

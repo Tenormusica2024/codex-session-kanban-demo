@@ -4,6 +4,17 @@ All notable public-demo changes are tracked here.
 
 This project is still pre-1.0. Entries focus on public distribution, fixture safety, and the session-to-task review workflow.
 
+## 0.1.30 - 2026-04-29
+
+### Added
+
+- Keyboard shortcut `b` copies the selected card brief, matching the detail-panel copy-card-brief action.
+- Browser smoke coverage verifies the card-brief keyboard shortcut.
+
+### Changed
+
+- The workflow guide now documents the card-brief shortcut so handoff summaries can be copied without opening the detail action row.
+
 ## 0.1.29 - 2026-04-29
 
 ### Added

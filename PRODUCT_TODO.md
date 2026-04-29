@@ -682,7 +682,7 @@ Risk to avoid:
 
 Status:
 - Board and candidate keyboard triage exist. Desktop, mobile, and 320px narrow smoke paths exist.
-- Follow-up added `/` search focus, `?` workflow-guide toggle, `Esc` guide close, `x` clear-filters, candidate-list filtering, filter result summary, expanded attention filters, candidate-review quick filters, selected-card URL hashes, copy-card links, copy-card briefs, and browser smoke coverage for these review shortcuts.
+- Follow-up added `/` search focus, `?` workflow-guide toggle, `Esc` guide close, `x` clear-filters, candidate-list filtering, filter result summary, expanded attention filters, candidate-review quick filters, selected-card URL hashes, copy-card links, copy-card briefs, the `b` card-brief shortcut, and browser smoke coverage for these review shortcuts.
 
 Goal:
 - Add shortcuts or UI refinements only when manual review shows a concrete bottleneck.
