@@ -82,7 +82,7 @@ Risk to avoid:
 ### 3. Needs-input badge/filter
 
 Status:
-- Initial implementation added: cards with blocker/auth/login/credential/manual-action/deploy/budget/rate-limit signals get a `needs input` badge and can be filtered from the toolbar. This stays as a badge/filter, not a new column.
+- Extended implementation added: cards with blocker/auth/login/credential/manual-action/deploy/budget/rate-limit signals get a `needs input` badge and can be filtered from the toolbar. The same attention filter now also covers extraction quality review, multi-session lineage, and high-activity/large-session review risk without adding new columns.
 
 Goal:
 - Distinguish ordinary review from true user/input blockers:
@@ -682,7 +682,7 @@ Risk to avoid:
 
 Status:
 - Board and candidate keyboard triage exist. Desktop, mobile, and 320px narrow smoke paths exist.
-- Follow-up added `/` search focus, `?` workflow-guide toggle, `Esc` guide close, `x` clear-filters, candidate-list filtering, filter result summary, and browser smoke coverage for these no-mouse review shortcuts.
+- Follow-up added `/` search focus, `?` workflow-guide toggle, `Esc` guide close, `x` clear-filters, candidate-list filtering, filter result summary, expanded attention filters, and browser smoke coverage for these no-mouse review shortcuts.
 
 Goal:
 - Add shortcuts or UI refinements only when manual review shows a concrete bottleneck.

@@ -4,6 +4,17 @@ All notable public-demo changes are tracked here.
 
 This project is still pre-1.0. Entries focus on public distribution, fixture safety, and the session-to-task review workflow.
 
+## 0.1.26 - 2026-04-29
+
+### Added
+
+- Expanded the attention filter with quality-review, multi-session lineage, and high-activity/large-session options.
+- Browser smoke coverage for attention-based quality filtering and `x` reset behavior.
+
+### Changed
+
+- Reviewers can now jump directly to extraction-risk or lineage-heavy cards without adding new Kanban columns.
+
 ## 0.1.25 - 2026-04-29
 
 ### Added

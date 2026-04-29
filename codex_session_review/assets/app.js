@@ -68,6 +68,9 @@ const I18N = {
     allAttention: "すべて",
     attentionNeedsInput: "入力/操作待ち",
     attentionHasBlocker: "blockerあり",
+    attentionQualityReview: "品質要確認",
+    attentionLineage: "複数session代表",
+    attentionHighActivity: "高活動/大きいsession",
     clearFilters: "絞り込み解除",
     clearFiltersShortcut: "絞り込み解除: x",
     filterSummary: "表示 {cards}件 / 候補 {candidates}件 / 絞り込み {filters}",
@@ -310,6 +313,9 @@ const I18N = {
     allAttention: "All",
     attentionNeedsInput: "Needs input",
     attentionHasBlocker: "Has blocker",
+    attentionQualityReview: "Needs quality review",
+    attentionLineage: "Multi-session representative",
+    attentionHighActivity: "High activity / large session",
     clearFilters: "Clear filters",
     clearFiltersShortcut: "Clear filters: x",
     filterSummary: "Showing {cards} cards / {candidates} candidates / filters {filters}",
@@ -1163,6 +1169,9 @@ function sessionMatchesCurrentFilters(session, { includeStatus = true } = {}) {
     const signals = attentionSignals(session);
     if (state.attention === "needs-input" && !signals.needsInput) return false;
     if (state.attention === "has-blocker" && !signals.hasBlocker) return false;
+    if (state.attention === "quality-review" && auditExtractionQuality(session).ok) return false;
+    if (state.attention === "lineage" && !lineageInfo(session).hasMerged) return false;
+    if (state.attention === "high-activity" && !lightweightStats(session).highActivity && !lightweightStats(session).largeSession) return false;
   }
   const search = state.search.trim().toLowerCase();
   return !search || sessionSearchHaystack(session).includes(search);
@@ -1284,6 +1293,9 @@ function renderAttentionFilter() {
     <option value="all">${escapeHtml(t("allAttention"))}</option>
     <option value="needs-input">${escapeHtml(t("attentionNeedsInput"))}</option>
     <option value="has-blocker">${escapeHtml(t("attentionHasBlocker"))}</option>
+    <option value="quality-review">${escapeHtml(t("attentionQualityReview"))}</option>
+    <option value="lineage">${escapeHtml(t("attentionLineage"))}</option>
+    <option value="high-activity">${escapeHtml(t("attentionHighActivity"))}</option>
   `;
   select.value = state.attention;
 }

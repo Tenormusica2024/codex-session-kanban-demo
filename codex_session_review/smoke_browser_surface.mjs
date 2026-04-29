@@ -174,6 +174,16 @@ async function main() {
   if (clearButtonState.search || clearButtonState.repo !== "all" || clearButtonState.status !== "all" || clearButtonState.cluster !== "all" || clearButtonState.attention !== "all") {
     errors.push(`clear filters button failed: ${JSON.stringify(clearButtonState)}`);
   }
+  await page.selectOption("#attention-filter", "quality-review");
+  await page.waitForTimeout(50);
+  const attentionFilter = await page.evaluate(() => ({
+    value: document.querySelector("#attention-filter")?.value || "",
+    candidateCards: document.querySelectorAll(".candidate-card").length,
+    filterSummary: document.querySelector("#filter-summary")?.textContent?.trim() || "",
+  }));
+  if (attentionFilter.value !== "quality-review" || attentionFilter.candidateCards <= 0 || !/active|有効|候補|candidates/i.test(attentionFilter.filterSummary)) {
+    errors.push(`attention quality filter failed: ${JSON.stringify(attentionFilter)}`);
+  }
   await page.keyboard.press("/");
   await page.keyboard.type("provider");
   await page.evaluate(() => document.querySelector("#search-input")?.blur());
@@ -181,8 +191,9 @@ async function main() {
   const clearShortcutState = await page.evaluate(() => ({
     search: document.querySelector("#search-input")?.value || "",
     status: document.querySelector("#status-filter")?.value || "",
+    attention: document.querySelector("#attention-filter")?.value || "",
   }));
-  if (clearShortcutState.search || clearShortcutState.status !== "all") {
+  if (clearShortcutState.search || clearShortcutState.status !== "all" || clearShortcutState.attention !== "all") {
     errors.push(`clear filters shortcut failed: ${JSON.stringify(clearShortcutState)}`);
   }
   await page.keyboard.press("Escape");
@@ -280,6 +291,7 @@ async function main() {
     promoted,
     shortcutSearch,
     clearFilters: { button: clearButtonState, shortcut: clearShortcutState },
+    attentionFilter,
     guideShortcuts: { open: guideOpen, closed: guideClosed },
     candidateKeyboard,
     keyboardTriage,
