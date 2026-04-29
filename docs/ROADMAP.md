@@ -24,21 +24,22 @@ The public fixture demo currently includes:
 - one-command release checks
 - local update helper for fixture refresh, browser smoke, optional package smoke, and manual/Task Scheduler use
 - provider import normalization for lightweight Claude Code / Cursor / Gemini-style JSON shapes
+- lightweight prioritization stats for estimated text size, high-activity signals, and large-session signals
 
 ## Near-term focus
 
 The initial public-demo hardening pass is largely complete. Next work should be more selective and evidence-driven rather than adding generic Kanban features.
 
-### 1. Lightweight prioritization stats
+### 1. Personal/private scheduled workflow
 
-Add small, review-oriented stats only if they help decide what to inspect first:
+The public fixture update helper exists. Personal/private scheduling is intentionally separate and should be documented carefully before adding automation.
 
-- session count per card / cluster
-- command count and activity score already present on cards
-- optional estimated text/token size if it can be computed cheaply from local/session JSON
-- optional "large session" or "high activity" badge
+Potential next work:
 
-This should stay lightweight. Do not turn it into a heavy cost analytics dashboard.
+- Task Scheduler recipe for private local imports
+- explicit private input/output path examples
+- backup/restore guidance for overrides
+- guardrails that prevent real logs from entering public fixture builds
 
 ### 2. Real-world provider adapter refinement
 
@@ -50,18 +51,7 @@ Useful next steps when samples exist:
 - normalize only stable aliases
 - keep provider support as import/display compatibility, not agent execution
 
-### 3. Personal/private scheduled workflow
-
-The public fixture update helper exists. Personal/private scheduling is intentionally separate and should be documented carefully before adding automation.
-
-Potential next work:
-
-- Task Scheduler recipe for private local imports
-- explicit private input/output path examples
-- backup/restore guidance for overrides
-- guardrails that prevent real logs from entering public fixture builds
-
-### 4. Extraction quality maintenance
+### 3. Extraction quality maintenance
 
 Do not add more synthetic fixture cases by default. Add fixtures only when a new real misclassification appears, such as:
 
@@ -70,7 +60,7 @@ Do not add more synthetic fixture cases by default. Add fixtures only when a new
 - a predecessor session that is suppressed without enough newer context
 - a provider export shape that loses title/body/status evidence
 
-### 5. UI polish by evidence
+### 4. UI polish by evidence
 
 Keyboard and desktop/mobile/narrow smoke coverage now exists. Further UI work should be triggered by screenshots, smoke failures, or a specific manual-review bottleneck.
 
@@ -78,12 +68,12 @@ Keyboard and desktop/mobile/narrow smoke coverage now exists. Further UI work sh
 
 These are useful, but should be implemented only if they strengthen the core review workflow.
 
-1. Lightweight token/session stats for prioritization.
+1. Optional Task Scheduler recipe refinements for personal/private imports.
 2. Broader provider import adapters after real-world export samples are reviewed.
-3. Optional Task Scheduler recipe refinements for personal/private imports.
-4. More fixture examples only when they demonstrate a new extraction/lineage failure mode.
-5. More keyboard-first triage actions when they remove a real drag/click bottleneck.
-6. Further mobile/narrow-width polish only when screenshots or smoke tests reveal a concrete regression.
+3. More fixture examples only when they demonstrate a new extraction/lineage failure mode.
+4. More keyboard-first triage actions when they remove a real drag/click bottleneck.
+5. Further mobile/narrow-width polish only when screenshots or smoke tests reveal a concrete regression.
+6. Lightweight prioritization-stat refinements only if the rough signals become noisy or insufficient.
 
 ## Deferred by default
 

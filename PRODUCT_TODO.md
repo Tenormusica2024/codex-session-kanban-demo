@@ -620,12 +620,12 @@ Why:
 Risk to avoid:
 - Keep this separate from private data collection. The public helper builds fixture data only; personal/private session import recipes should remain explicit and local.
 
-## P1 remaining / next candidates
+## P1 tracked / next candidates
 
 ### 35. Lightweight prioritization stats
 
 Status:
-- Not implemented yet. Cards already expose command count and activity score; the next step is to decide whether small text/session-size stats improve triage enough to add.
+- Implemented in v0.1.18. Cards and detail view now expose rough local text-unit estimates, high-activity signals, and large-session signals for review prioritization.
 
 Goal:
 - Add lightweight signals that help decide what to inspect first, such as session count, estimated text/token size, high-activity badge, or large-session warning.
@@ -718,8 +718,8 @@ For each feature:
 
 ## Current recommended order
 
-1. Lightweight prioritization stats, if kept small and review-oriented.
-2. Personal/private Task Scheduler recipe, if local scheduled refresh becomes the next operational need.
-3. Real-world provider adapter refinement, only after concrete export samples are available.
-4. Evidence-driven fixture additions, only after a new misclassification appears.
-5. Evidence-driven UI/keyboard polish, only after a concrete manual-review bottleneck appears.
+1. Personal/private Task Scheduler recipe, if local scheduled refresh becomes the next operational need.
+2. Real-world provider adapter refinement, only after concrete export samples are available.
+3. Evidence-driven fixture additions, only after a new misclassification appears.
+4. Evidence-driven UI/keyboard polish, only after a concrete manual-review bottleneck appears.
+5. Lightweight prioritization stats refinement, only if the current rough signals become noisy or insufficient.

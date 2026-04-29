@@ -71,6 +71,7 @@ Real session data should stay local or in a private repository. The public demo 
 - **Inspectable extraction**: detail panels expose evidence categories, extraction timeline, suppressed predecessor sessions, and extraction debug hints.
 - **Static/private-safe distribution**: public demos use fixture data only; real `.codex` logs stay local/private.
 - **Provider import normalization**: lightweight Claude Code / Cursor / Gemini-style exports can be normalized into the common review schema without adding agent execution scope.
+- **Lightweight prioritization stats**: cards expose rough local text-unit estimates, high-activity badges, and large-session hints without becoming a cost dashboard.
 - **Representative public fixtures**: synthetic examples cover topic conflict, same-repo parallel tasks, cross-session predecessor suppression, and non-Codex provider metadata.
 
 ## Quick start

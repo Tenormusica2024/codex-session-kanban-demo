@@ -779,6 +779,12 @@ button.secondary,
   background: rgba(100, 210, 255, 0.08);
 }
 
+.tag.signal {
+  color: #ffd6a5;
+  border: 1px solid rgba(255, 214, 165, 0.24);
+  background: rgba(255, 214, 165, 0.07);
+}
+
 .tag.provider {
   color: #d6ccff;
   border: 1px solid rgba(138, 125, 255, 0.24);
@@ -980,6 +986,11 @@ button.secondary,
 
 .rationale-box ul {
   margin-top: 6px;
+}
+
+.stats-box {
+  border: 1px solid rgba(138, 125, 255, 0.16);
+  background: linear-gradient(135deg, rgba(138, 125, 255, 0.055), rgba(100, 210, 255, 0.035));
 }
 
 .quality-box.review {

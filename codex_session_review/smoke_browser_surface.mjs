@@ -167,6 +167,7 @@ async function main() {
     statusControls: document.querySelectorAll("#quick-status, #detail-status, .card-status-select, #manual-status").length,
     visibleTextLength: document.body.innerText.length,
     visibleTextHasJapanese: /[ぁ-んァ-ン一-龥]/.test(document.body.innerText),
+    hasLightweightStats: /Text ~|Lightweight priority stats|軽量優先度stats|High activity|高活動/.test(document.body.innerText),
     scrollWidth: document.documentElement.scrollWidth,
     hasHorizontalOverflow: document.documentElement.scrollWidth > window.innerWidth + 2,
   }));
@@ -178,6 +179,7 @@ async function main() {
   if (!promoted.detailHasSessionId) errors.push("detail panel does not expose session_id");
   if (promoted.statusControls <= 0) errors.push("status controls are missing after promotion");
   if (promoted.visibleTextLength <= 200) errors.push("visible text is unexpectedly short");
+  if (!promoted.hasLightweightStats) errors.push("lightweight prioritization stats are not visible");
   if (promoted.hasHorizontalOverflow) {
     errors.push(`horizontal overflow after interaction: viewport=${viewport.width}, scrollWidth=${promoted.scrollWidth}`);
   }

@@ -2457,6 +2457,104 @@ def build_quality_report(sessions: list[dict[str, Any]], task_clusters: list[dic
     }
 
 
+
+def _coerce_text_parts(value: Any) -> list[str]:
+    if value is None:
+        return []
+    if isinstance(value, str):
+        return [value]
+    if isinstance(value, (int, float, bool)):
+        return [str(value)]
+    if isinstance(value, list):
+        parts: list[str] = []
+        for item in value:
+            parts.extend(_coerce_text_parts(item))
+        return parts
+    if isinstance(value, dict):
+        parts: list[str] = []
+        for key in ("text", "content", "message", "summary", "title"):
+            if key in value:
+                parts.extend(_coerce_text_parts(value.get(key)))
+        return parts
+    return [str(value)]
+
+
+def estimate_session_text_stats(session: dict[str, Any]) -> tuple[int, int]:
+    fields = [
+        "title",
+        "summary",
+        "task_body_summary",
+        "current_goal",
+        "deep_summary",
+        "latest_meaningful_change",
+        "latest_phase_context",
+        "blocker",
+        "first_user_message",
+        "last_user_message",
+        "last_assistant_message",
+        "suggested_reason",
+    ]
+    parts: list[str] = []
+    for field in fields:
+        parts.extend(_coerce_text_parts(session.get(field)))
+    for field in ("evidence_messages", "recent_user_messages", "timeline_messages"):
+        parts.extend(_coerce_text_parts(session.get(field)))
+    chars = len("\n".join(item for item in parts if item))
+    # Deliberately a rough review-sorting signal, not billing-grade token accounting.
+    estimated_tokens = math.ceil(chars / 4) if chars else 0
+    return chars, estimated_tokens
+
+
+def apply_lightweight_prioritization_stats(bundle: dict[str, Any]) -> dict[str, Any]:
+    sessions = bundle.get("sessions") or []
+    by_id: dict[str, dict[str, Any]] = {}
+    for session in sessions:
+        if not isinstance(session, dict):
+            continue
+        chars, estimated_tokens = estimate_session_text_stats(session)
+        session["text_size_chars"] = int(session.get("text_size_chars") or chars)
+        session["estimated_tokens"] = int(session.get("estimated_tokens") or estimated_tokens)
+        command_count = int(session.get("command_count") or 0)
+        activity_score = int(session.get("activity_score") or 0)
+        related_count = int(session.get("related_session_count") or 1)
+        high_activity = bool(session.get("high_activity_signal")) or command_count >= 25 or activity_score >= 120
+        large_session = bool(session.get("large_session_signal")) or session["estimated_tokens"] >= 700 or command_count >= 50
+        flags = set(session.get("prioritization_flags") or [])
+        if high_activity:
+            flags.add("high-activity")
+        if large_session:
+            flags.add("large-session")
+        if related_count >= 2:
+            flags.add("multi-session")
+        session["high_activity_signal"] = high_activity
+        session["large_session_signal"] = large_session
+        session["prioritization_flags"] = sorted(flags)
+        if session.get("session_id"):
+            by_id[str(session["session_id"])] = session
+
+    for cluster in bundle.get("task_clusters") or []:
+        if not isinstance(cluster, dict):
+            continue
+        members = [by_id[item] for item in cluster.get("session_ids") or [] if item in by_id]
+        if not members:
+            continue
+        cluster["estimated_tokens_total"] = sum(int(item.get("estimated_tokens") or 0) for item in members)
+        cluster["estimated_tokens_max"] = max(int(item.get("estimated_tokens") or 0) for item in members)
+        cluster["high_activity_count"] = sum(1 for item in members if item.get("high_activity_signal"))
+        cluster["large_session_count"] = sum(1 for item in members if item.get("large_session_signal"))
+
+    cluster_lookup = {item.get("cluster_key"): item for item in (bundle.get("task_clusters") or []) if isinstance(item, dict)}
+    for task in bundle.get("suggested_tasks") or []:
+        if not isinstance(task, dict):
+            continue
+        cluster = cluster_lookup.get(task.get("cluster_key"))
+        if cluster:
+            task["estimated_tokens_total"] = cluster.get("estimated_tokens_total", 0)
+            task["estimated_tokens_max"] = cluster.get("estimated_tokens_max", 0)
+            task["high_activity_count"] = cluster.get("high_activity_count", 0)
+            task["large_session_count"] = cluster.get("large_session_count", 0)
+    return bundle
+
 def collect_sessions(codex_home: Path, days: int, max_sessions: int, min_user_messages: int) -> dict[str, Any]:
     now = datetime.now(timezone.utc)
     cutoff = now - timedelta(days=days)
@@ -2527,15 +2625,17 @@ def collect_sessions(codex_home: Path, days: int, max_sessions: int, min_user_me
 
     task_clusters = enrich_task_clusters(sessions)
     suggested_tasks = build_suggested_tasks(task_clusters)
-    return {
+    bundle = {
         "generated_at": datetime.now(JST).isoformat(timespec="seconds"),
         "source": str(codex_home),
         "mode": "auto-first-with-optional-human-override",
         "sessions": sessions,
         "task_clusters": task_clusters,
         "suggested_tasks": suggested_tasks,
-        "quality_report": build_quality_report(sessions, task_clusters, suggested_tasks),
     }
+    apply_lightweight_prioritization_stats(bundle)
+    bundle["quality_report"] = build_quality_report(sessions, task_clusters, suggested_tasks)
+    return bundle
 
 
 def render_markdown(bundle: dict[str, Any]) -> str:
@@ -2829,6 +2929,8 @@ def main() -> None:
             bundle["task_clusters"] = enrich_task_clusters(sessions)
         if bundle.get("task_clusters") and not bundle.get("suggested_tasks"):
             bundle["suggested_tasks"] = build_suggested_tasks(bundle["task_clusters"])
+        if sessions and bundle.get("task_clusters") and bundle.get("suggested_tasks"):
+            apply_lightweight_prioritization_stats(bundle)
         if sessions and bundle.get("task_clusters") and bundle.get("suggested_tasks") and not bundle.get("quality_report"):
             bundle["quality_report"] = build_quality_report(sessions, bundle["task_clusters"], bundle["suggested_tasks"])
     else:
@@ -2838,6 +2940,8 @@ def main() -> None:
             max_sessions=args.max_sessions,
             min_user_messages=args.min_user_messages,
         )
+    apply_lightweight_prioritization_stats(bundle)
+
     if args.distribution:
         bundle["surface_mode"] = "distribution"
         private_markers = find_private_markers(bundle)

@@ -145,6 +145,12 @@ const I18N = {
     assistantCount: "A",
     commandCount: "Cmd",
     score: "Score",
+    textUnits: "Text",
+    lightweightStats: "軽量優先度stats",
+    estimatedText: "推定テキスト量",
+    highActivity: "高活動",
+    largeSession: "大きめ",
+    prioritizationSignals: "優先度シグナル",
     rankUp: "同じ列で上へ",
     rankDown: "同じ列で下へ",
     buildMeta: "生成 {date} / {count} セッション",
@@ -376,6 +382,12 @@ const I18N = {
     assistantCount: "A",
     commandCount: "Cmd",
     score: "Score",
+    textUnits: "Text",
+    lightweightStats: "Lightweight priority stats",
+    estimatedText: "Estimated text",
+    highActivity: "High activity",
+    largeSession: "Large session",
+    prioritizationSignals: "Priority signals",
     rankUp: "Move up in column",
     rankDown: "Move down in column",
     buildMeta: "built {date} / {count} sessions",
@@ -1576,6 +1588,7 @@ function renderBoard() {
     columnSessions.forEach((session) => {
       const cardLineage = lineageInfo(session);
       const quality = auditExtractionQuality(session);
+      const stats = lightweightStats(session);
       const card = document.createElement("article");
       card.className = `session-card${session.session_id === state.selectedId ? " selected" : ""}`;
       card.draggable = true;
@@ -1593,6 +1606,8 @@ function renderBoard() {
           ${session.clusterCard ? `<span class="tag">${escapeHtml(t("cluster"))}</span>` : ""}
           ${attentionSignals(session).needsInput ? `<span class="tag attention">${escapeHtml(t("needsInput"))}</span>` : ""}
           ${cardLineage.hasMerged ? `<span class="tag lineage">${escapeHtml(cardLineage.badge)}</span>` : ""}
+          ${stats.highActivity ? `<span class="tag signal">${escapeHtml(t("highActivity"))}</span>` : ""}
+          ${stats.largeSession ? `<span class="tag signal">${escapeHtml(t("largeSession"))}</span>` : ""}
           <span class="tag ${quality.ok ? "quality-ok" : "quality-review"}">${escapeHtml(quality.ok ? t("qualityOk") : t("qualityReview"))}</span>
           ${session.overrideLock ? `<span class="tag override">${escapeHtml(t("humanLock"))}</span>` : ""}
           ${session.orderLock ? `<span class="tag override">${escapeHtml(t("manualOrder"))}</span>` : ""}
@@ -1616,6 +1631,7 @@ function renderBoard() {
           <span class="tag">${escapeHtml(t("assistantCount"))} ${session.assistant_message_count}</span>
           <span class="tag">${escapeHtml(t("commandCount"))} ${session.command_count}</span>
           <span class="tag">${escapeHtml(t("score"))} ${session.activity_score}</span>
+          <span class="tag">${escapeHtml(t("textUnits"))} ~${stats.estimatedTokens}</span>
         </div>
       `;
       card.addEventListener("click", () => {
@@ -1851,6 +1867,7 @@ function renderDetail() {
   const taskMap = relatedTaskMap(session, displaySessions);
   const suppressedLineage = buildSuppressedLineage(session, merged);
   const quality = auditExtractionQuality(session);
+  const stats = lightweightStats(session);
   const extractionDebug = extractionDebugInfo(session, relatedSessions);
   const evidenceCategories = buildEvidenceCategories(session);
 
@@ -1863,6 +1880,8 @@ function renderDetail() {
       <span class="tag ${escapeHtml(session.autonomy_mode || "")}">${escapeHtml(localizeAutonomyMode(session.autonomy_mode))}</span>
       ${attentionSignals(session).needsInput ? `<span class="tag attention">${escapeHtml(t("needsInput"))}</span>` : ""}
       ${detailLineage.hasMerged ? `<span class="tag lineage">${escapeHtml(detailLineage.badge)}</span>` : ""}
+      ${stats.highActivity ? `<span class="tag signal">${escapeHtml(t("highActivity"))}</span>` : ""}
+      ${stats.largeSession ? `<span class="tag signal">${escapeHtml(t("largeSession"))}</span>` : ""}
       <span class="tag ${quality.ok ? "quality-ok" : "quality-review"}">${escapeHtml(quality.ok ? t("qualityOk") : t("qualityReview"))} ${quality.score}</span>
       <span class="tag">${escapeHtml(session.statusOwner || "ai")} ${escapeHtml(t("owner"))}</span>
       <span class="tag">${escapeHtml(displayClusterLabel(session.task_cluster_family || session.task_cluster_label || "misc"))} / ${session.related_session_count || 1} ${escapeHtml(t("sessions"))}</span>
@@ -1939,6 +1958,15 @@ function renderDetail() {
               </div>`
           )
           .join("") || `<p>${escapeHtml(t("qualityWeakEvidence"))}</p>`}
+      </div>
+    </div>
+
+    <div class="detail-section">
+      <h3>${escapeHtml(t("lightweightStats"))}</h3>
+      <div class="reason-box stats-box">
+        <div><strong>${escapeHtml(t("estimatedText"))}:</strong> ${escapeHtml(t("textUnits"))} ~${stats.estimatedTokens} / ${stats.textSizeChars} chars</div>
+        <div><strong>${escapeHtml(t("commandCount"))}:</strong> ${stats.commandCount} / <strong>${escapeHtml(t("score"))}:</strong> ${stats.activityScore}</div>
+        <div><strong>${escapeHtml(t("prioritizationSignals"))}:</strong> ${stats.flags.length ? stats.flags.map((flag) => escapeHtml(flag)).join(" / ") : "n/a"}</div>
       </div>
     </div>
 
@@ -2588,6 +2616,43 @@ function slugify(value) {
   return String(value || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
 
+
+function estimateTextUnits(source, evidence = [], messages = []) {
+  const fields = [
+    source?.title,
+    source?.summary,
+    source?.task_body_summary,
+    source?.current_goal,
+    source?.deep_summary,
+    source?.latest_meaningful_change,
+    source?.latest_phase_context,
+    source?.blocker,
+    source?.first_user_message,
+    source?.last_user_message,
+    source?.last_assistant_message,
+    source?.suggested_reason,
+    ...(Array.isArray(evidence) ? evidence : []),
+    ...(Array.isArray(messages) ? messages.map((item) => item.text || item.message || item.content || "") : []),
+  ];
+  const chars = fields.filter(Boolean).map((item) => String(item)).join("\n").length;
+  return { chars, tokens: chars ? Math.ceil(chars / 4) : 0 };
+}
+
+function lightweightStats(session) {
+  const estimatedTokens = Number(session.estimated_tokens || 0);
+  const textSizeChars = Number(session.text_size_chars || estimatedTokens * 4 || 0);
+  const commandCount = Number(session.command_count || 0);
+  const activityScore = Number(session.activity_score || 0);
+  const relatedCount = Number(session.related_session_count || 1);
+  const highActivity = Boolean(session.high_activity_signal) || commandCount >= 25 || activityScore >= 120;
+  const largeSession = Boolean(session.large_session_signal) || estimatedTokens >= 700 || commandCount >= 50;
+  const flags = new Set(Array.isArray(session.prioritization_flags) ? session.prioritization_flags : []);
+  if (highActivity) flags.add("high-activity");
+  if (largeSession) flags.add("large-session");
+  if (relatedCount >= 2) flags.add("multi-session");
+  return { estimatedTokens, textSizeChars, commandCount, activityScore, relatedCount, highActivity, largeSession, flags: [...flags] };
+}
+
 function normalizeProviderSession(item, index, boardProvider) {
   const source = item && typeof item === "object" ? item : { summary: String(item || "") };
   const provider = inferProvider(source, boardProvider);
@@ -2603,6 +2668,7 @@ function normalizeProviderSession(item, index, boardProvider) {
   const startAt = source.start_at || source.created_at || source.createdAt || source.timestamp || source.startTime || source.end_at || new Date().toISOString();
   const endAt = source.end_at || source.updated_at || source.updatedAt || source.lastUpdated || source.endTime || startAt;
   const primaryRepo = repoFromProviderItem(source);
+  const textStats = estimateTextUnits(source, evidence, messages);
   const base = {
     ...source,
     session_id: String(sessionId),
@@ -2619,6 +2685,11 @@ function normalizeProviderSession(item, index, boardProvider) {
     assistant_message_count: source.assistant_message_count || assistantMessages.length,
     command_count: source.command_count || messages.filter((msg) => msg.role === "system").length,
     activity_score: source.activity_score || Math.max(1, messages.length * 8 + evidence.length * 5),
+    text_size_chars: source.text_size_chars || textStats.chars,
+    estimated_tokens: source.estimated_tokens || textStats.tokens,
+    high_activity_signal: Boolean(source.high_activity_signal) || Number(source.command_count || 0) >= 25 || Number(source.activity_score || 0) >= 120,
+    large_session_signal: Boolean(source.large_session_signal) || Number(source.estimated_tokens || textStats.tokens) >= 700 || Number(source.command_count || 0) >= 50,
+    prioritization_flags: Array.isArray(source.prioritization_flags) ? source.prioritization_flags : [],
     provider,
     provider_session_type: source.provider_session_type || source.format || `${provider}-import`,
     provider_source: source.provider_source || source.source || "provider-import",
