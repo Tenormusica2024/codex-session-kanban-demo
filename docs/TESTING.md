@@ -16,7 +16,7 @@ Equivalent npm shortcut:
 npm run release:check
 ```
 
-This runs fixture validation, distribution build, static artifact smoke, Python compile checks, downloadable package smoke, and local desktop/mobile browser smoke.
+This runs fixture validation, distribution build, static artifact smoke, fixture coverage diagnosis, provider import diagnosis, Python compile checks, downloadable package smoke, and local desktop/mobile browser smoke.
 
 To also verify the deployed GitHub Pages URL:
 
@@ -172,6 +172,17 @@ npm run private:update:full
 ```
 
 See [Private scheduled refresh](./PRIVATE_SCHEDULED_REFRESH.md) before scheduling real `.codex` data.
+
+
+## Fixture coverage diagnosis
+
+The one-command release check verifies that the public fixture still covers the main session-to-task behaviors without adding sample sessions just for volume.
+
+```powershell
+npm run fixture:coverage
+```
+
+This produces `fixture-coverage.json` and `fixture-coverage.normalized.json` under `codex_session_review/fixture_snapshot/`. See [Fixture coverage diagnosis](./FIXTURE_COVERAGE.md).
 
 ## Provider import diagnosis and normalization smoke
 

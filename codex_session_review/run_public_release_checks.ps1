@@ -37,7 +37,15 @@ Invoke-Step "Python compile check" {
         .\codex_session_review\validate_session_data.py `
         .\codex_session_review\smoke_public_build.py `
         .\codex_session_review\smoke_distribution_package.py `
-        .\codex_session_review\diagnose_provider_import.py
+        .\codex_session_review\diagnose_provider_import.py `
+        .\codex_session_review\diagnose_fixture_coverage.py
+}
+
+Invoke-Step "Fixture coverage diagnosis" {
+    python .\codex_session_review\diagnose_fixture_coverage.py `
+        .\codex_session_review\sample_data\recent_sessions.sample.json `
+        --report-json .\codex_session_review\fixture_snapshot\fixture-coverage.json `
+        --normalized-json .\codex_session_review\fixture_snapshot\fixture-coverage.normalized.json
 }
 
 Invoke-Step "Provider import diagnosis" {

@@ -4,6 +4,18 @@ All notable public-demo changes are tracked here.
 
 This project is still pre-1.0. Entries focus on public distribution, fixture safety, and the session-to-task review workflow.
 
+## 0.1.21 - 2026-04-29
+
+### Added
+
+- Fixture coverage diagnosis script for behavior-driven public sample maintenance.
+- npm shortcut `fixture:coverage` and release-check coverage for fixture behavior diagnosis.
+- Fixture coverage guide documenting when to add or avoid new synthetic sessions.
+
+### Changed
+
+- Roadmap and product TODO now make fixture additions coverage-first instead of volume-driven.
+
 ## 0.1.20 - 2026-04-29
 
 ### Added

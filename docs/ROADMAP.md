@@ -27,6 +27,7 @@ The public fixture demo currently includes:
 - lightweight prioritization stats for estimated text size, high-activity signals, and large-session signals
 - private scheduled refresh recipe for local real-session builds
 - provider import diagnosis for observed export shapes
+- fixture coverage diagnosis for behavior-driven sample additions
 
 ## Near-term focus
 
@@ -34,7 +35,7 @@ The initial public-demo hardening pass is largely complete. Next work should be 
 
 ### 1. Extraction quality maintenance
 
-Do not add more synthetic fixture cases by default. Add fixtures only when a new real misclassification appears, such as:
+Do not add more synthetic fixture cases by default. Run `npm run fixture:coverage` first, then add fixtures only when a new real misclassification appears, such as:
 
 - a new topic-conflict pattern
 - a same-repo parallel task that incorrectly merges
@@ -49,8 +50,8 @@ Keyboard and desktop/mobile/narrow smoke coverage now exists. Further UI work sh
 
 These are useful, but should be implemented only if they strengthen the core review workflow.
 
-1. More fixture examples only when they demonstrate a new extraction/lineage failure mode.
-2. More keyboard-first triage actions when they remove a real drag/click bottleneck.
+1. More keyboard-first triage actions when they remove a real drag/click bottleneck.
+2. More fixture examples only when coverage diagnosis or a real misclassification shows a new extraction/lineage failure mode.
 3. Further mobile/narrow-width polish only when screenshots or smoke tests reveal a concrete regression.
 4. Provider mappings only after diagnosis of real export samples shows a stable new field shape.
 5. Optional Task Scheduler refinements only after the private recipe is used in practice.

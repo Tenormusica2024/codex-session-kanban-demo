@@ -667,7 +667,7 @@ Risk to avoid:
 ### 38. Evidence-driven fixture additions
 
 Status:
-- Current public fixture covers topic conflict, same-repo parallel tasks, provider import, cross-session predecessor suppression, needs-input/blocker, and mobile review control examples.
+- Implemented as coverage-first maintenance in v0.1.21. The public fixture covers topic conflict, same-repo parallel tasks, provider import, cross-session predecessor suppression, needs-input/blocker, and mobile review control examples. `diagnose_fixture_coverage.py` and `npm run fixture:coverage` now make that coverage machine-visible before adding more samples.
 
 Goal:
 - Add new fixtures only when a real misclassification pattern appears.
@@ -718,8 +718,8 @@ For each feature:
 
 ## Current recommended order
 
-1. Evidence-driven fixture additions, only after a new misclassification appears.
-2. Evidence-driven UI/keyboard polish, only after a concrete manual-review bottleneck appears.
+1. Evidence-driven UI/keyboard polish, only after a concrete manual-review bottleneck appears.
+2. Fixture additions only when coverage diagnosis or a real misclassification shows a new behavior gap.
 3. Provider mapping refinements, only after diagnosis of a real export sample shows a stable new field shape.
 4. Personal/private Task Scheduler refinements, only after the recipe is used in practice.
 5. Lightweight prioritization stats refinement, only if the current rough signals become noisy or insufficient.

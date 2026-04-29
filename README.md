@@ -71,6 +71,7 @@ Real session data should stay local or in a private repository. The public demo 
 - **Inspectable extraction**: detail panels expose evidence categories, extraction timeline, suppressed predecessor sessions, and extraction debug hints.
 - **Static/private-safe distribution**: public demos use fixture data only; real `.codex` logs stay local/private.
 - **Provider import normalization**: lightweight Claude Code / Cursor / Gemini-style exports can be normalized into the common review schema without adding agent execution scope.
+- **Fixture coverage diagnosis**: public samples are checked for behavior coverage so new fixtures are added only for real extraction/lineage gaps.
 - **Lightweight prioritization stats**: cards expose rough local text-unit estimates, high-activity badges, and large-session hints without becoming a cost dashboard.
 - **Private scheduled refresh**: a separate git-ignored local workflow can scan real `.codex` sessions without mixing private data into public fixture builds.
 - **Representative public fixtures**: synthetic examples cover topic conflict, same-repo parallel tasks, cross-session predecessor suppression, and non-Codex provider metadata.
@@ -141,6 +142,7 @@ npm run release:check:pages
 - [Architecture / data flow](./docs/ARCHITECTURE.md)
 - [Import schema](./docs/IMPORT_SCHEMA.md)
 - [Provider adapter review](./docs/PROVIDER_ADAPTER_REVIEW.md)
+- [Fixture coverage diagnosis](./docs/FIXTURE_COVERAGE.md)
 - [Testing guide](./docs/TESTING.md)
 - [Local update helper](./docs/LOCAL_UPDATE_HELPER.md)
 - [Roadmap](./docs/ROADMAP.md)
