@@ -108,6 +108,7 @@ async function main() {
     hasCandidateList: Boolean(document.querySelector("#candidate-list")),
     hasDetailPanel: Boolean(document.querySelector("#detail-panel")),
     filterSummary: document.querySelector("#filter-summary")?.textContent?.trim() || "",
+    buildMeta: document.querySelector("#build-meta")?.textContent?.trim() || "",
     viewport: { width: window.innerWidth, height: window.innerHeight },
     scrollWidth: document.documentElement.scrollWidth,
     hasHorizontalOverflow: document.documentElement.scrollWidth > window.innerWidth + 2,
@@ -117,6 +118,9 @@ async function main() {
   if (!initial.hasDetailPanel) errors.push("detail-panel is missing");
   if (initial.candidateCards <= 0) errors.push("candidate cards are not visible");
   if (initial.columns.length < 5) errors.push(`too few kanban columns: ${initial.columns.join(", ")}`);
+  if (!/v\d+\.\d+\.\d+/.test(initial.buildMeta)) {
+    errors.push(`build meta does not show app version: ${initial.buildMeta}`);
+  }
   if (initial.hasHorizontalOverflow) {
     errors.push(`horizontal overflow before interaction: viewport=${initial.viewport.width}, scrollWidth=${initial.scrollWidth}`);
   }
@@ -153,6 +157,7 @@ async function main() {
     value: document.querySelector("#search-input")?.value || "",
     candidateCards: document.querySelectorAll(".candidate-card").length,
     filterSummary: document.querySelector("#filter-summary")?.textContent?.trim() || "",
+    buildMeta: document.querySelector("#build-meta")?.textContent?.trim() || "",
   }));
   if (shortcutSearch.activeId !== "search-input" || shortcutSearch.value !== "provider") {
     errors.push(`slash shortcut did not focus/search correctly: ${JSON.stringify(shortcutSearch)}`);
@@ -180,6 +185,7 @@ async function main() {
     value: document.querySelector("#attention-filter")?.value || "",
     candidateCards: document.querySelectorAll(".candidate-card").length,
     filterSummary: document.querySelector("#filter-summary")?.textContent?.trim() || "",
+    buildMeta: document.querySelector("#build-meta")?.textContent?.trim() || "",
   }));
   if (attentionFilter.value !== "quality-review" || attentionFilter.candidateCards <= 0 || !/active|有効|候補|candidates/i.test(attentionFilter.filterSummary)) {
     errors.push(`attention quality filter failed: ${JSON.stringify(attentionFilter)}`);
@@ -202,6 +208,7 @@ async function main() {
     attention: document.querySelector("#attention-filter")?.value || "",
     candidateCards: document.querySelectorAll(".candidate-card").length,
     filterSummary: document.querySelector("#filter-summary")?.textContent?.trim() || "",
+    buildMeta: document.querySelector("#build-meta")?.textContent?.trim() || "",
   }));
   if (reviewQuickFilter.attention !== "quality-review" || reviewQuickFilter.candidateCards <= 0 || !/active|有効|候補|candidates/i.test(reviewQuickFilter.filterSummary)) {
     errors.push(`candidate review quick filter failed: ${JSON.stringify(reviewQuickFilter)}`);

@@ -2874,7 +2874,20 @@ def normalize_import_bundle(raw: Any) -> dict[str, Any]:
     return board
 
 
+
+
+def read_app_version(root: Path) -> str:
+    package_path = root.parent / "package.json"
+    try:
+        package = json.loads(package_path.read_text(encoding="utf-8"))
+        version = str(package.get("version") or "").strip()
+        return version or "unknown"
+    except Exception:
+        return "unknown"
+
+
 def render_html(bundle: dict[str, Any], root: Path) -> str:
+    bundle["app_version"] = read_app_version(root)
     template = root.joinpath("templates", "review_template.html").read_text(encoding="utf-8")
     css = root.joinpath("assets", "styles.css").read_text(encoding="utf-8").rstrip()
     js = root.joinpath("assets", "app.js").read_text(encoding="utf-8").rstrip()
@@ -2941,6 +2954,7 @@ def main() -> None:
             min_user_messages=args.min_user_messages,
         )
     apply_lightweight_prioritization_stats(bundle)
+    bundle["app_version"] = read_app_version(root)
 
     if args.distribution:
         bundle["surface_mode"] = "distribution"

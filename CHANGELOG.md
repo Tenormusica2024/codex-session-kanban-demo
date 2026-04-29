@@ -4,6 +4,13 @@ All notable public-demo changes are tracked here.
 
 This project is still pre-1.0. Entries focus on public distribution, fixture safety, and the session-to-task review workflow.
 
+## 0.1.33 - 2026-04-29
+
+### Added
+
+- Public and local builds now embed `app_version` from `package.json` into the review payload and display it in the hero build pill.
+- Static and browser smoke checks now fail if the embedded app version is missing.
+
 ## 0.1.32 - 2026-04-29
 
 ### Changed

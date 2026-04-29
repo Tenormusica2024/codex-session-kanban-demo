@@ -162,7 +162,7 @@ const I18N = {
     prioritizationSignals: "優先度シグナル",
     rankUp: "同じ列で上へ",
     rankDown: "同じ列で下へ",
-    buildMeta: "生成 {date} / {count} セッション",
+    buildMeta: "v{version} / 生成 {date} / {count} セッション",
     copySessionId: "session IDをコピー",
     copyCardLink: "カードURLをコピー",
     copyCardBrief: "カード要約をコピー",
@@ -410,7 +410,7 @@ const I18N = {
     prioritizationSignals: "Priority signals",
     rankUp: "Move up in column",
     rankDown: "Move down in column",
-    buildMeta: "built {date} / {count} sessions",
+    buildMeta: "v{version} / built {date} / {count} sessions",
     copySessionId: "Copy session ID",
     copyCardLink: "Copy card URL",
     copyCardBrief: "Copy card brief",
@@ -552,7 +552,11 @@ function accessProfileLabel() {
 function updateHeroMeta() {
   const buildMeta = document.getElementById("build-meta");
   if (buildMeta) {
-    buildMeta.textContent = t("buildMeta", { date: state.boardData?.generated_at || "unknown", count: state.sessions.length });
+    buildMeta.textContent = t("buildMeta", {
+      version: state.boardData?.app_version || "unknown",
+      date: state.boardData?.generated_at || "unknown",
+      count: state.sessions.length,
+    });
   }
   const accessPill = document.getElementById("access-profile-pill");
   if (accessPill) {
