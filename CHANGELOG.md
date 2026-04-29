@@ -4,6 +4,18 @@ All notable public-demo changes are tracked here.
 
 This project is still pre-1.0. Entries focus on public distribution, fixture safety, and the session-to-task review workflow.
 
+## 0.1.22 - 2026-04-29
+
+### Added
+
+- Keyboard polish for faster review: `/` focuses search, `?` toggles the workflow guide, and `Esc` closes it.
+- Browser smoke coverage for search and guide keyboard shortcuts.
+- Release-check step wrapper now fails on non-zero native command exits.
+
+### Changed
+
+- Workflow guide shortcut copy now documents search/guide shortcuts in both Japanese and English.
+
 ## 0.1.21 - 2026-04-29
 
 ### Added

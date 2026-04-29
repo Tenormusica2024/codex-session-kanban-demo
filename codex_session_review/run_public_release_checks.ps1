@@ -13,7 +13,11 @@ function Invoke-Step {
     )
     Write-Host ""
     Write-Host "==> $Name" -ForegroundColor Cyan
+    $global:LASTEXITCODE = 0
     & $Command
+    if ($global:LASTEXITCODE -ne 0) {
+        throw "Step failed with exit code $global:LASTEXITCODE: $Name"
+    }
 }
 
 $RepoRoot = Resolve-Path (Join-Path $PSScriptRoot "..")

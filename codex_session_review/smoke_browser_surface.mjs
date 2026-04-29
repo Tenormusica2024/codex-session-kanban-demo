@@ -144,6 +144,35 @@ async function main() {
   if (!englishUi.hasEnglishTitle) errors.push("English title was not rendered after language switch");
   if (englishUi.hasJapaneseUiLabels) errors.push("English UI still contains common Japanese static labels");
 
+  await page.keyboard.press("/");
+  await page.waitForTimeout(50);
+  await page.keyboard.type("provider");
+  const shortcutSearch = await page.evaluate(() => ({
+    activeId: document.activeElement?.id || "",
+    value: document.querySelector("#search-input")?.value || "",
+  }));
+  if (shortcutSearch.activeId !== "search-input" || shortcutSearch.value !== "provider") {
+    errors.push(`slash shortcut did not focus/search correctly: ${JSON.stringify(shortcutSearch)}`);
+  }
+  await page.keyboard.press("Escape");
+  await page.evaluate(() => {
+    const input = document.querySelector("#search-input");
+    if (input) {
+      input.value = "";
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+      input.blur();
+    }
+  });
+  await page.keyboard.press("Shift+/");
+  await page.waitForTimeout(50);
+  const guideOpen = await page.evaluate(() => !document.querySelector("#workflow-help")?.hidden);
+  await page.keyboard.press("Escape");
+  await page.waitForTimeout(50);
+  const guideClosed = await page.evaluate(() => Boolean(document.querySelector("#workflow-help")?.hidden));
+  if (!guideOpen || !guideClosed) {
+    errors.push(`guide shortcuts failed: open=${guideOpen}, closed=${guideClosed}`);
+  }
+
   const firstCandidate = page.locator(".candidate-card").first();
   await firstCandidate.focus();
   await page.keyboard.press("j");
@@ -218,6 +247,8 @@ async function main() {
     targetUrl,
     initial,
     promoted,
+    shortcutSearch,
+    guideShortcuts: { open: guideOpen, closed: guideClosed },
     candidateKeyboard,
     keyboardTriage,
     note: promoted.visibleTextHasJapanese

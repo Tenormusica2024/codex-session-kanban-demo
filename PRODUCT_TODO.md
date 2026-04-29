@@ -682,6 +682,7 @@ Risk to avoid:
 
 Status:
 - Board and candidate keyboard triage exist. Desktop, mobile, and 320px narrow smoke paths exist.
+- Follow-up added `/` search focus, `?` workflow-guide toggle, `Esc` guide close, and browser smoke coverage for these no-mouse review shortcuts.
 
 Goal:
 - Add shortcuts or UI refinements only when manual review shows a concrete bottleneck.

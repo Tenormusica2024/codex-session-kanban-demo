@@ -42,7 +42,7 @@ const I18N = {
     guideNoteSchedule:
       "配布版は sample fixture だけから GitHub Actions で生成します。外部 LLM API や実セッションは使いません。",
     guideKeyboard:
-      "ショートカット: j/k でカード選択移動、Alt+↑/↓ で同列順位変更、1-6 で状態変更、c でsession IDコピー。候補一覧フォーカス中は j/k で候補移動、Enterで詳細、aで推奨列へ追加。入力欄フォーカス中は無効。",
+      "ショートカット: / で検索、? で使い方、Esc で使い方を閉じる。j/k でカード選択移動、Alt+↑/↓ で同列順位変更、1-6 で状態変更、c でsession IDコピー。候補一覧フォーカス中は j/k で候補移動、Enterで詳細、aで推奨列へ追加。入力欄フォーカス中は無効。",
     statVisible: "表示中セッション",
     statOverrides: "手動固定",
     statAutoReady: "自動処理候補",
@@ -279,7 +279,7 @@ const I18N = {
     guideNoteSchedule:
       "The public demo is generated from sample fixtures by GitHub Actions. It uses no external LLM API and no real session logs.",
     guideKeyboard:
-      "Shortcuts: j/k select cards, Alt+↑/↓ reorder within a column, 1-6 move status, c copy session ID. When the candidate list is focused, j/k move candidates, Enter previews, and a adds to the recommended column. Disabled while typing in inputs.",
+      "Shortcuts: / focuses search, ? toggles the guide, and Esc closes it. j/k select cards, Alt+↑/↓ reorder within a column, 1-6 move status, c copy session ID. When the candidate list is focused, j/k move candidates, Enter previews, and a adds to the recommended column. Disabled while typing in inputs.",
     statVisible: "Visible sessions",
     statOverrides: "Human overrides",
     statAutoReady: "Auto-ready",
@@ -1814,7 +1814,38 @@ function isTypingTarget(target) {
 }
 
 function handleKeyboardTriage(event) {
-  if (isTypingTarget(event.target) || event.ctrlKey || event.metaKey || event.shiftKey) return;
+  if (event.ctrlKey || event.metaKey) return;
+  if (isTypingTarget(event.target)) {
+    if (event.key === "Escape") {
+      const workflowHelp = document.getElementById("workflow-help");
+      if (workflowHelp && !workflowHelp.hidden) {
+        workflowHelp.hidden = true;
+        event.preventDefault();
+      }
+    }
+    return;
+  }
+  if (event.key === "/" && !event.shiftKey) {
+    event.preventDefault();
+    const searchInput = document.getElementById("search-input");
+    searchInput?.focus();
+    searchInput?.select?.();
+    return;
+  }
+  if (event.key === "?" || (event.key === "/" && event.shiftKey)) {
+    event.preventDefault();
+    const workflowHelp = document.getElementById("workflow-help");
+    if (workflowHelp) workflowHelp.hidden = !workflowHelp.hidden;
+    return;
+  }
+  if (event.key === "Escape") {
+    const workflowHelp = document.getElementById("workflow-help");
+    if (workflowHelp && !workflowHelp.hidden) {
+      workflowHelp.hidden = true;
+      event.preventDefault();
+    }
+    return;
+  }
   if (event.altKey && event.key === "ArrowUp") {
     event.preventDefault();
     if (state.selectedId) moveSessionWithinColumn(state.selectedId, -1);
@@ -3003,3 +3034,4 @@ function init() {
 }
 
 document.addEventListener("DOMContentLoaded", init);
+
