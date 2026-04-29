@@ -162,7 +162,16 @@ Run the fuller local update path including mobile smoke and package smoke:
 npm run local:update:full
 ```
 
-See [Local update helper](./LOCAL_UPDATE_HELPER.md) for direct PowerShell flags and Task Scheduler examples.
+See [Local update helper](./LOCAL_UPDATE_HELPER.md) for direct PowerShell flags and public-fixture Task Scheduler examples.
+
+For private real-session refresh checks, use:
+
+```powershell
+npm run private:update
+npm run private:update:full
+```
+
+See [Private scheduled refresh](./PRIVATE_SCHEDULED_REFRESH.md) before scheduling real `.codex` data.
 
 ## Provider import normalization smoke
 

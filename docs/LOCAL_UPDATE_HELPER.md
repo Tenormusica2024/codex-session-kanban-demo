@@ -10,6 +10,8 @@ It is intended for:
 
 The helper keeps the public repository fixture-only. It reads `codex_session_review/sample_data/recent_sessions.sample.json` and builds a distribution-safe snapshot.
 
+For real `.codex` logs and personal scheduled refresh, use [`PRIVATE_SCHEDULED_REFRESH.md`](./PRIVATE_SCHEDULED_REFRESH.md) and `update_private_review.ps1` instead.
+
 ## Quick commands
 
 Build, validate, and run the desktop browser smoke:

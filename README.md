@@ -72,6 +72,7 @@ Real session data should stay local or in a private repository. The public demo 
 - **Static/private-safe distribution**: public demos use fixture data only; real `.codex` logs stay local/private.
 - **Provider import normalization**: lightweight Claude Code / Cursor / Gemini-style exports can be normalized into the common review schema without adding agent execution scope.
 - **Lightweight prioritization stats**: cards expose rough local text-unit estimates, high-activity badges, and large-session hints without becoming a cost dashboard.
+- **Private scheduled refresh**: a separate git-ignored local workflow can scan real `.codex` sessions without mixing private data into public fixture builds.
 - **Representative public fixtures**: synthetic examples cover topic conflict, same-repo parallel tasks, cross-session predecessor suppression, and non-Codex provider metadata.
 
 ## Quick start
@@ -184,13 +185,23 @@ npm run smoke:browser:mobile:local
 npm run smoke:browser:narrow:local
 ```
 
-Lightweight local refresh helper:
+Lightweight public-fixture refresh helper:
 
 ```powershell
 npm run local:update
 npm run local:update:open
 npm run local:update:full
 ```
+
+Private/local real-session refresh helper:
+
+```powershell
+npm run private:update
+npm run private:update:open
+npm run private:update:full
+```
+
+See [Private scheduled refresh](./docs/PRIVATE_SCHEDULED_REFRESH.md) before wiring this into Windows Task Scheduler.
 
 To verify the public Pages URL:
 

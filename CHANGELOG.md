@@ -4,6 +4,18 @@ All notable public-demo changes are tracked here.
 
 This project is still pre-1.0. Entries focus on public distribution, fixture safety, and the session-to-task review workflow.
 
+## 0.1.19 - 2026-04-29
+
+### Added
+
+- Private real-session refresh helper `update_private_review.ps1` that writes to a git-ignored local output directory.
+- npm shortcuts `private:update`, `private:update:open`, and `private:update:full`.
+- Private scheduled refresh documentation with Windows Task Scheduler setup, output paths, and override backup/restore guidance.
+
+### Changed
+
+- Roadmap and product TODO now move private scheduling from near-term implementation to practical-use refinement.
+
 ## 0.1.18 - 2026-04-29
 
 ### Added

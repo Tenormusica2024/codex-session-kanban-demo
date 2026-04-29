@@ -653,7 +653,7 @@ Risk to avoid:
 ### 37. Personal/private Task Scheduler recipe
 
 Status:
-- Public fixture local update helper exists. Personal/private scheduled import is not documented as a complete recipe yet.
+- Implemented in v0.1.19. Added `update_private_review.ps1`, npm `private:update*` scripts, git-ignored private output, and `docs/PRIVATE_SCHEDULED_REFRESH.md` with Task Scheduler, output, and override backup guidance.
 
 Goal:
 - Document a safe private-only scheduled workflow for local session imports, generated review HTML, and override backup/restore.
@@ -718,8 +718,8 @@ For each feature:
 
 ## Current recommended order
 
-1. Personal/private Task Scheduler recipe, if local scheduled refresh becomes the next operational need.
-2. Real-world provider adapter refinement, only after concrete export samples are available.
-3. Evidence-driven fixture additions, only after a new misclassification appears.
-4. Evidence-driven UI/keyboard polish, only after a concrete manual-review bottleneck appears.
+1. Real-world provider adapter refinement, only after concrete export samples are available.
+2. Evidence-driven fixture additions, only after a new misclassification appears.
+3. Evidence-driven UI/keyboard polish, only after a concrete manual-review bottleneck appears.
+4. Personal/private Task Scheduler refinements, only after the recipe is used in practice.
 5. Lightweight prioritization stats refinement, only if the current rough signals become noisy or insufficient.
