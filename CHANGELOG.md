@@ -4,6 +4,17 @@ All notable public-demo changes are tracked here.
 
 This project is still pre-1.0. Entries focus on public distribution, fixture safety, and the session-to-task review workflow.
 
+## 0.1.15 - 2026-04-29
+
+### Added
+
+- Expanded public fixture coverage with cross-session predecessor/representative lineage for provider import normalization.
+- Added a topic-conflict fixture where login/Pages testing context is downweighted in favor of the actual mobile review controls task.
+
+### Changed
+
+- Public fixture now contains 11 synthetic sessions and demonstrates 9 task clusters.
+
 ## 0.1.14 - 2026-04-29
 
 ### Added

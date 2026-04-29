@@ -61,7 +61,7 @@ Keep improving the static/local workflow before adding backend features:
 
 Keep the fixture demo useful without exposing private data:
 
-- maintain representative synthetic examples
+- maintain representative synthetic examples, currently including topic conflict, same-repo parallel tasks, provider import, and cross-session predecessor suppression
 - cover topic conflict, same-repo parallel tasks, and provider import/display examples
 - keep screenshots current
 - keep release notes and smoke tests aligned
@@ -73,7 +73,7 @@ These are useful, but should be implemented only if they strengthen the core rev
 
 - Lightweight token/session stats if they help prioritization
 - Broader provider import adapters after real-world export samples are reviewed
-- Better fixture examples for topic conflict and cross-session lineage
+- More fixture examples only when they demonstrate a new extraction/lineage failure mode
 - Optional Task Scheduler recipe refinements for personal/private imports
 - More keyboard-first triage actions
 - Better mobile/narrow-width layout polish

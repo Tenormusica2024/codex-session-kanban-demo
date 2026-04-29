@@ -305,6 +305,7 @@ Risk to avoid:
 Status:
 - Initial implementation added: sample fixture now includes six sessions covering static review surface lineage, suppressed predecessor handling, topic-shift decomposition, needs-input/blocker deployment, completed knowledge review, and external sink rescoping.
 - Follow-up expanded the fixture with same-repo parallel task separation and a non-Codex provider import example.
+- Follow-up expanded the fixture with provider-import cross-session predecessor/representative lineage and a topic-conflict example that downweights login/Pages testing context in favor of mobile review controls.
 
 Goal:
 - Make the public demo demonstrate the product wedge without private data.
