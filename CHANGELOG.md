@@ -4,6 +4,13 @@ All notable public-demo changes are tracked here.
 
 This project is still pre-1.0. Entries focus on public distribution, fixture safety, and the session-to-task review workflow.
 
+## 0.1.32 - 2026-04-29
+
+### Changed
+
+- Competitive positioning now reflects that the initial P0/P1 competitor-inspired adoption pass is largely implemented.
+- Replaced the stale implementation-order list with the current evidence-driven maintenance order.
+
 ## 0.1.31 - 2026-04-29
 
 ### Changed

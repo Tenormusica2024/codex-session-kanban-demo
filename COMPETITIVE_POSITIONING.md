@@ -110,7 +110,7 @@ Longer version:
 
 This section is intentionally practical: features that can be borrowed without changing the core wedge of intent-first session-to-task extraction.
 
-### P0 — high leverage, low/medium cost
+### P0 — high leverage, low/medium cost (implemented in the public demo)
 
 1. **Explain why a card exists**
    - Borrowed pattern: dashboards show status/progress, but usually not enough rationale.
@@ -148,7 +148,7 @@ This section is intentionally practical: features that can be borrowed without c
    - Why it matters: matches the user's review workflow and avoids duplicate cards.
    - Cost: low/medium.
 
-### P1 — strong, but should not distract
+### P1 — strong, but should not distract (mostly implemented / evidence-driven now)
 
 7. **Parent/child or linked task relation**
    - Borrowed pattern: Vibe issue parent/child relationships and sub-issues.
@@ -200,16 +200,29 @@ This section is intentionally practical: features that can be borrowed without c
 
 ## Recommended next implementation order
 
-1. Candidate backlog cleanup: fixed cards disappear; promote-to-status is explicit.
-2. Explainability: show why status/title/summary/lineage were inferred.
-3. Needs-input badge/filter.
-4. Done/Dropped collapse.
-5. Evidence-aware search.
-6. Stale predecessor badges and successor links.
-7. Keyboard triage shortcuts.
-8. Parent/child relation display for legitimate parallel tasks.
+The original P0/P1 adoption pass is now largely implemented in the public demo. Future work should be evidence-driven rather than parity-driven:
 
-The main rule: borrow workflow affordances, not the entire agent-orchestration product category.
+1. **Extraction quality maintenance**: add fixture coverage only when a real misclassification or lineage error appears.
+2. **UI/keyboard polish**: add shortcuts or controls only when manual review exposes a concrete bottleneck.
+3. **Provider mapping refinements**: extend normalization only after diagnosing a real export shape.
+4. **Private scheduled-refresh refinements**: improve the local/private recipe after it is used in practice.
+5. **Lightweight prioritization tuning**: adjust rough local signals only if they become noisy or insufficient.
+
+Already adopted from the competitor scan:
+
+- candidate staging and explicit promotion
+- card-existence rationale and extraction evidence
+- needs-input badges/filters
+- Done/Dropped archive collapse
+- evidence-aware search
+- stale predecessor / lineage display
+- related task display for legitimate same-repo parallel work
+- extraction timeline and debug panels
+- keyboard-first triage and handoff-copy shortcuts
+- override export/import guidance
+- lightweight provider/schema extensibility
+
+The main rule remains: borrow workflow affordances, not the entire agent-orchestration product category.
 
 ## Implementation backlog
 
