@@ -4,6 +4,18 @@ All notable public-demo changes are tracked here.
 
 This project is still pre-1.0. Entries focus on public distribution, fixture safety, and the session-to-task review workflow.
 
+## 0.1.28 - 2026-04-29
+
+### Added
+
+- Selected board cards now sync to a `#session=...` URL hash so refreshes and copied links return to the same card.
+- Detail view includes a copy-card-URL action.
+- Browser smoke coverage for selected-card hash updates and copied card links.
+
+### Changed
+
+- Card review state is easier to resume or share without relying only on session-id copy.
+
 ## 0.1.27 - 2026-04-29
 
 ### Added

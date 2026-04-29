@@ -278,8 +278,11 @@ async function main() {
       hasHumanLock: /human lock|手動固定/.test(document.body.textContent),
       copiedText: window.__copiedText || "",
       selectedId,
+      hash: window.location.hash || "",
     };
   });
+  await page.click("#copy-card-link");
+  const cardLink = await page.evaluate(() => window.__copiedText || "");
   if (keyboardTriage.quickStatus !== "In Progress") {
     errors.push(`keyboard status shortcut did not move selected card to In Progress: ${keyboardTriage.quickStatus}`);
   }
@@ -307,6 +310,7 @@ async function main() {
     guideShortcuts: { open: guideOpen, closed: guideClosed },
     candidateKeyboard,
     keyboardTriage,
+    cardLink,
     note: promoted.visibleTextHasJapanese
       ? "Japanese may remain in source/session data; static English UI labels were checked separately."
       : "No Japanese text found in visible page text.",

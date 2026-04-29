@@ -164,6 +164,7 @@ const I18N = {
     rankDown: "同じ列で下へ",
     buildMeta: "生成 {date} / {count} セッション",
     copySessionId: "session IDをコピー",
+    copyCardLink: "カードURLをコピー",
     moveStatus: "状態を変更",
     humanLockHint: "変更すると human override lock として保存",
     aiRecommendation: "AI判断",
@@ -410,6 +411,7 @@ const I18N = {
     rankDown: "Move down in column",
     buildMeta: "built {date} / {count} sessions",
     copySessionId: "Copy session ID",
+    copyCardLink: "Copy card URL",
     moveStatus: "Move status",
     humanLockHint: "Changing this saves a human override lock",
     aiRecommendation: "AI recommendation",
@@ -1383,8 +1385,36 @@ function findRepresentativeForTask(task) {
   );
 }
 
-function revealBoardSession(sessionId) {
+function selectedSessionIdFromHash() {
+  const raw = decodeURIComponent(String(window.location.hash || "").replace(/^#/, ""));
+  if (!raw) return null;
+  if (raw.startsWith("session=")) {
+    return new URLSearchParams(raw).get("session");
+  }
+  return raw;
+}
+
+function cardLinkForSession(sessionId) {
+  const url = new URL(window.location.href);
+  url.hash = `session=${encodeURIComponent(sessionId)}`;
+  return url.toString();
+}
+
+function syncSelectedHash(sessionId) {
+  if (!sessionId || !window.history?.replaceState) return;
+  const nextHash = `#session=${encodeURIComponent(sessionId)}`;
+  if (window.location.hash !== nextHash) {
+    window.history.replaceState(null, "", nextHash);
+  }
+}
+
+function selectBoardSession(sessionId, { updateHash = true } = {}) {
   state.selectedId = sessionId;
+  if (updateHash) syncSelectedHash(sessionId);
+}
+
+function revealBoardSession(sessionId) {
+  selectBoardSession(sessionId);
   state.status = "all";
   state.cluster = "all";
   state.repo = "all";
@@ -1742,7 +1772,7 @@ function renderBoard() {
         </div>
       `;
       card.addEventListener("click", () => {
-        state.selectedId = session.session_id;
+        selectBoardSession(session.session_id);
         renderBoard();
         renderDetail();
       });
@@ -1854,7 +1884,7 @@ function moveSessionWithinColumn(sessionId, direction) {
   const ordered = columnSessions.map((item) => item.session_id);
   [ordered[index], ordered[nextIndex]] = [ordered[nextIndex], ordered[index]];
   persistColumnOrder(ordered);
-  state.selectedId = sessionId;
+  selectBoardSession(sessionId);
   renderBoard();
   renderDetail();
 }
@@ -1895,7 +1925,7 @@ function selectAdjacentSession(direction) {
   );
   const currentIndex = ordered.findIndex((item) => item.session_id === state.selectedId);
   const nextIndex = currentIndex < 0 ? 0 : Math.max(0, Math.min(ordered.length - 1, currentIndex + direction));
-  state.selectedId = ordered[nextIndex].session_id;
+  selectBoardSession(ordered[nextIndex].session_id);
   renderBoard();
   renderDetail();
 }
@@ -2053,7 +2083,10 @@ function renderDetail() {
         <span class="small">session_id</span>
         <div class="mono">${escapeHtml(session.session_id)}</div>
       </div>
-      <button class="secondary tiny" id="copy-session-id">${escapeHtml(t("copySessionId"))}</button>
+      <div class="session-id-actions">
+        <button class="secondary tiny" id="copy-session-id">${escapeHtml(t("copySessionId"))}</button>
+        <button class="secondary tiny" id="copy-card-link">${escapeHtml(t("copyCardLink"))}</button>
+      </div>
     </div>
     <div class="quick-status-bar">
       <label>
@@ -2315,6 +2348,10 @@ function renderDetail() {
   document.getElementById("copy-session-id").addEventListener("click", () => {
     navigator.clipboard.writeText(session.session_id).catch((error) => alert(t("copyFailed", { message: error.message })));
   });
+  document.getElementById("copy-card-link")?.addEventListener("click", () => {
+    navigator.clipboard.writeText(cardLinkForSession(session.session_id)).catch((error) => alert(t("copyFailed", { message: error.message })));
+  });
+  syncSelectedHash(session.session_id);
 
   document.getElementById("quick-status").addEventListener("change", (event) => {
     setOverride(session.session_id, { status: event.target.value, notes: session.reviewNotes || "" });
@@ -2324,7 +2361,7 @@ function renderDetail() {
 
   panel.querySelectorAll("[data-related-id]").forEach((button) => {
     button.addEventListener("click", () => {
-      state.selectedId = button.dataset.relatedId;
+      selectBoardSession(button.dataset.relatedId);
       renderBoard();
       renderDetail();
     });
@@ -3052,7 +3089,8 @@ function init() {
   state.originalBoardData = JSON.parse(JSON.stringify(state.boardData));
   state.sessions = state.boardData.sessions || [];
   state.overrides = loadOverrides();
-  state.selectedId = state.sessions[0]?.session_id || null;
+  const hashSelectedId = selectedSessionIdFromHash();
+  state.selectedId = state.sessions.some((item) => item.session_id === hashSelectedId) ? hashSelectedId : state.sessions[0]?.session_id || null;
 
   applyStaticI18n();
   updateHeroMeta();
