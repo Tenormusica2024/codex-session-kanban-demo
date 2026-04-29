@@ -42,7 +42,7 @@ const I18N = {
     guideNoteSchedule:
       "配布版は sample fixture だけから GitHub Actions で生成します。外部 LLM API や実セッションは使いません。",
     guideKeyboard:
-      "ショートカット: / で検索、? で使い方、Esc で使い方を閉じる、x で絞り込み解除。j/k でカード選択移動、Alt+↑/↓ で同列順位変更、1-6 で状態変更、c でsession IDコピー。候補一覧フォーカス中は j/k で候補移動、Enterで詳細、aで推奨列へ追加。入力欄フォーカス中は無効。",
+      "ショートカット: / で検索、? で使い方、Esc で使い方を閉じる、x でボードと候補の絞り込み解除。j/k でカード選択移動、Alt+↑/↓ で同列順位変更、1-6 で状態変更、c でsession IDコピー。候補一覧フォーカス中は j/k で候補移動、Enterで詳細、aで推奨列へ追加。入力欄フォーカス中は無効。",
     statVisible: "表示中セッション",
     statOverrides: "手動固定",
     statAutoReady: "自動処理候補",
@@ -281,7 +281,7 @@ const I18N = {
     guideNoteSchedule:
       "The public demo is generated from sample fixtures by GitHub Actions. It uses no external LLM API and no real session logs.",
     guideKeyboard:
-      "Shortcuts: / focuses search, ? toggles the guide, and Esc closes it, and x clears filters. j/k select cards, Alt+↑/↓ reorder within a column, 1-6 move status, c copy session ID. When the candidate list is focused, j/k move candidates, Enter previews, and a adds to the recommended column. Disabled while typing in inputs.",
+      "Shortcuts: / focuses search, ? toggles the guide, and Esc closes it, and x clears board and candidate filters. j/k select cards, Alt+↑/↓ reorder within a column, 1-6 move status, c copy session ID. When the candidate list is focused, j/k move candidates, Enter previews, and a adds to the recommended column. Disabled while typing in inputs.",
     statVisible: "Visible sessions",
     statOverrides: "Human overrides",
     statAutoReady: "Auto-ready",
@@ -1095,67 +1095,105 @@ function getDisplaySessions() {
   return representatives;
 }
 
-function getVisibleSessions() {
+function sessionSearchHaystack(session) {
+  const relatedSessions = (session.related_session_ids || [])
+    .map((id) => state.sessions.find((item) => item.session_id === id))
+    .filter(Boolean);
+  return [
+    session.title,
+    session.title_ja,
+    session.title_en,
+    session.summary,
+    session.summary_en,
+    session.task_body_summary,
+    session.task_body_summary_en,
+    session.primary_repo,
+    session.session_id,
+    session.source_file,
+    session.current_goal,
+    session.current_goal_en,
+    session.deep_summary,
+    session.deep_summary_en,
+    session.latest_meaningful_change,
+    session.latest_meaningful_change_en,
+    session.blocker,
+    session.blocker_en,
+    session.suggested_reason,
+    session.suggested_reason_en,
+    session.task_cluster_key,
+    session.task_cluster_label,
+    session.task_cluster_family,
+    session.topic_key,
+    session.topic_label,
+    session.lineage_key,
+    session.lineage_label,
+    session.first_user_message,
+    session.first_user_message_en,
+    session.last_assistant_message,
+    session.last_assistant_message_en,
+    ...(session.evidence_messages || []),
+    ...(session.evidence_messages_en || []),
+    ...relatedSessions.flatMap((item) => [
+      item.title,
+      item.title_ja,
+      item.summary,
+      item.task_body_summary,
+      item.session_id,
+      item.first_user_message,
+      item.latest_meaningful_change,
+      ...(item.evidence_messages || []),
+    ]),
+  ]
+    .filter(Boolean)
+    .join("\n")
+    .toLowerCase();
+}
+
+function sessionMatchesCurrentFilters(session, { includeStatus = true } = {}) {
+  if (state.repo !== "all" && session.primary_repo !== state.repo) return false;
+  if (includeStatus && state.status !== "all" && session.currentStatus !== state.status) return false;
+  if (state.cluster !== "all" && (session.task_cluster_family || session.task_cluster_label) !== state.cluster) return false;
+  if (state.attention !== "all") {
+    const signals = attentionSignals(session);
+    if (state.attention === "needs-input" && !signals.needsInput) return false;
+    if (state.attention === "has-blocker" && !signals.hasBlocker) return false;
+  }
   const search = state.search.trim().toLowerCase();
-  return getDisplaySessions().filter((session) => {
-    if (state.repo !== "all" && session.primary_repo !== state.repo) return false;
-    if (state.status !== "all" && session.currentStatus !== state.status) return false;
-    if (state.cluster !== "all" && (session.task_cluster_family || session.task_cluster_label) !== state.cluster) return false;
-    if (state.attention !== "all") {
-      const signals = attentionSignals(session);
-      if (state.attention === "needs-input" && !signals.needsInput) return false;
-      if (state.attention === "has-blocker" && !signals.hasBlocker) return false;
-    }
-    if (!search) return true;
-    const relatedSessions = (session.related_session_ids || [])
-      .map((id) => state.sessions.find((item) => item.session_id === id))
-      .filter(Boolean);
-    const haystack = [
-      session.title,
-      session.title_ja,
-      session.title_en,
-      session.summary,
-      session.summary_en,
-      session.task_body_summary,
-      session.task_body_summary_en,
-      session.primary_repo,
-      session.session_id,
-      session.source_file,
-      session.current_goal,
-      session.current_goal_en,
-      session.deep_summary,
-      session.deep_summary_en,
-      session.latest_meaningful_change,
-      session.latest_meaningful_change_en,
-      session.blocker,
-      session.blocker_en,
-      session.suggested_reason,
-      session.suggested_reason_en,
-      session.task_cluster_key,
-      session.task_cluster_label,
-      session.task_cluster_family,
-      session.first_user_message,
-      session.first_user_message_en,
-      session.last_assistant_message,
-      session.last_assistant_message_en,
-      ...(session.evidence_messages || []),
-      ...(session.evidence_messages_en || []),
-      ...relatedSessions.flatMap((item) => [
-        item.title,
-        item.title_ja,
-        item.summary,
-        item.task_body_summary,
-        item.session_id,
-        item.first_user_message,
-        item.latest_meaningful_change,
-        ...(item.evidence_messages || []),
-      ]),
-    ]
-      .filter(Boolean)
-      .join("\n")
-      .toLowerCase();
-    return haystack.includes(search);
-  });
+  return !search || sessionSearchHaystack(session).includes(search);
+}
+
+function candidateMatchesCurrentFilters(task) {
+  const representative = findRepresentativeForTask(task);
+  if (!representative) return false;
+  if (!sessionMatchesCurrentFilters(representative, { includeStatus: false })) return false;
+  if (state.status !== "all") {
+    const targetStatus = task["推奨列"] || representative.suggested_status || representative.currentStatus;
+    if (targetStatus !== state.status) return false;
+  }
+  const search = state.search.trim().toLowerCase();
+  if (!search) return true;
+  const cluster = findClusterForTask(task);
+  const taskHaystack = [
+    task.title_ja,
+    task.title_en,
+    task.cluster_label,
+    task.task_id,
+    task["理由"],
+    task["状態判断理由"],
+    task["次の一手"],
+    ...(task.primary_repos || []),
+    ...(task.representative_titles || []),
+    cluster?.cluster_label,
+    cluster?.cluster_key,
+  ]
+    .filter(Boolean)
+    .join("\n")
+    .toLowerCase();
+  return taskHaystack.includes(search) || sessionSearchHaystack(representative).includes(search);
+}
+
+function getVisibleSessions() {
+  return getDisplaySessions().filter((session) => sessionMatchesCurrentFilters(session));
 }
 
 function updateOverviewStats(visible) {
@@ -1327,7 +1365,7 @@ function getOpenCandidateTasks() {
   const allCandidates = state.boardData?.suggested_tasks || [];
   return allCandidates.filter((task) => {
     const representative = findRepresentativeForTask(task);
-    return !(representative && state.overrides[representative.session_id]?.status);
+    return !(representative && state.overrides[representative.session_id]?.status) && candidateMatchesCurrentFilters(task);
   });
 }
 
@@ -1823,6 +1861,7 @@ function clearFilters() {
   state.status = "all";
   state.cluster = "all";
   state.attention = "all";
+  state.selectedCandidateIndex = 0;
   const searchInput = document.getElementById("search-input");
   if (searchInput) searchInput.value = "";
   renderRepoFilter();
@@ -2982,23 +3021,33 @@ function init() {
 
   document.getElementById("search-input").addEventListener("input", (event) => {
     state.search = event.target.value;
+    state.selectedCandidateIndex = 0;
+    renderCandidateStrip();
     renderBoard();
   });
 
   document.getElementById("repo-filter").addEventListener("change", (event) => {
     state.repo = event.target.value;
+    state.selectedCandidateIndex = 0;
+    renderCandidateStrip();
     renderBoard();
   });
   document.getElementById("status-filter").addEventListener("change", (event) => {
     state.status = event.target.value;
+    state.selectedCandidateIndex = 0;
+    renderCandidateStrip();
     renderBoard();
   });
   document.getElementById("cluster-filter").addEventListener("change", (event) => {
     state.cluster = event.target.value;
+    state.selectedCandidateIndex = 0;
+    renderCandidateStrip();
     renderBoard();
   });
   document.getElementById("attention-filter")?.addEventListener("change", (event) => {
     state.attention = event.target.value;
+    state.selectedCandidateIndex = 0;
+    renderCandidateStrip();
     renderBoard();
   });
   document.getElementById("clear-filters")?.addEventListener("click", clearFilters);

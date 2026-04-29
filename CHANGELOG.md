@@ -4,6 +4,17 @@ All notable public-demo changes are tracked here.
 
 This project is still pre-1.0. Entries focus on public distribution, fixture safety, and the session-to-task review workflow.
 
+## 0.1.24 - 2026-04-29
+
+### Added
+
+- Candidate staging now respects the same search/repo/status/cluster/attention filters as the board.
+- Browser smoke coverage verifies that search narrows the candidate list, not only board cards.
+
+### Changed
+
+- Filter reset now explicitly resets both board and candidate filters.
+
 ## 0.1.23 - 2026-04-29
 
 ### Added

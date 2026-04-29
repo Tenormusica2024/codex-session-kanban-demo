@@ -150,9 +150,13 @@ async function main() {
   const shortcutSearch = await page.evaluate(() => ({
     activeId: document.activeElement?.id || "",
     value: document.querySelector("#search-input")?.value || "",
+    candidateCards: document.querySelectorAll(".candidate-card").length,
   }));
   if (shortcutSearch.activeId !== "search-input" || shortcutSearch.value !== "provider") {
     errors.push(`slash shortcut did not focus/search correctly: ${JSON.stringify(shortcutSearch)}`);
+  }
+  if (shortcutSearch.candidateCards >= initial.candidateCards) {
+    errors.push(`candidate list was not filtered by search: before=${initial.candidateCards}, after=${shortcutSearch.candidateCards}`);
   }
   await page.click("#clear-filters");
   const clearButtonState = await page.evaluate(() => ({

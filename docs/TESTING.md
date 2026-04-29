@@ -98,7 +98,7 @@ The browser smoke test checks:
 - promotion creates a human-lock marker
 - `session_id` is visible in the detail panel
 - status controls are present after promotion
-- `/` focuses search, `x` clears filters, `?` opens/closes the workflow guide, and `Esc` closes it
+- `/` focuses search and filters both board cards and candidates, `x` clears filters, `?` opens/closes the workflow guide, and `Esc` closes it
 - keyboard triage can move the selected card to `In Progress`
 - keyboard copy shortcut targets the selected `session_id` when clipboard access is available
 
