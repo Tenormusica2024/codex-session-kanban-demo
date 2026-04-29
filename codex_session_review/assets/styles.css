@@ -1296,3 +1296,85 @@ button.secondary,
   justify-content: center;
   text-decoration: none;
 }
+
+@media (max-width: 380px) {
+  .page-shell {
+    padding: 8px;
+    gap: 10px;
+  }
+
+  .hero,
+  .detail-panel,
+  .toolbar,
+  .export-panel,
+  .kanban-column {
+    border-radius: 14px;
+    padding: 12px;
+  }
+
+  .hero h1 {
+    font-size: 1.22rem;
+  }
+
+  .hero p,
+  .candidate-card p,
+  .session-card p {
+    font-size: 0.86rem;
+  }
+
+  .stats-row {
+    grid-template-columns: 1fr;
+  }
+
+  .kanban-column {
+    min-height: 180px;
+  }
+
+  .dropzone {
+    min-height: 96px;
+  }
+
+  .archive-column.collapsed {
+    min-height: 120px;
+  }
+
+  .archive-column.collapsed .dropzone {
+    min-height: 70px;
+  }
+
+  .card-top-actions {
+    position: static;
+    justify-content: flex-end;
+    margin-bottom: 8px;
+  }
+
+  .session-card .card-tags {
+    padding-right: 0;
+  }
+
+  .candidate-actions,
+  .detail-actions,
+  .manual-actions,
+  .toolbar-actions {
+    flex-direction: column;
+  }
+
+  .candidate-actions button,
+  .detail-actions button,
+  .manual-actions button,
+  .toolbar-actions button,
+  .toolbar-actions .file-button {
+    width: 100%;
+    flex-basis: auto;
+  }
+
+  .quick-status-bar button {
+    width: 100%;
+    white-space: normal;
+  }
+
+  .tag {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+}

@@ -180,6 +180,7 @@ Browser operation and visible-text check:
 npm install
 npm run smoke:browser:local
 npm run smoke:browser:mobile:local
+npm run smoke:browser:narrow:local
 ```
 
 Lightweight local refresh helper:

@@ -75,8 +75,8 @@ These are useful, but should be implemented only if they strengthen the core rev
 - Broader provider import adapters after real-world export samples are reviewed
 - More fixture examples only when they demonstrate a new extraction/lineage failure mode
 - Optional Task Scheduler recipe refinements for personal/private imports
-- More keyboard-first triage actions
-- Better mobile/narrow-width layout polish
+- More keyboard-first triage actions when they remove a real drag/click bottleneck
+- Further mobile/narrow-width polish only when screenshots or smoke tests reveal a concrete regression
 
 ## Deferred by default
 

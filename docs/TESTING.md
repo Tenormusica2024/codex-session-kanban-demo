@@ -83,6 +83,7 @@ Run the same checks in a narrow mobile viewport:
 ```powershell
 npm run smoke:browser:mobile
 npm run smoke:browser:mobile:local
+npm run smoke:browser:narrow:local
 ```
 
 The browser smoke test checks:
@@ -182,3 +183,14 @@ Browser smoke covers both board-card and candidate-list shortcuts:
 - board cards: `1-6` status movement and `c` session-id copy
 
 These checks protect the no-drag fallback path for dense boards and mobile/narrow review workflows.
+
+## Narrow viewport smoke
+
+Use the narrow smoke when checking very small phone-width layouts:
+
+```powershell
+npm run smoke:browser:narrow:local
+npm run smoke:browser:narrow
+```
+
+The narrow profile uses a 320px-wide viewport and checks the same candidate, detail, status, keyboard, and horizontal-overflow assertions as the desktop/mobile smoke.

@@ -4,6 +4,18 @@ All notable public-demo changes are tracked here.
 
 This project is still pre-1.0. Entries focus on public distribution, fixture safety, and the session-to-task review workflow.
 
+## 0.1.16 - 2026-04-29
+
+### Added
+
+- Narrow viewport smoke mode for 320px-wide review checks.
+- npm shortcuts for narrow smoke against local fixture and deployed Pages URL.
+
+### Changed
+
+- Release checks now include narrow viewport browser smoke.
+- Tightened ultra-narrow CSS spacing, column/dropzone heights, card actions, and buttons to avoid cramped phone-width layouts.
+
 ## 0.1.15 - 2026-04-29
 
 ### Added

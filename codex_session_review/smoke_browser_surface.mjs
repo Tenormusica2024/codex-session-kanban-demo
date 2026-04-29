@@ -57,9 +57,18 @@ function visibleTextHasJapanese(text) {
 async function main() {
   const targetUrl = buildTargetUrl();
   const mobile = hasFlag("--mobile");
-  const viewport = mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 };
+  const narrow = hasFlag("--narrow");
+  const widthArg = Number(argValue("--width") || 0);
+  const heightArg = Number(argValue("--height") || 0);
+  const viewport = widthArg && heightArg
+    ? { width: widthArg, height: heightArg }
+    : narrow
+      ? { width: 320, height: 740 }
+      : mobile
+        ? { width: 390, height: 844 }
+        : { width: 1440, height: 1000 };
   const browser = await chromium.launch({ headless: true });
-  const page = await browser.newPage({ viewport, isMobile: mobile });
+  const page = await browser.newPage({ viewport, isMobile: mobile || narrow });
   const errors = [];
 
   await page.addInitScript(() => {
