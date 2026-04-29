@@ -489,6 +489,23 @@ input[type="text"] {
   font: inherit;
 }
 
+.filter-summary {
+  display: inline-flex;
+  align-items: center;
+  min-height: 38px;
+  padding: 0 12px;
+  border: 1px solid rgba(151, 169, 195, 0.16);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.035);
+  white-space: nowrap;
+}
+
+.filter-summary.active {
+  color: var(--accent);
+  border-color: rgba(100, 210, 255, 0.34);
+  background: rgba(100, 210, 255, 0.08);
+}
+
 button,
 .file-button {
   border: 0;

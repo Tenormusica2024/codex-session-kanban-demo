@@ -107,6 +107,7 @@ async function main() {
     stats: [...document.querySelectorAll(".stat-card .value")].map((node) => node.textContent.trim()),
     hasCandidateList: Boolean(document.querySelector("#candidate-list")),
     hasDetailPanel: Boolean(document.querySelector("#detail-panel")),
+    filterSummary: document.querySelector("#filter-summary")?.textContent?.trim() || "",
     viewport: { width: window.innerWidth, height: window.innerHeight },
     scrollWidth: document.documentElement.scrollWidth,
     hasHorizontalOverflow: document.documentElement.scrollWidth > window.innerWidth + 2,
@@ -151,12 +152,16 @@ async function main() {
     activeId: document.activeElement?.id || "",
     value: document.querySelector("#search-input")?.value || "",
     candidateCards: document.querySelectorAll(".candidate-card").length,
+    filterSummary: document.querySelector("#filter-summary")?.textContent?.trim() || "",
   }));
   if (shortcutSearch.activeId !== "search-input" || shortcutSearch.value !== "provider") {
     errors.push(`slash shortcut did not focus/search correctly: ${JSON.stringify(shortcutSearch)}`);
   }
   if (shortcutSearch.candidateCards >= initial.candidateCards) {
     errors.push(`candidate list was not filtered by search: before=${initial.candidateCards}, after=${shortcutSearch.candidateCards}`);
+  }
+  if (!/provider|active|有効|候補|candidates/i.test(shortcutSearch.filterSummary)) {
+    errors.push(`filter summary did not update after search: ${shortcutSearch.filterSummary}`);
   }
   await page.click("#clear-filters");
   const clearButtonState = await page.evaluate(() => ({

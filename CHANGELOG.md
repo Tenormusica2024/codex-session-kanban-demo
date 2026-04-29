@@ -4,6 +4,17 @@ All notable public-demo changes are tracked here.
 
 This project is still pre-1.0. Entries focus on public distribution, fixture safety, and the session-to-task review workflow.
 
+## 0.1.25 - 2026-04-29
+
+### Added
+
+- Filter result summary showing visible board cards, open candidates, and whether filters are active.
+- Browser smoke coverage for filter-summary updates after search.
+
+### Changed
+
+- Candidate/board filtering is now easier to confirm at a glance before clearing or promoting candidates.
+
 ## 0.1.24 - 2026-04-29
 
 ### Added

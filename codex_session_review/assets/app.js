@@ -70,6 +70,9 @@ const I18N = {
     attentionHasBlocker: "blockerあり",
     clearFilters: "絞り込み解除",
     clearFiltersShortcut: "絞り込み解除: x",
+    filterSummary: "表示 {cards}件 / 候補 {candidates}件 / 絞り込み {filters}",
+    filterSummaryNone: "なし",
+    filterSummaryActive: "有効",
     exportOverrides: "手動修正を出力",
     copyOverridesJson: "手動修正JSONをコピー",
     saveSyncJson: "同期用JSONを保存",
@@ -309,6 +312,9 @@ const I18N = {
     attentionHasBlocker: "Has blocker",
     clearFilters: "Clear filters",
     clearFiltersShortcut: "Clear filters: x",
+    filterSummary: "Showing {cards} cards / {candidates} candidates / filters {filters}",
+    filterSummaryNone: "none",
+    filterSummaryActive: "active",
     exportOverrides: "Export overrides",
     copyOverridesJson: "Copy overrides JSON",
     saveSyncJson: "Save sync JSON",
@@ -1248,6 +1254,29 @@ function renderClusterFilter() {
   select.value = state.cluster;
 }
 
+function filtersActive() {
+  return Boolean(
+    state.search.trim() ||
+      state.repo !== "all" ||
+      state.status !== "all" ||
+      state.cluster !== "all" ||
+      state.attention !== "all"
+  );
+}
+
+function updateFilterSummary(visibleSessions = null, openCandidates = null) {
+  const node = document.getElementById("filter-summary");
+  if (!node) return;
+  const cards = visibleSessions || getVisibleSessions();
+  const candidates = openCandidates || getOpenCandidateTasks();
+  node.textContent = t("filterSummary", {
+    cards: cards.length,
+    candidates: candidates.length,
+    filters: t(filtersActive() ? "filterSummaryActive" : "filterSummaryNone"),
+  });
+  node.classList.toggle("active", filtersActive());
+}
+
 function renderAttentionFilter() {
   const select = document.getElementById("attention-filter");
   if (!select) return;
@@ -1447,6 +1476,7 @@ function renderCandidateStrip() {
   const allCandidates = state.boardData?.suggested_tasks || [];
   const openCandidates = getOpenCandidateTasks();
   const hiddenCount = allCandidates.length - openCandidates.length;
+  updateFilterSummary(null, openCandidates);
   state.selectedCandidateIndex = Math.max(0, Math.min(state.selectedCandidateIndex || 0, Math.max(0, openCandidates.length - 1)));
   const candidates = openCandidates.slice(0, 8);
   host.innerHTML = "";
@@ -1579,6 +1609,7 @@ function getVisibleClusters() {
 
 function renderBoard() {
   const visible = getVisibleSessions();
+  updateFilterSummary(visible, null);
   updateOverviewStats(visible);
   renderClusterStrip(visible);
   const grouped = Object.fromEntries(STATUSES.map((status) => [status, []]));
