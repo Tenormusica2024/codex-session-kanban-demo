@@ -165,6 +165,7 @@ const I18N = {
     buildMeta: "生成 {date} / {count} セッション",
     copySessionId: "session IDをコピー",
     copyCardLink: "カードURLをコピー",
+    copyCardBrief: "カード要約をコピー",
     moveStatus: "状態を変更",
     humanLockHint: "変更すると human override lock として保存",
     aiRecommendation: "AI判断",
@@ -412,6 +413,7 @@ const I18N = {
     buildMeta: "built {date} / {count} sessions",
     copySessionId: "Copy session ID",
     copyCardLink: "Copy card URL",
+    copyCardBrief: "Copy card brief",
     moveStatus: "Move status",
     humanLockHint: "Changing this saves a human override lock",
     aiRecommendation: "AI recommendation",
@@ -2038,6 +2040,27 @@ function handleKeyboardTriage(event) {
   }
 }
 
+function cardBriefText(session, relatedSessions = []) {
+  const evidence = displayEvidenceMessages(session).filter(Boolean).slice(0, 3);
+  const lines = [
+    `# ${displayTaskTitle(session)}`,
+    `status: ${statusLabel(session.currentStatus)}`,
+    `repo: ${session.primary_repo || "unknown"}`,
+    `session_id: ${session.session_id}`,
+    `summary: ${displayTaskSummary(session)}`,
+    `next_action: ${displayNextAction(session) || "n/a"}`,
+    `reason: ${displayReason(session) || session.suggested_reason || "n/a"}`,
+  ];
+  if (relatedSessions.length || Number(session.related_session_count || 1) > 1) {
+    lines.push(`related_sessions: ${Math.max(Number(session.related_session_count || 1), relatedSessions.length + 1)}`);
+  }
+  if (evidence.length) {
+    lines.push("evidence:");
+    evidence.forEach((item) => lines.push(`- ${item}`));
+  }
+  return lines.join("\n");
+}
+
 function renderDetail() {
   const panel = document.getElementById("detail-panel");
   const merged = getMergedSessions();
@@ -2086,6 +2109,7 @@ function renderDetail() {
       <div class="session-id-actions">
         <button class="secondary tiny" id="copy-session-id">${escapeHtml(t("copySessionId"))}</button>
         <button class="secondary tiny" id="copy-card-link">${escapeHtml(t("copyCardLink"))}</button>
+        <button class="secondary tiny" id="copy-card-brief">${escapeHtml(t("copyCardBrief"))}</button>
       </div>
     </div>
     <div class="quick-status-bar">
@@ -2350,6 +2374,9 @@ function renderDetail() {
   });
   document.getElementById("copy-card-link")?.addEventListener("click", () => {
     navigator.clipboard.writeText(cardLinkForSession(session.session_id)).catch((error) => alert(t("copyFailed", { message: error.message })));
+  });
+  document.getElementById("copy-card-brief")?.addEventListener("click", () => {
+    navigator.clipboard.writeText(cardBriefText(session, relatedSessions)).catch((error) => alert(t("copyFailed", { message: error.message })));
   });
   syncSelectedHash(session.session_id);
 

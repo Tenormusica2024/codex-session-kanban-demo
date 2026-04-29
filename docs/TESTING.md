@@ -100,7 +100,7 @@ The browser smoke test checks:
 - status controls are present after promotion
 - `/` focuses search and filters both board cards and candidates, the filter summary updates, attention filters can isolate quality-review cards, `x` clears filters, `?` opens/closes the workflow guide, and `Esc` closes it
 - keyboard triage can move the selected card to `In Progress`
-- keyboard copy shortcut targets the selected `session_id`, selected cards update the `#session=...` hash, and the detail copy-card-link action copies a resumable URL when clipboard access is available
+- keyboard copy shortcut targets the selected `session_id`, selected cards update the `#session=...` hash, and detail copy-card-link / copy-card-brief actions copy resumable URLs and compact card handoff text when clipboard access is available
 
 Japanese may still appear in source/session data. The English check is scoped to static UI labels, not arbitrary user-authored content.
 

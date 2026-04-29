@@ -4,6 +4,17 @@ All notable public-demo changes are tracked here.
 
 This project is still pre-1.0. Entries focus on public distribution, fixture safety, and the session-to-task review workflow.
 
+## 0.1.29 - 2026-04-29
+
+### Added
+
+- Detail view includes a copy-card-brief action with title, status, repo, session id, summary, next action, reason, related-session count, and compact evidence.
+- Browser smoke coverage for copied card briefs.
+
+### Changed
+
+- Selected cards are easier to hand off to another AI/chat or save into notes without copying the whole board state.
+
 ## 0.1.28 - 2026-04-29
 
 ### Added

@@ -283,6 +283,8 @@ async function main() {
   });
   await page.click("#copy-card-link");
   const cardLink = await page.evaluate(() => window.__copiedText || "");
+  await page.click("#copy-card-brief");
+  const cardBrief = await page.evaluate(() => window.__copiedText || "");
   if (keyboardTriage.quickStatus !== "In Progress") {
     errors.push(`keyboard status shortcut did not move selected card to In Progress: ${keyboardTriage.quickStatus}`);
   }
@@ -311,6 +313,7 @@ async function main() {
     candidateKeyboard,
     keyboardTriage,
     cardLink,
+    cardBrief,
     note: promoted.visibleTextHasJapanese
       ? "Japanese may remain in source/session data; static English UI labels were checked separately."
       : "No Japanese text found in visible page text.",
