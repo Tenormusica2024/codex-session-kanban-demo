@@ -189,6 +189,13 @@ npm run smoke:browser:mobile:local
 npm run smoke:browser:narrow:local
 ```
 
+Regenerate public README screenshots from fixture data:
+
+```powershell
+npm run local:update
+npm run screenshots:update
+```
+
 Lightweight public-fixture refresh helper:
 
 ```powershell

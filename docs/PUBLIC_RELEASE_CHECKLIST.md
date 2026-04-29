@@ -73,7 +73,7 @@ npm run smoke:browser:mobile:local
 ## Positioning
 
 - [ ] README explains that this is a session-to-task extraction review surface, not a generic Kanban.
-- [ ] README screenshots are regenerated after major UI changes.
+- [ ] README screenshots are regenerated after major UI changes (`npm run screenshots:update` against the public fixture).
 - [ ] README links to usage guide, import schema, competitive positioning, and TODO/adoption policy.
 - [ ] LICENSE, CONTRIBUTING, and SECURITY docs are present and still match the public fixture/privacy stance.
 - [ ] CHANGELOG and GitHub issue templates are present and still warn against sharing private session data.

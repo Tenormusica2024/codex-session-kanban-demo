@@ -4,6 +4,13 @@ All notable public-demo changes are tracked here.
 
 This project is still pre-1.0. Entries focus on public distribution, fixture safety, and the session-to-task review workflow.
 
+## 0.1.34 - 2026-04-29
+
+### Added
+
+- Added `npm run screenshots:update` to regenerate README screenshots from the public fixture snapshot.
+- Added screenshot regeneration docs and release-checklist guidance.
+
 ## 0.1.33 - 2026-04-29
 
 ### Added

@@ -222,3 +222,22 @@ npm run smoke:browser:narrow
 ```
 
 The narrow profile uses a 320px-wide viewport and checks the same candidate, detail, status, keyboard, and horizontal-overflow assertions as the desktop/mobile smoke.
+
+## Regenerate README screenshots
+
+Screenshots are generated from the public fixture snapshot only. Rebuild the fixture first, then capture the desktop and mobile README images:
+
+```powershell
+npm run local:update
+npm run screenshots:update
+```
+
+This updates:
+
+- `docs/assets/board-overview.png`
+- `docs/assets/card-detail.png`
+- `docs/assets/mobile-overview.png`
+- `docs/assets/mobile-detail.png`
+
+Do not run the screenshot command against private real-session output.
+

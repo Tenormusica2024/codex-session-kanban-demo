@@ -1,6 +1,6 @@
 {
   "name": "codex-session-kanban-demo",
-  "version": "0.1.33",
+  "version": "0.1.34",
   "description": "Static, privacy-aware Kanban review surface that turns AI coding sessions into deduplicated task candidates.",
   "private": true,
   "type": "module",
@@ -39,7 +39,8 @@
     "private:update:open": "powershell -NoProfile -ExecutionPolicy Bypass -File ./codex_session_review/update_private_review.ps1 -SkipBrowserSmoke -Open",
     "private:update:full": "powershell -NoProfile -ExecutionPolicy Bypass -File ./codex_session_review/update_private_review.ps1 -MobileSmoke",
     "provider:diagnose": "python ./codex_session_review/diagnose_provider_import.py ./codex_session_review/sample_data/provider_imports.sample.json --report-json ./codex_session_review/fixture_snapshot/provider-import.diagnosis.json --normalized-json ./codex_session_review/fixture_snapshot/provider-import.diagnosis.normalized.json",
-    "fixture:coverage": "python ./codex_session_review/diagnose_fixture_coverage.py ./codex_session_review/sample_data/recent_sessions.sample.json --report-json ./codex_session_review/fixture_snapshot/fixture-coverage.json --normalized-json ./codex_session_review/fixture_snapshot/fixture-coverage.normalized.json"
+    "fixture:coverage": "python ./codex_session_review/diagnose_fixture_coverage.py ./codex_session_review/sample_data/recent_sessions.sample.json --report-json ./codex_session_review/fixture_snapshot/fixture-coverage.json --normalized-json ./codex_session_review/fixture_snapshot/fixture-coverage.normalized.json",
+    "screenshots:update": "node codex_session_review/capture_public_screenshots.mjs --file codex_session_review/fixture_snapshot/index.html"
   },
   "devDependencies": {
     "playwright": "1.59.1"
