@@ -196,6 +196,17 @@ async function main() {
   if (clearShortcutState.search || clearShortcutState.status !== "all" || clearShortcutState.attention !== "all") {
     errors.push(`clear filters shortcut failed: ${JSON.stringify(clearShortcutState)}`);
   }
+  await page.locator('[data-review-attention="quality-review"]').first().click();
+  await page.waitForTimeout(50);
+  const reviewQuickFilter = await page.evaluate(() => ({
+    attention: document.querySelector("#attention-filter")?.value || "",
+    candidateCards: document.querySelectorAll(".candidate-card").length,
+    filterSummary: document.querySelector("#filter-summary")?.textContent?.trim() || "",
+  }));
+  if (reviewQuickFilter.attention !== "quality-review" || reviewQuickFilter.candidateCards <= 0 || !/active|有効|候補|candidates/i.test(reviewQuickFilter.filterSummary)) {
+    errors.push(`candidate review quick filter failed: ${JSON.stringify(reviewQuickFilter)}`);
+  }
+  await page.keyboard.press("x");
   await page.keyboard.press("Escape");
   await page.evaluate(() => {
     const input = document.querySelector("#search-input");
@@ -292,6 +303,7 @@ async function main() {
     shortcutSearch,
     clearFilters: { button: clearButtonState, shortcut: clearShortcutState },
     attentionFilter,
+    reviewQuickFilter,
     guideShortcuts: { open: guideOpen, closed: guideClosed },
     candidateKeyboard,
     keyboardTriage,

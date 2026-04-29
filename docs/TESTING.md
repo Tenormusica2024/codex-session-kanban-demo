@@ -207,7 +207,7 @@ This does not run external agents. It only verifies import/display compatibility
 Browser smoke covers both board-card and candidate-list shortcuts:
 
 - global: `/` search focus, `x` clear filters, `?` guide toggle, `Esc` guide close
-- candidate list: focus candidate, `j/k` movement, `Enter` preview, `a` promote to recommended column
+- candidate list: focus candidate, `j/k` movement, `Enter` preview, `a` promote to recommended column, and candidate-review quick filters
 - board cards: `1-6` status movement and `c` session-id copy
 
 These checks protect the no-drag fallback path for dense boards and mobile/narrow review workflows.

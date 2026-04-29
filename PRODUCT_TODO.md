@@ -46,7 +46,7 @@ If the answer is unclear, keep the feature as a backlog idea rather than impleme
 ### 1. Candidate backlog cleanup
 
 Status:
-- Extended with an initial candidate review panel: the UI now summarizes open candidates, fixed candidates, quality-review cards, and multi-session representatives before/after promotion. Candidate click now opens a detail preview without fixing it to the board; only explicit target-column promotion creates the human override lock.
+- Extended with an actionable candidate review panel: the UI summarizes open candidates, fixed candidates, quality-review cards, and multi-session representatives before/after promotion. Candidate click opens a detail preview without fixing it to the board; only explicit target-column promotion creates the human override lock. Review summary cards can also quick-filter the candidate list for open, quality-review, or lineage-heavy candidates.
 
 Goal:
 - Treat "Kanban追加候補" as a staging backlog.
@@ -682,7 +682,7 @@ Risk to avoid:
 
 Status:
 - Board and candidate keyboard triage exist. Desktop, mobile, and 320px narrow smoke paths exist.
-- Follow-up added `/` search focus, `?` workflow-guide toggle, `Esc` guide close, `x` clear-filters, candidate-list filtering, filter result summary, expanded attention filters, and browser smoke coverage for these no-mouse review shortcuts.
+- Follow-up added `/` search focus, `?` workflow-guide toggle, `Esc` guide close, `x` clear-filters, candidate-list filtering, filter result summary, expanded attention filters, candidate-review quick filters, and browser smoke coverage for these no-mouse review shortcuts.
 
 Goal:
 - Add shortcuts or UI refinements only when manual review shows a concrete bottleneck.

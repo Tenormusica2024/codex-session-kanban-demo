@@ -136,6 +136,7 @@ const I18N = {
     candidatePromote: "この列へ追加",
     candidateRepresentative: "代表セッション",
     candidatePreviewHint: "ここではまだボードに固定しません。追加先を選んで保存すると human override lock として固定されます。",
+    quickFilter: "絞り込む",
     show: "表示",
     collapse: "折りたたむ",
     archiveCollapsed: "{status} {count}件を折りたたみ中",
@@ -381,6 +382,7 @@ const I18N = {
     candidatePromote: "Add to this column",
     candidateRepresentative: "Representative session",
     candidatePreviewHint: "This does not fix the card to the board yet. Choose a target column and save to create a human override lock.",
+    quickFilter: "Filter",
     show: "Show",
     collapse: "Collapse",
     archiveCollapsed: "{status} {count} items collapsed",
@@ -1570,21 +1572,41 @@ function renderCandidateReviewPanel() {
   const qualityReview = displaySessions.filter((item) => !auditExtractionQuality(item).ok);
   const lineageSessions = displaySessions.filter((item) => lineageInfo(item).hasMerged);
   const rows = [
-    { label: t("candidateOpen"), count: openCandidateCount, items: allCandidates.slice(0, 3).map((task) => displayTaskTitle(task)).filter(Boolean) },
+    { label: t("candidateOpen"), count: openCandidateCount, items: allCandidates.slice(0, 3).map((task) => displayTaskTitle(task)).filter(Boolean), action: "open" },
     { label: t("candidateFixed"), count: fixedCandidateIds.size, items: [...fixedCandidateIds].slice(0, 3).map((id) => displayTaskTitle(displaySessions.find((item) => item.session_id === id) || { title: id })) },
-    { label: t("candidateQualityReview"), count: qualityReview.length, items: qualityReview.slice(0, 3).map(displayTaskTitle) },
-    { label: t("candidateLineage"), count: lineageSessions.length, items: lineageSessions.slice(0, 3).map(displayTaskTitle) },
+    { label: t("candidateQualityReview"), count: qualityReview.length, items: qualityReview.slice(0, 3).map(displayTaskTitle), attention: "quality-review" },
+    { label: t("candidateLineage"), count: lineageSessions.length, items: lineageSessions.slice(0, 3).map(displayTaskTitle), attention: "lineage" },
   ];
   host.innerHTML = rows
     .map(
-      (row) => `
-        <div class="candidate-review-card">
+      (row, index) => `
+        <div class="candidate-review-card${row.action || row.attention ? " actionable" : ""}" data-review-row="${index}">
           <div class="candidate-review-count">${escapeHtml(row.count)}</div>
           <strong>${escapeHtml(row.label)}</strong>
           <ul>${row.items.map((item) => `<li>${escapeHtml(item)}</li>`).join("") || "<li>n/a</li>"}</ul>
+          ${row.action || row.attention ? `<button class="secondary tiny candidate-review-filter" type="button" data-review-action="${escapeHtml(row.action || "attention")}" data-review-attention="${escapeHtml(row.attention || "all")}">${escapeHtml(t("quickFilter"))}</button>` : ""}
         </div>`
     )
     .join("");
+  host.querySelectorAll("[data-review-action]").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.search = "";
+      state.repo = "all";
+      state.status = "all";
+      state.cluster = "all";
+      state.attention = button.dataset.reviewAction === "attention" ? button.dataset.reviewAttention || "all" : "all";
+      state.selectedCandidateIndex = 0;
+      const searchInput = document.getElementById("search-input");
+      if (searchInput) searchInput.value = "";
+      renderRepoFilter();
+      renderStatusFilter();
+      renderClusterFilter();
+      renderAttentionFilter();
+      renderCandidateStrip();
+      renderBoard();
+      document.getElementById("candidate-list")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  });
 }
 
 function getVisibleClusters() {

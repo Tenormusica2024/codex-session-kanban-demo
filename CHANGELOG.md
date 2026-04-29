@@ -4,6 +4,17 @@ All notable public-demo changes are tracked here.
 
 This project is still pre-1.0. Entries focus on public distribution, fixture safety, and the session-to-task review workflow.
 
+## 0.1.27 - 2026-04-29
+
+### Added
+
+- Candidate review summary cards now provide quick filters for open candidates, extraction quality review, and multi-session lineage review.
+- Browser smoke coverage for candidate-review quick filtering.
+
+### Changed
+
+- The candidate review panel is now an actionable triage entry point instead of a read-only summary.
+
 ## 0.1.26 - 2026-04-29
 
 ### Added
