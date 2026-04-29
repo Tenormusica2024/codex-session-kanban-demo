@@ -13,7 +13,7 @@
 
 Codex Session Kanban is not a generic project-management Kanban. It is a review surface for turning long AI coding sessions into task candidates.
 
-The demo shows four core behaviors:
+The demo shows five core behaviors:
 
 1. **Intent-first extraction**
    - Cards should describe the real task, not just the first prompt.
@@ -23,7 +23,7 @@ The demo shows four core behaviors:
    - The sample data includes same-repo work streams that stay separate when their deliverables differ.
 4. **Human override lock**
    - Moving a card or changing status makes the human decision authoritative.
-4. **Inspectable extraction**
+5. **Inspectable extraction**
    - Detail panels show evidence, extraction timeline, suppressed sessions, and debug hints.
 
 ## Recommended review flow
@@ -47,12 +47,25 @@ The board intentionally uses a review-oriented status order:
 
 ## Keyboard shortcuts
 
+Board review:
+
+- `/`: focus search
+- `?`: open/close the workflow guide
+- `Esc`: close the workflow guide
+- `x`: clear board and candidate filters
 - `j` / `k`: select next/previous visible card
 - `Alt+↑` / `Alt+↓`: reorder selected card inside the same column
 - `1-6`: move selected card to a status
 - `c`: copy selected session id
+- `b`: copy selected card brief
 
-Shortcuts are disabled while typing in inputs or textareas.
+Candidate staging:
+
+- `j` / `k`: move through candidates when the candidate list is focused
+- `Enter`: preview the selected candidate
+- `a`: add the selected candidate to its recommended column
+
+Shortcuts are disabled while typing in inputs, selects, or textareas.
 
 ## Public vs personal mode
 

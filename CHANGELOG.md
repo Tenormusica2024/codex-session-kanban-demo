@@ -4,6 +4,17 @@ All notable public-demo changes are tracked here.
 
 This project is still pre-1.0. Entries focus on public distribution, fixture safety, and the session-to-task review workflow.
 
+## 0.1.31 - 2026-04-29
+
+### Changed
+
+- Demo usage docs now list the full board/candidate keyboard shortcut set, including search, guide, filter reset, candidate promotion, and card-brief copy.
+- README quick demo flow now points users to keyboard-first triage and handoff-copy actions.
+
+### Fixed
+
+- Corrected duplicate numbering in the demo behavior list.
+
 ## 0.1.30 - 2026-04-29
 
 ### Added

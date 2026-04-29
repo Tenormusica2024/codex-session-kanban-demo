@@ -24,6 +24,7 @@ In the demo, try this flow:
 3. Open the card detail panel.
 4. Check **Why this card exists**, evidence categories, extraction timeline, and suppressed predecessor sessions.
 5. Move the card status and confirm it becomes a human override lock.
+6. Use `/`, `?`, `x`, `j/k`, `1-6`, `c`, and `b` to test keyboard-first triage and handoff copying.
 
 ## Who this is for
 
