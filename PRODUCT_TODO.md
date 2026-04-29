@@ -670,6 +670,7 @@ Risk to avoid:
 Status:
 - Implemented as coverage-first maintenance in v0.1.21. The public fixture covers topic conflict, same-repo parallel tasks, provider import, cross-session predecessor suppression, needs-input/blocker, and mobile review control examples. `diagnose_fixture_coverage.py` and `npm run fixture:coverage` now make that coverage machine-visible before adding more samples.
 - Follow-up added an intentionally dropped hosting-path fixture so the collapsed `Dropped` archive behavior is covered, and aligned fixture-status diagnostics with the current board columns after Inbox removal.
+- Follow-up added a latest-phase-over-stale-context fixture based on private operational validation: a session can start with mail-link investigation but later move to X bookmark recommendation dedupe, and extraction should keep the latest task rather than reverting to the entry topic.
 
 Goal:
 - Add new fixtures only when a real misclassification pattern appears.

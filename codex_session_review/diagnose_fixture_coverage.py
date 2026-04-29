@@ -34,6 +34,7 @@ REQUIRED_CAPABILITIES: dict[str, str] = {
     "done_or_archived": "completed work is represented so it can stay out of active candidates",
     "english_distribution_copy": "public/demo English copy fields are represented",
     "lightweight_prioritization": "token-free activity/size prioritization signals can be generated",
+    "latest_phase_overrides_stale_context": "latest substantive phase can override stale entry-topic context",
 }
 
 # Keep this aligned with the visible board columns. Inbox used to be part of
@@ -137,6 +138,7 @@ def session_capabilities(sessions: list[dict[str, Any]], bundle: dict[str, Any])
         "done_or_archived": bool(status_counter.get("Done") or status_counter.get("Dropped")),
         "english_distribution_copy": english_complete >= max(1, len(sessions) // 2),
         "lightweight_prioritization": has_stats,
+        "latest_phase_overrides_stale_context": any_all("リンク未生成", "ブックマーク推薦", "最新phase"),
     }
 
     return {

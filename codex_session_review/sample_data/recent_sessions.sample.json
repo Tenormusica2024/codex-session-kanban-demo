@@ -604,6 +604,56 @@
       "topic_label": "Abandoned hosting path",
       "lineage_key": "distribution:abandoned-hosting-path",
       "lineage_label": "Abandoned hosting path"
+    },
+    {
+      "session_id": "sample-latest-phase-bookmark-dedupe",
+      "title": "メールリンク未生成調査からXブックマーク推薦除外へ移行",
+      "summary": "最初はAI秘書メールのリンク未生成調査だったが、後半はXブックマーク推薦で採用済み候補を再推薦しない除外記録の整備へ移った。最新phaseを現在タスクとして扱う。",
+      "first_user_message": "AI秘書メールでリンク未生成があるので原因調査して。",
+      "last_user_message": "実データはすぐ回せないので、採用済み候補が次回推薦されないよう入念にテストして。",
+      "last_assistant_message": "claude-autopilot 本体はクリーンです。Xブックマーク推薦側で同じ候補がまた出ないよう、採用済み/既存実装ありとして除外記録に入る経路を確認します。",
+      "evidence_messages": [
+        "前半のリンク未生成は入口の調査だった。",
+        "後半ではXブックマーク推薦の除外記録と再推薦防止が本題になった。",
+        "最新phaseを優先し、古いmail-link topicへ戻さない。"
+      ],
+      "suggested_status": "Need Review",
+      "user_message_count": 7,
+      "assistant_message_count": 8,
+      "command_count": 14,
+      "activity_score": 43,
+      "primary_repo": "openclaw-secretary",
+      "active_paths": [
+        "/workspace/openclaw-secretary"
+      ],
+      "source_file": "sample/latest-phase-bookmark-dedupe.jsonl",
+      "start_at": "2026-04-29T11:05:00+09:00",
+      "end_at": "2026-04-29T12:10:00+09:00",
+      "recency_label": "today",
+      "title_en": "Keep Latest Bookmark Recommendation Work Instead of Old Mail Context",
+      "summary_en": "The session starts with a mail link-generation issue but later shifts to suppressing already-adopted X bookmark recommendations. The current card should represent the latest phase rather than the stale mail topic.",
+      "first_user_message_en": "Investigate why a link was not generated in the AI secretary mail.",
+      "last_user_message_en": "Real data is hard to run immediately, so test carefully that adopted candidates are not recommended again.",
+      "last_assistant_message_en": "The claude-autopilot side is clean. Next, verify the exclusion-record path so already-adopted X bookmark recommendations are not suggested again.",
+      "evidence_messages_en": [
+        "The mail link issue was the entry context.",
+        "The later work shifted to bookmark recommendation dedupe.",
+        "The latest phase should override stale mail context."
+      ],
+      "current_goal_en": "Prevent old mail-link context from overriding the latest bookmark recommendation dedupe task.",
+      "deep_summary_en": "This fixture protects latest-phase extraction: a long session can start with one topic and move to another, and the visible task should follow the latest substantive phase.",
+      "latest_meaningful_change_en": "The task shifted from mail-link investigation to bookmark recommendation dedupe testing.",
+      "blocker_en": "none",
+      "suggested_reason_en": "The latest phase needs review, so Need Review is appropriate.",
+      "provider": "codex",
+      "provider_session_type": "codex-cli-session",
+      "provider_source": "sample-fixture",
+      "task_cluster_key": "global:bookmark-recommendation-dedupe",
+      "task_cluster_label": "Bookmark recommendation dedupe",
+      "topic_key": "global:bookmark-recommendation-dedupe",
+      "topic_label": "Bookmark recommendation dedupe",
+      "lineage_key": "global:bookmark-recommendation-dedupe",
+      "lineage_label": "Bookmark recommendation dedupe"
     }
   ],
   "schema_version": "0.2.1",

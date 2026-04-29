@@ -623,6 +623,8 @@ def concrete_title_from_topic(repo_name: str, topic_label: str, latest_change: s
         if "差分" in latest_source:
             return "LLMWIKIとの差分確認"
         return "LLMWIKI 週次レビューと取り込み整理"
+    if topic_label == "ブックマーク推薦重複抑止":
+        return "Xブックマーク推薦の採用済み反映"
     structured = compose_task_title_from_intent(repo_name, topic_label, latest_source)
     if structured:
         return structured
@@ -645,6 +647,7 @@ RECOMPOSABLE_TOPIC_LABELS = {
     "ナレッジ取り込み",
     "ネットワーク不安定の原因調査",
     "ブックマーク見直し",
+    "ブックマーク推薦重複抑止",
     "メールリンク未生成調査",
     "メール運用",
     "ランキング鮮度・sparkline修正",
@@ -1231,6 +1234,7 @@ def revise_task_body_ja(cluster_label: str | None, current_goal: str, base_body:
         "kanban自動化": "Codexセッションをkanban候補へ整理し、統合・状態判定・human lockの境界を整える。",
         "LinkedInオファー返信方針": "LinkedIn関連は原則まとめ、直近の送信者と返信温度感を確認する。",
         "ブックマーク見直し": "ブックマーク管理サイトとGitHubピン留めrepoの見直しを扱う。統合/分割は保留観察する。",
+        "ブックマーク推薦重複抑止": "Xブックマーク推薦で採用済み・既存実装ありの候補を再推薦しないよう、除外記録と検知経路を確認する。",
         "B2Bポートフォリオページ改善": "B2Bポートフォリオのページ内容、図解、文言、公開反映を確認する。",
         "LLMWIKI品質レビュー導線改善": "LLMWIKIの自動収集・品質レビュー・恒久配置済み資料の参照導線を改善する。",
     }
@@ -1434,6 +1438,23 @@ def derive_topic_key(
         return f"{repo_name}:demand-index", "需要レンズ指数設計", 86, "near-future demand / monetization index"
     if near_future_dashboard_signal:
         return f"{repo_name}:dashboard-freshness", "ランキング鮮度・sparkline修正", 86, "ranking freshness / sparkline display"
+    bookmark_recommendation_latest = any(
+        token in current_phase_activity
+        for token in (
+            "claude-autopilot",
+            "xブックマーク推薦",
+            "ブックマーク推薦",
+            "採用済み",
+            "既存実装あり",
+            "再推薦",
+            "次回推薦",
+        )
+    ) and any(
+        token in current_phase_activity
+        for token in ("ブックマーク", "bookmark", "推薦", "recommend")
+    )
+    if bookmark_recommendation_latest:
+        return "global:bookmark-recommendation-dedupe", "ブックマーク推薦重複抑止", 82, "latest phase / bookmark recommendation dedupe"
     career_text = deep_activity_text
     career_direct_tokens = ("求人", "転職", "応募候補", "求人選別", "年収", "カオナビ", "finatext", "ジーニー", "linkedin", "linkedin-offer-responder", "オファー", "松尾研究所", "渡邊", "前田")
     career_context_tokens = ("返信", "文面", "面談", "ポジション", "案件", "求人", "転職", "linkedin", "オファー")
@@ -1450,7 +1471,11 @@ def derive_topic_key(
         return f"{repo_name}:{key}", label, 86, reason
     # Mail-operation topics use the same aligned-context guard: stale mail notes
     # in a long session do not become the current task unless the latest anchor agrees.
-    mail_anchor_text = topic_text
+    mail_current_signal = any(
+        token in current_phase_activity
+        for token in ("リンク未生成", "未生成", "送信者名", "別 gmail", "alias", "重複", "llmwikiクエリ報告", "メール", "gmail")
+    )
+    mail_anchor_text = current_phase_activity if mail_current_signal else topic_text
     concrete_mail_signal = (
         any(token in mail_anchor_text for token in ("リンク未生成", "送信者名", "別 gmail", "alias"))
         or ("重複" in mail_anchor_text and any(token in mail_anchor_text for token in ("メール", "gmail", "llmwikiクエリ報告")))
@@ -2073,9 +2098,12 @@ def derive_task_title_ja(cluster: dict[str, Any]) -> str:
         return concrete_title_from_topic(repo_name, label, cluster.get("latest_meaningful_change") or "", f"{repo_name}の公開反映", "\n".join(str(item) for item in cluster.get("representative_titles", [])))
     if label == "UI表示修正" and repo_name != "unknown":
         return concrete_title_from_topic(repo_name, label, cluster.get("latest_meaningful_change") or "", f"{repo_name}の表示文言・レイアウト修正", "\n".join(str(item) for item in cluster.get("representative_titles", [])))
+    if label == "ブックマーク推薦重複抑止":
+        return concrete_title_from_topic(repo_name, label, cluster.get("latest_meaningful_change") or "", "Xブックマーク推薦の採用済み反映", "\n".join(str(item) for item in cluster.get("representative_titles", [])))
     mapping = {
         "ナレッジ取り込み": "LLMWIKI 週次レビューと取り込み整理",
         "ブックマーク見直し": "ブックマーク管理サイト / ピン留め repo 見直し",
+        "ブックマーク推薦重複抑止": "Xブックマーク推薦の採用済み反映",
         "メール運用": "AI秘書メール運用の整理",
         "メールリンク未生成調査": "メールリンク未生成調査",
         "LLMWIKIクエリ報告メール重複抑止": "LLMWIKIクエリ報告メール重複抑止",
@@ -2187,6 +2215,7 @@ def derive_task_next_action_ja(cluster: dict[str, Any]) -> str:
     mapping = {
         "ナレッジ取り込み": "今週分の query / レポートをまとめて、取り込む価値が高い項目と保留項目を仕分ける",
         "ブックマーク見直し": "ブックマーク管理サイトと pinned repo の反映済み変更・残件を確認し、次に入れ替える対象を決める",
+        "ブックマーク推薦重複抑止": "採用済み/既存実装ありの返信が除外記録に入るか確認し、再推薦されない状態に固定する",
         "メール運用": "メール生成・重複抑止・送信履歴のどこが残件かを確認し、運用ルールに固定する",
         "クリエイティブ素材": "成果物を目視確認し、品質不足・再生成条件・次に使う経路を1つに絞る",
         "ティザーLP": "次に詰める画面/素材/公開確認を1つに絞り、LP制作の続きに入る",

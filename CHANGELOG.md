@@ -4,6 +4,18 @@ All notable public-demo changes are tracked here.
 
 This project is still pre-1.0. Entries focus on public distribution, fixture safety, and the session-to-task review workflow.
 
+## 0.1.37 - 2026-04-29
+
+### Added
+
+- Added latest-phase fixture coverage for sessions that start with stale mail-link context but move to bookmark recommendation dedupe work.
+- Fixture coverage diagnostics now require a `latest_phase_overrides_stale_context` behavior case.
+
+### Fixed
+
+- Private-session extraction now prefers the latest bookmark recommendation dedupe phase over an older mail-link investigation entry prompt.
+- Suggested task titles and next actions now use a concrete `Xブックマーク推薦の採用済み反映` task instead of falling back to a generic bookmark/mail label.
+
 ## 0.1.36 - 2026-04-29
 
 ### Changed

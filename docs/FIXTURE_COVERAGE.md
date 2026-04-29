@@ -32,14 +32,16 @@ The diagnosis verifies that the public fixture represents the core product wedge
 - done/archive behavior
 - English distribution copy fields
 - lightweight prioritization stats
+- latest-phase-over-stale-context behavior, where the current task follows the latest substantive phase instead of an older entry prompt
 
-It also reports optional status gaps such as `Inbox` or `Dropped`. Optional gaps are warnings, not release blockers, because adding fake sessions only to cover every column can make the demo noisier.
+It also reports optional visible-board status gaps. Optional gaps are warnings, not release blockers, because adding fake sessions only to cover every column can make the demo noisier.
 
 ## When to add a fixture
 
 Add a new synthetic session only when it demonstrates a distinct behavior that is not already covered, for example:
 
 - a real misclassification pattern that current topic-shift fixtures do not represent
+- a long session where the latest substantive phase should override an older high-signal entry topic
 - a same-repo parallel task that incorrectly merges
 - a predecessor/successor lineage that suppresses the wrong card
 - a provider export shape that loses title, body, status, or evidence

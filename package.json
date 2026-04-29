@@ -1,6 +1,6 @@
 {
   "name": "codex-session-kanban-demo",
-  "version": "0.1.36",
+  "version": "0.1.37",
   "description": "Static, privacy-aware Kanban review surface that turns AI coding sessions into deduplicated task candidates.",
   "private": true,
   "type": "module",
