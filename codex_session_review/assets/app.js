@@ -42,7 +42,7 @@ const I18N = {
     guideNoteSchedule:
       "配布版は sample fixture だけから GitHub Actions で生成します。外部 LLM API や実セッションは使いません。",
     guideKeyboard:
-      "ショートカット: / で検索、? で使い方、Esc で使い方を閉じる。j/k でカード選択移動、Alt+↑/↓ で同列順位変更、1-6 で状態変更、c でsession IDコピー。候補一覧フォーカス中は j/k で候補移動、Enterで詳細、aで推奨列へ追加。入力欄フォーカス中は無効。",
+      "ショートカット: / で検索、? で使い方、Esc で使い方を閉じる、x で絞り込み解除。j/k でカード選択移動、Alt+↑/↓ で同列順位変更、1-6 で状態変更、c でsession IDコピー。候補一覧フォーカス中は j/k で候補移動、Enterで詳細、aで推奨列へ追加。入力欄フォーカス中は無効。",
     statVisible: "表示中セッション",
     statOverrides: "手動固定",
     statAutoReady: "自動処理候補",
@@ -68,6 +68,8 @@ const I18N = {
     allAttention: "すべて",
     attentionNeedsInput: "入力/操作待ち",
     attentionHasBlocker: "blockerあり",
+    clearFilters: "絞り込み解除",
+    clearFiltersShortcut: "絞り込み解除: x",
     exportOverrides: "手動修正を出力",
     copyOverridesJson: "手動修正JSONをコピー",
     saveSyncJson: "同期用JSONを保存",
@@ -279,7 +281,7 @@ const I18N = {
     guideNoteSchedule:
       "The public demo is generated from sample fixtures by GitHub Actions. It uses no external LLM API and no real session logs.",
     guideKeyboard:
-      "Shortcuts: / focuses search, ? toggles the guide, and Esc closes it. j/k select cards, Alt+↑/↓ reorder within a column, 1-6 move status, c copy session ID. When the candidate list is focused, j/k move candidates, Enter previews, and a adds to the recommended column. Disabled while typing in inputs.",
+      "Shortcuts: / focuses search, ? toggles the guide, and Esc closes it, and x clears filters. j/k select cards, Alt+↑/↓ reorder within a column, 1-6 move status, c copy session ID. When the candidate list is focused, j/k move candidates, Enter previews, and a adds to the recommended column. Disabled while typing in inputs.",
     statVisible: "Visible sessions",
     statOverrides: "Human overrides",
     statAutoReady: "Auto-ready",
@@ -305,6 +307,8 @@ const I18N = {
     allAttention: "All",
     attentionNeedsInput: "Needs input",
     attentionHasBlocker: "Has blocker",
+    clearFilters: "Clear filters",
+    clearFiltersShortcut: "Clear filters: x",
     exportOverrides: "Export overrides",
     copyOverridesJson: "Copy overrides JSON",
     saveSyncJson: "Save sync JSON",
@@ -1813,6 +1817,22 @@ function isTypingTarget(target) {
   return tag === "input" || tag === "textarea" || tag === "select" || Boolean(target?.isContentEditable);
 }
 
+function clearFilters() {
+  state.search = "";
+  state.repo = "all";
+  state.status = "all";
+  state.cluster = "all";
+  state.attention = "all";
+  const searchInput = document.getElementById("search-input");
+  if (searchInput) searchInput.value = "";
+  renderRepoFilter();
+  renderStatusFilter();
+  renderClusterFilter();
+  renderAttentionFilter();
+  renderBoard();
+  renderDetail();
+}
+
 function handleKeyboardTriage(event) {
   if (event.ctrlKey || event.metaKey) return;
   if (isTypingTarget(event.target)) {
@@ -1872,6 +1892,9 @@ function handleKeyboardTriage(event) {
   } else if (inCandidateList && event.key.toLowerCase() === "a") {
     event.preventDefault();
     addSelectedCandidate();
+  } else if (event.key.toLowerCase() === "x") {
+    event.preventDefault();
+    clearFilters();
   } else if (/^[1-6]$/.test(event.key)) {
     event.preventDefault();
     setSelectedStatusByIndex(Number(event.key) - 1);
@@ -2978,6 +3001,7 @@ function init() {
     state.attention = event.target.value;
     renderBoard();
   });
+  document.getElementById("clear-filters")?.addEventListener("click", clearFilters);
 
   document.getElementById("export-button").addEventListener("click", exportOverrides);
   document.getElementById("copy-overrides-json").addEventListener("click", () => {

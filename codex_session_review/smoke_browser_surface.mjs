@@ -154,6 +154,28 @@ async function main() {
   if (shortcutSearch.activeId !== "search-input" || shortcutSearch.value !== "provider") {
     errors.push(`slash shortcut did not focus/search correctly: ${JSON.stringify(shortcutSearch)}`);
   }
+  await page.click("#clear-filters");
+  const clearButtonState = await page.evaluate(() => ({
+    search: document.querySelector("#search-input")?.value || "",
+    repo: document.querySelector("#repo-filter")?.value || "",
+    status: document.querySelector("#status-filter")?.value || "",
+    cluster: document.querySelector("#cluster-filter")?.value || "",
+    attention: document.querySelector("#attention-filter")?.value || "",
+  }));
+  if (clearButtonState.search || clearButtonState.repo !== "all" || clearButtonState.status !== "all" || clearButtonState.cluster !== "all" || clearButtonState.attention !== "all") {
+    errors.push(`clear filters button failed: ${JSON.stringify(clearButtonState)}`);
+  }
+  await page.keyboard.press("/");
+  await page.keyboard.type("provider");
+  await page.evaluate(() => document.querySelector("#search-input")?.blur());
+  await page.keyboard.press("x");
+  const clearShortcutState = await page.evaluate(() => ({
+    search: document.querySelector("#search-input")?.value || "",
+    status: document.querySelector("#status-filter")?.value || "",
+  }));
+  if (clearShortcutState.search || clearShortcutState.status !== "all") {
+    errors.push(`clear filters shortcut failed: ${JSON.stringify(clearShortcutState)}`);
+  }
   await page.keyboard.press("Escape");
   await page.evaluate(() => {
     const input = document.querySelector("#search-input");
@@ -248,6 +270,7 @@ async function main() {
     initial,
     promoted,
     shortcutSearch,
+    clearFilters: { button: clearButtonState, shortcut: clearShortcutState },
     guideShortcuts: { open: guideOpen, closed: guideClosed },
     candidateKeyboard,
     keyboardTriage,

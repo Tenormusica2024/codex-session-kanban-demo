@@ -98,7 +98,7 @@ The browser smoke test checks:
 - promotion creates a human-lock marker
 - `session_id` is visible in the detail panel
 - status controls are present after promotion
-- `/` focuses search, `?` opens/closes the workflow guide, and `Esc` closes it
+- `/` focuses search, `x` clears filters, `?` opens/closes the workflow guide, and `Esc` closes it
 - keyboard triage can move the selected card to `In Progress`
 - keyboard copy shortcut targets the selected `session_id` when clipboard access is available
 
@@ -206,7 +206,7 @@ This does not run external agents. It only verifies import/display compatibility
 
 Browser smoke covers both board-card and candidate-list shortcuts:
 
-- global: `/` search focus, `?` guide toggle, `Esc` guide close
+- global: `/` search focus, `x` clear filters, `?` guide toggle, `Esc` guide close
 - candidate list: focus candidate, `j/k` movement, `Enter` preview, `a` promote to recommended column
 - board cards: `1-6` status movement and `c` session-id copy
 
