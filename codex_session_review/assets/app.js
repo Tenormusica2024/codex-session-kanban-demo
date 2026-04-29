@@ -1550,6 +1550,9 @@ function renderCandidateStrip() {
     card.className = `candidate-card${index === state.selectedCandidateIndex ? " selected" : ""}`;
     card.tabIndex = 0;
     card.dataset.candidateIndex = String(index);
+    if (representative?.session_id) {
+      card.dataset.representativeSessionId = representative.session_id;
+    }
     card.innerHTML = `
       <div class="card-tags">
         <span class="tag">${escapeHtml(displayTaskSize(task.task_size_ja))}</span>

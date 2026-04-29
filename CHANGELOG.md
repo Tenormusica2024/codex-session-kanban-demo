@@ -4,6 +4,17 @@ All notable public-demo changes are tracked here.
 
 This project is still pre-1.0. Entries focus on public distribution, fixture safety, and the session-to-task review workflow.
 
+## 0.1.35 - 2026-04-29
+
+### Added
+
+- Added a public fixture case for an intentionally dropped hosting path so the collapsed `Dropped` archive column is covered by demo data.
+
+### Changed
+
+- Fixture coverage diagnostics now align optional status coverage with the current visible board columns after removing the early Inbox prototype.
+- Browser smoke candidate-promotion assertions now compare against the immediately visible candidate count, making the check robust when archive-only candidates are hidden by default.
+
 ## 0.1.34 - 2026-04-29
 
 ### Added

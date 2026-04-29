@@ -556,6 +556,54 @@
       "task_shift_signal": true,
       "doneish_signal": false,
       "pendingish_signal": false
+    },
+    {
+      "session_id": "sample-abandoned-hosting-path",
+      "title": "Vercel制限後に古いホスティング案をDroppedへ退避",
+      "summary": "Vercel無料枠や認証操作で詰まったため、当初のホスティング案は継続対象から外し、public GitHub Pages とローカル配布の安全な経路に切り替えた。古い案は参照履歴として残すが、現在の作業候補からは外す。",
+      "first_user_message": "vercelが制限がかかったので後はローカルですすめよう",
+      "last_assistant_message": "Vercel案は止め、公開デモはGitHub Pages、個人運用はローカル/private出力に分けて進めます。",
+      "evidence_messages": [
+        "Vercel制限によりその場でのdeploy継続は避ける。",
+        "個人データはpublic repoに入れず、公開版はfixtureだけにする。",
+        "GitHub Pages と downloadable artifact が現在の配布経路になった。"
+      ],
+      "suggested_status": "Dropped",
+      "user_message_count": 3,
+      "assistant_message_count": 4,
+      "command_count": 6,
+      "activity_score": 17,
+      "primary_repo": "codex-session-kanban-demo",
+      "active_paths": [
+        "/workspace/codex-session-kanban-demo"
+      ],
+      "source_file": "sample/abandoned-hosting-path.jsonl",
+      "start_at": "2026-04-28T22:20:00+09:00",
+      "end_at": "2026-04-28T22:44:00+09:00",
+      "recency_label": "yesterday",
+      "title_en": "Drop the Old Hosting Path After Vercel Limits",
+      "summary_en": "The session drops the earlier Vercel-first hosting path after quota/auth friction and switches distribution toward GitHub Pages, downloadable artifacts, and local/private outputs. The old path remains useful context but should not stay active.",
+      "first_user_message_en": "Vercel hit a limit, so continue locally for now.",
+      "last_assistant_message_en": "Stop the Vercel path and separate public fixture distribution from local/private review outputs.",
+      "evidence_messages_en": [
+        "The Vercel deploy path should not block local progress.",
+        "Private data must stay out of the public repository.",
+        "GitHub Pages and downloadable artifacts became the active distribution path."
+      ],
+      "current_goal_en": "Archive an abandoned hosting option so it does not appear as active work.",
+      "deep_summary_en": "This sample demonstrates the Dropped archive path: a previously considered deployment strategy was superseded by a safer distribution model.",
+      "latest_meaningful_change_en": "The active distribution direction changed from Vercel-first to GitHub Pages/artifact plus local private output.",
+      "blocker_en": "Vercel quota/auth friction made the path unattractive for the current public demo.",
+      "suggested_reason_en": "The path was intentionally abandoned, so Dropped is the correct archive status.",
+      "provider": "codex",
+      "provider_session_type": "codex-cli-session",
+      "provider_source": "sample-fixture",
+      "task_cluster_key": "distribution:abandoned-hosting-path",
+      "task_cluster_label": "Abandoned hosting path",
+      "topic_key": "distribution:abandoned-hosting-path",
+      "topic_label": "Abandoned hosting path",
+      "lineage_key": "distribution:abandoned-hosting-path",
+      "lineage_label": "Abandoned hosting path"
     }
   ],
   "schema_version": "0.2.1",

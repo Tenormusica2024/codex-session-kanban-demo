@@ -36,7 +36,10 @@ REQUIRED_CAPABILITIES: dict[str, str] = {
     "lightweight_prioritization": "token-free activity/size prioritization signals can be generated",
 }
 
-OPTIONAL_STATUS_LABELS = ["Inbox", "Need Review", "Pending", "In Progress", "Blocked", "Done", "Dropped"]
+# Keep this aligned with the visible board columns. Inbox used to be part of
+# the early prototype, but the public review surface intentionally removed it
+# so candidates stay in the staging backlog until explicitly promoted.
+OPTIONAL_STATUS_LABELS = list(STATUS_ORDER)
 
 
 def load_raw(path: Path) -> Any:
