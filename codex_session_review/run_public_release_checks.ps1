@@ -36,7 +36,15 @@ Invoke-Step "Python compile check" {
         .\codex_session_review\build_review_surface.py `
         .\codex_session_review\validate_session_data.py `
         .\codex_session_review\smoke_public_build.py `
-        .\codex_session_review\smoke_distribution_package.py
+        .\codex_session_review\smoke_distribution_package.py `
+        .\codex_session_review\diagnose_provider_import.py
+}
+
+Invoke-Step "Provider import diagnosis" {
+    python .\codex_session_review\diagnose_provider_import.py `
+        .\codex_session_review\sample_data\provider_imports.sample.json `
+        --report-json .\codex_session_review\fixture_snapshot\provider-import.diagnosis.json `
+        --normalized-json .\codex_session_review\fixture_snapshot\provider-import.diagnosis.normalized.json
 }
 
 Invoke-Step "Provider import normalization smoke" {

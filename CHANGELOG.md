@@ -4,6 +4,18 @@ All notable public-demo changes are tracked here.
 
 This project is still pre-1.0. Entries focus on public distribution, fixture safety, and the session-to-task review workflow.
 
+## 0.1.20 - 2026-04-29
+
+### Added
+
+- Provider import diagnosis script for observed real-world export shapes.
+- npm shortcut `provider:diagnose` and release-check coverage for provider diagnosis.
+- Provider adapter review guide that keeps future mappings diagnosis-first and import/display-only.
+
+### Changed
+
+- Import schema and testing docs now show the diagnosis step before adding broader provider compatibility claims.
+
 ## 0.1.19 - 2026-04-29
 
 ### Added

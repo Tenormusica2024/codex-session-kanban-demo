@@ -173,9 +173,15 @@ npm run private:update:full
 
 See [Private scheduled refresh](./PRIVATE_SCHEDULED_REFRESH.md) before scheduling real `.codex` data.
 
-## Provider import normalization smoke
+## Provider import diagnosis and normalization smoke
 
-The one-command release check runs this smoke test automatically. Browser smoke also verifies that lightweight prioritization stats are visible after candidate promotion. To verify lightweight Claude Code / Cursor / Gemini-style imports normalize into the common session schema manually:
+The one-command release check runs the provider diagnosis and normalization smoke automatically.
+
+```powershell
+npm run provider:diagnose
+```
+
+The smoke test also builds a normalized HTML artifact. Browser smoke also verifies that lightweight prioritization stats are visible after candidate promotion. To verify lightweight Claude Code / Cursor / Gemini-style imports normalize into the common session schema manually:
 
 ```powershell
 python .\codex_session_review\build_review_surface.py --input-json .\codex_session_review\sample_data\provider_imports.sample.json --output .\codex_session_review\fixture_snapshot\provider-import.html --json-output .\codex_session_review\fixture_snapshot\provider-import.normalized.json --distribution

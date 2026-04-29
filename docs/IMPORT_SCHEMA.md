@@ -63,7 +63,13 @@ A provider-native sample lives at:
 codex_session_review/sample_data/provider_imports.sample.json
 ```
 
-You can normalize and smoke-test it with:
+You can diagnose, normalize, and smoke-test it with:
+
+```powershell
+python .\codex_session_review\diagnose_provider_import.py .\codex_session_review\sample_data\provider_imports.sample.json --report-json .\codex_session_reviewixture_snapshot\provider-import.diagnosis.json --normalized-json .\codex_session_reviewixture_snapshot\provider-import.diagnosis.normalized.json
+```
+
+Then build the HTML smoke artifact:
 
 ```powershell
 python .\codex_session_review\build_review_surface.py --input-json .\codex_session_review\sample_data\provider_imports.sample.json --output .\codex_session_review\fixture_snapshot\provider-import.html --json-output .\codex_session_review\fixture_snapshot\provider-import.normalized.json --distribution

@@ -639,7 +639,7 @@ Risk to avoid:
 ### 36. Real-world provider adapter samples
 
 Status:
-- Lightweight provider import normalization exists for Claude Code / Cursor / Gemini-style shapes. No broader provider adapter should be added until real export samples or concrete schema needs appear.
+- Implemented in v0.1.20 as a diagnosis-first workflow. Added `diagnose_provider_import.py`, `npm run provider:diagnose`, release-check coverage, and `docs/PROVIDER_ADAPTER_REVIEW.md`. No speculative provider adapter was added.
 
 Goal:
 - Improve provider import compatibility only from observed data shapes.
@@ -718,8 +718,8 @@ For each feature:
 
 ## Current recommended order
 
-1. Real-world provider adapter refinement, only after concrete export samples are available.
-2. Evidence-driven fixture additions, only after a new misclassification appears.
-3. Evidence-driven UI/keyboard polish, only after a concrete manual-review bottleneck appears.
+1. Evidence-driven fixture additions, only after a new misclassification appears.
+2. Evidence-driven UI/keyboard polish, only after a concrete manual-review bottleneck appears.
+3. Provider mapping refinements, only after diagnosis of a real export sample shows a stable new field shape.
 4. Personal/private Task Scheduler refinements, only after the recipe is used in practice.
 5. Lightweight prioritization stats refinement, only if the current rough signals become noisy or insufficient.

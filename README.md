@@ -140,6 +140,7 @@ npm run release:check:pages
 - [Downloadable artifact usage](./docs/ARTIFACT_USAGE.md)
 - [Architecture / data flow](./docs/ARCHITECTURE.md)
 - [Import schema](./docs/IMPORT_SCHEMA.md)
+- [Provider adapter review](./docs/PROVIDER_ADAPTER_REVIEW.md)
 - [Testing guide](./docs/TESTING.md)
 - [Local update helper](./docs/LOCAL_UPDATE_HELPER.md)
 - [Roadmap](./docs/ROADMAP.md)
@@ -199,6 +200,12 @@ Private/local real-session refresh helper:
 npm run private:update
 npm run private:update:open
 npm run private:update:full
+```
+
+Provider import diagnosis for observed export shapes:
+
+```powershell
+npm run provider:diagnose
 ```
 
 See [Private scheduled refresh](./docs/PRIVATE_SCHEDULED_REFRESH.md) before wiring this into Windows Task Scheduler.

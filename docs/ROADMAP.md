@@ -26,22 +26,13 @@ The public fixture demo currently includes:
 - provider import normalization for lightweight Claude Code / Cursor / Gemini-style JSON shapes
 - lightweight prioritization stats for estimated text size, high-activity signals, and large-session signals
 - private scheduled refresh recipe for local real-session builds
+- provider import diagnosis for observed export shapes
 
 ## Near-term focus
 
 The initial public-demo hardening pass is largely complete. Next work should be more selective and evidence-driven rather than adding generic Kanban features.
 
-### 1. Real-world provider adapter refinement
-
-The current importer normalizes lightweight Claude Code / Cursor / Gemini-style shapes. Broader adapters should wait for real export samples or concrete user data shapes.
-
-Useful next steps when samples exist:
-
-- add a provider-specific fixture
-- normalize only stable aliases
-- keep provider support as import/display compatibility, not agent execution
-
-### 2. Extraction quality maintenance
+### 1. Extraction quality maintenance
 
 Do not add more synthetic fixture cases by default. Add fixtures only when a new real misclassification appears, such as:
 
@@ -50,7 +41,7 @@ Do not add more synthetic fixture cases by default. Add fixtures only when a new
 - a predecessor session that is suppressed without enough newer context
 - a provider export shape that loses title/body/status evidence
 
-### 3. UI polish by evidence
+### 2. UI polish by evidence
 
 Keyboard and desktop/mobile/narrow smoke coverage now exists. Further UI work should be triggered by screenshots, smoke failures, or a specific manual-review bottleneck.
 
@@ -58,10 +49,10 @@ Keyboard and desktop/mobile/narrow smoke coverage now exists. Further UI work sh
 
 These are useful, but should be implemented only if they strengthen the core review workflow.
 
-1. Broader provider import adapters after real-world export samples are reviewed.
-2. More fixture examples only when they demonstrate a new extraction/lineage failure mode.
-3. More keyboard-first triage actions when they remove a real drag/click bottleneck.
-4. Further mobile/narrow-width polish only when screenshots or smoke tests reveal a concrete regression.
+1. More fixture examples only when they demonstrate a new extraction/lineage failure mode.
+2. More keyboard-first triage actions when they remove a real drag/click bottleneck.
+3. Further mobile/narrow-width polish only when screenshots or smoke tests reveal a concrete regression.
+4. Provider mappings only after diagnosis of real export samples shows a stable new field shape.
 5. Optional Task Scheduler refinements only after the private recipe is used in practice.
 6. Lightweight prioritization-stat refinements only if the rough signals become noisy or insufficient.
 
