@@ -41,6 +41,7 @@ const I18N = {
     paneAutoTitle: "Pane Auto",
     paneAutoModeLocal: "local cache",
     paneAutoModeBridge: "bridge同期",
+    paneAutoModePending: "未反映",
     paneAutoUpperLeft: "左上",
     paneAutoUpperRight: "右上",
     paneAutoLowerLeft: "左下",
@@ -308,6 +309,7 @@ const I18N = {
     paneAutoTitle: "Pane Auto",
     paneAutoModeLocal: "local cache",
     paneAutoModeBridge: "bridge sync",
+    paneAutoModePending: "pending",
     paneAutoUpperLeft: "upper left",
     paneAutoUpperRight: "upper right",
     paneAutoLowerLeft: "lower left",
@@ -578,6 +580,7 @@ const state = {
   archiveExpanded: {},
   paneAutomation: { ...PANE_AUTOMATION_DEFAULT },
   paneAutomationBridgeOnline: null,
+  paneAutomationDirty: false,
   lang: localStorage.getItem(LANGUAGE_KEY) || "ja",
 };
 
@@ -1124,6 +1127,7 @@ async function refreshPaneAutomationFromBridge({ quiet = false } = {}) {
     }
     state.paneAutomation = normalizePaneAutomationPanes(payload.panes);
     state.paneAutomationBridgeOnline = true;
+    state.paneAutomationDirty = false;
     savePaneAutomation();
     renderPaneAutomationControl();
     if (!quiet) {
@@ -1151,9 +1155,15 @@ function renderPaneAutomationControl() {
   const mode = document.getElementById("pane-auto-mode");
   if (mode) {
     const bridgeOnline = state.paneAutomationBridgeOnline === true;
-    mode.textContent = bridgeOnline ? t("paneAutoModeBridge") : t("paneAutoModeLocal");
-    mode.classList.toggle("is-online", bridgeOnline);
-    mode.classList.toggle("is-local", !bridgeOnline);
+    const pending = state.paneAutomationDirty === true;
+    mode.textContent = pending
+      ? t("paneAutoModePending")
+      : bridgeOnline
+        ? t("paneAutoModeBridge")
+        : t("paneAutoModeLocal");
+    mode.classList.toggle("is-online", bridgeOnline && !pending);
+    mode.classList.toggle("is-local", !bridgeOnline && !pending);
+    mode.classList.toggle("is-pending", pending);
   }
   document.querySelectorAll("[data-pane-toggle]").forEach((button) => {
     const pane = button.dataset.paneToggle;
@@ -1176,6 +1186,7 @@ function initPaneAutomationControl() {
     button.addEventListener("click", () => {
       const pane = button.dataset.paneToggle;
       state.paneAutomation[pane] = !(state.paneAutomation[pane] !== false);
+      state.paneAutomationDirty = true;
       savePaneAutomation();
       renderPaneAutomationControl();
     });
@@ -1192,6 +1203,7 @@ function initPaneAutomationControl() {
         throw new Error(`HTTP ${response.status}`);
       }
       state.paneAutomationBridgeOnline = true;
+      state.paneAutomationDirty = false;
       renderPaneAutomationControl();
       setPaneAutomationFeedback("paneAutoApplied");
     } catch {

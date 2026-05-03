@@ -170,6 +170,13 @@ async function main() {
   }
 
   await page.locator('[data-pane-toggle="upper_right"]').click();
+  const pendingPaneAutomationMode = await page
+    .locator("#pane-auto-mode")
+    .textContent()
+    .then((text) => text?.trim() || "");
+  if (!/未反映|pending/.test(pendingPaneAutomationMode)) {
+    errors.push(`pane automation mode did not show pending local change: ${pendingPaneAutomationMode}`);
+  }
   await page.click("#pane-auto-apply");
   await page.waitForTimeout(100);
   await page.click("#pane-auto-refresh");
