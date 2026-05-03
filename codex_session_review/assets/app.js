@@ -49,8 +49,10 @@ const I18N = {
     paneAutoOn: "ON",
     paneAutoOff: "OFF",
     paneAutoSummary: "{count}/4 ON",
+    paneAutoRefresh: "再読込",
     paneAutoApply: "ローカル反映",
     paneAutoCopy: "JSONコピー",
+    paneAutoLoaded: "bridgeから読込",
     paneAutoApplied: "反映しました",
     paneAutoBridgeOffline: "bridge未接続",
     paneAutoCopied: "コピーしました",
@@ -313,8 +315,10 @@ const I18N = {
     paneAutoOn: "ON",
     paneAutoOff: "OFF",
     paneAutoSummary: "{count}/4 ON",
+    paneAutoRefresh: "refresh",
     paneAutoApply: "apply local",
     paneAutoCopy: "copy JSON",
+    paneAutoLoaded: "loaded from bridge",
     paneAutoApplied: "applied",
     paneAutoBridgeOffline: "bridge offline",
     paneAutoCopied: "copied",
@@ -1077,6 +1081,13 @@ function savePaneAutomation() {
   localStorage.setItem(PANE_AUTOMATION_KEY, JSON.stringify(state.paneAutomation, null, 2));
 }
 
+function normalizePaneAutomationPanes(panes) {
+  return Object.keys(PANE_AUTOMATION_DEFAULT).reduce((result, pane) => {
+    result[pane] = panes?.[pane] ?? PANE_AUTOMATION_DEFAULT[pane];
+    return result;
+  }, {});
+}
+
 function paneAutomationExportPayload() {
   return {
     schema_version: 1,
@@ -1085,6 +1096,42 @@ function paneAutomationExportPayload() {
     updated_at: new Date().toISOString(),
     panes: { ...PANE_AUTOMATION_DEFAULT, ...state.paneAutomation },
   };
+}
+
+function setPaneAutomationFeedback(messageKey, timeout = 1600) {
+  const feedback = document.getElementById("pane-auto-feedback");
+  if (!feedback) return;
+  feedback.textContent = t(messageKey);
+  if (timeout > 0) {
+    window.setTimeout(() => {
+      feedback.textContent = "";
+    }, timeout);
+  }
+}
+
+async function refreshPaneAutomationFromBridge({ quiet = false } = {}) {
+  try {
+    const response = await fetch(PANE_AUTOMATION_BRIDGE_URL, { method: "GET" });
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    const payload = await response.json();
+    if (!payload?.ok || !payload?.panes) {
+      throw new Error("invalid pane automation bridge response");
+    }
+    state.paneAutomation = normalizePaneAutomationPanes(payload.panes);
+    savePaneAutomation();
+    renderPaneAutomationControl();
+    if (!quiet) {
+      setPaneAutomationFeedback("paneAutoLoaded");
+    }
+    return true;
+  } catch {
+    if (!quiet) {
+      setPaneAutomationFeedback("paneAutoBridgeOffline", 0);
+    }
+    return false;
+  }
 }
 
 function renderPaneAutomationControl() {
@@ -1121,7 +1168,6 @@ function initPaneAutomationControl() {
     });
   });
   document.getElementById("pane-auto-apply")?.addEventListener("click", async () => {
-    const feedback = document.getElementById("pane-auto-feedback");
     const payload = paneAutomationExportPayload();
     try {
       const response = await fetch(PANE_AUTOMATION_BRIDGE_URL, {
@@ -1132,17 +1178,13 @@ function initPaneAutomationControl() {
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
       }
-      if (feedback) {
-        feedback.textContent = t("paneAutoApplied");
-        window.setTimeout(() => {
-          feedback.textContent = "";
-        }, 1600);
-      }
+      setPaneAutomationFeedback("paneAutoApplied");
     } catch {
-      if (feedback) {
-        feedback.textContent = t("paneAutoBridgeOffline");
-      }
+      setPaneAutomationFeedback("paneAutoBridgeOffline", 0);
     }
+  });
+  document.getElementById("pane-auto-refresh")?.addEventListener("click", () => {
+    refreshPaneAutomationFromBridge();
   });
   document.getElementById("pane-auto-copy")?.addEventListener("click", async () => {
     const feedback = document.getElementById("pane-auto-feedback");
@@ -1162,6 +1204,7 @@ function initPaneAutomationControl() {
     }
   });
   renderPaneAutomationControl();
+  refreshPaneAutomationFromBridge({ quiet: true });
 }
 
 function getMergedSessions() {

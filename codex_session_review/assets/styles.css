@@ -258,6 +258,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 8px;
   color: var(--muted);
   font-size: 0.64rem;

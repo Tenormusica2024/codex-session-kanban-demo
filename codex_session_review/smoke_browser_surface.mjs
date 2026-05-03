@@ -95,9 +95,42 @@ async function main() {
     }
   });
 
+  const paneAutomationPosts = [];
+  await page.route("http://127.0.0.1:8766/pane-automation", async (route) => {
+    if (route.request().method() === "GET") {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          ok: true,
+          schema_version: 1,
+          source: "pane_automation_control",
+          panes: {
+            upper_left: false,
+            upper_right: false,
+            lower_left: false,
+            lower_right: true,
+          },
+        }),
+      });
+      return;
+    }
+    if (route.request().method() === "POST") {
+      paneAutomationPosts.push(await route.request().postDataJSON());
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ ok: true }),
+      });
+      return;
+    }
+    await route.continue();
+  });
+
   await page.goto(targetUrl, { waitUntil: "networkidle", timeout: 60000 });
   await page.waitForSelector("#candidate-list", { timeout: 15000 });
   await page.waitForSelector("#detail-panel", { timeout: 15000 });
+  await page.waitForFunction(() => document.querySelector('[data-pane-toggle="lower_right"]')?.getAttribute("aria-pressed") === "true");
 
   const initial = await page.evaluate(() => ({
     title: document.title,
@@ -109,6 +142,10 @@ async function main() {
     hasDetailPanel: Boolean(document.querySelector("#detail-panel")),
     filterSummary: document.querySelector("#filter-summary")?.textContent?.trim() || "",
     buildMeta: document.querySelector("#build-meta")?.textContent?.trim() || "",
+    paneAutomation: [...document.querySelectorAll("[data-pane-toggle]")].reduce((acc, button) => {
+      acc[button.dataset.paneToggle] = button.getAttribute("aria-pressed") === "true";
+      return acc;
+    }, {}),
     viewport: { width: window.innerWidth, height: window.innerHeight },
     scrollWidth: document.documentElement.scrollWidth,
     hasHorizontalOverflow: document.documentElement.scrollWidth > window.innerWidth + 2,
@@ -123,6 +160,36 @@ async function main() {
   }
   if (initial.hasHorizontalOverflow) {
     errors.push(`horizontal overflow before interaction: viewport=${initial.viewport.width}, scrollWidth=${initial.scrollWidth}`);
+  }
+  if (initial.paneAutomation.upper_left !== false || initial.paneAutomation.lower_right !== true) {
+    errors.push(`pane automation did not load bridge state: ${JSON.stringify(initial.paneAutomation)}`);
+  }
+
+  await page.locator('[data-pane-toggle="upper_right"]').click();
+  await page.click("#pane-auto-apply");
+  await page.waitForTimeout(100);
+  await page.click("#pane-auto-refresh");
+  await page.waitForFunction(() => document.querySelector('[data-pane-toggle="upper_right"]')?.getAttribute("aria-pressed") === "false");
+  await page.click("#pane-auto-copy");
+  const paneAutomation = await page.evaluate(() => ({
+    postedCount: window.__paneAutomationPostCount || 0,
+    ui: [...document.querySelectorAll("[data-pane-toggle]")].reduce((acc, button) => {
+      acc[button.dataset.paneToggle] = button.getAttribute("aria-pressed") === "true";
+      return acc;
+    }, {}),
+    feedback: document.querySelector("#pane-auto-feedback")?.textContent?.trim() || "",
+    copiedText: window.__copiedText || "",
+  }));
+  paneAutomation.postedCount = paneAutomationPosts.length;
+  paneAutomation.lastPost = paneAutomationPosts.at(-1) || null;
+  if (paneAutomation.postedCount !== 1 || paneAutomation.lastPost?.panes?.upper_right !== true) {
+    errors.push(`pane automation apply did not post toggled state: ${JSON.stringify(paneAutomation.lastPost)}`);
+  }
+  if (paneAutomation.ui.upper_right !== false || paneAutomation.ui.lower_right !== true) {
+    errors.push(`pane automation refresh did not restore bridge state: ${JSON.stringify(paneAutomation.ui)}`);
+  }
+  if (!/pane-automation/.test(paneAutomation.copiedText) || !/"lower_right": true/.test(paneAutomation.copiedText)) {
+    errors.push("pane automation copy JSON did not expose the current pane state");
   }
 
   await page.getByRole("button", { name: "EN" }).click();
@@ -326,6 +393,7 @@ async function main() {
     ok: errors.length === 0,
     targetUrl,
     initial,
+    paneAutomation,
     promoted,
     shortcutSearch,
     clearFilters: { button: clearButtonState, shortcut: clearShortcutState },
