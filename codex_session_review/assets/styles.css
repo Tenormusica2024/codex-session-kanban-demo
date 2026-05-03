@@ -191,6 +191,12 @@ body {
   color: var(--muted);
 }
 
+.pane-auto-status {
+  min-width: 48px;
+  text-align: right;
+  color: var(--accent);
+}
+
 .pane-auto-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -236,6 +242,49 @@ body {
   font-weight: 800;
   line-height: 1;
   opacity: 0.82;
+}
+
+.pane-auto-grid button em {
+  margin-top: 4px;
+  font-size: 0.56rem;
+  font-style: normal;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  opacity: 0.76;
+}
+
+.pane-auto-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 0.64rem;
+}
+
+.pane-auto-foot button {
+  border: 1px solid rgba(151, 169, 195, 0.18);
+  border-radius: 999px;
+  padding: 4px 8px;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.035);
+  font-size: 0.62rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.pane-auto-foot button:hover {
+  color: var(--text);
+  border-color: rgba(100, 210, 255, 0.44);
+}
+
+.pane-auto-feedback {
+  min-height: 0.8rem;
+  color: var(--accent-2);
+  font-size: 0.62rem;
+  line-height: 1;
+  word-break: break-all;
 }
 
 .workflow-help {

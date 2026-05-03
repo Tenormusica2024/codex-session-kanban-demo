@@ -32,26 +32,35 @@ __INLINE_CSS__
             <div class="pane-auto-control" aria-labelledby="pane-auto-title">
               <div class="pane-auto-head">
                 <strong id="pane-auto-title" data-i18n="paneAutoTitle">Pane Auto</strong>
-                <span data-i18n="paneAutoMode">local only</span>
+                <span id="pane-auto-status">4/4 ON</span>
               </div>
               <div class="pane-auto-grid" id="pane-auto-grid">
                 <button type="button" data-pane-toggle="upper_left" aria-pressed="true">
                   <span>UL</span>
                   <small data-i18n="paneAutoUpperLeft">左上</small>
+                  <em data-pane-toggle-status>ON</em>
                 </button>
                 <button type="button" data-pane-toggle="upper_right" aria-pressed="true">
                   <span>UR</span>
                   <small data-i18n="paneAutoUpperRight">右上</small>
+                  <em data-pane-toggle-status>ON</em>
                 </button>
                 <button type="button" data-pane-toggle="lower_left" aria-pressed="true">
                   <span>LL</span>
                   <small data-i18n="paneAutoLowerLeft">左下</small>
+                  <em data-pane-toggle-status>ON</em>
                 </button>
                 <button type="button" data-pane-toggle="lower_right" aria-pressed="true">
                   <span>LR</span>
                   <small data-i18n="paneAutoLowerRight">右下</small>
+                  <em data-pane-toggle-status>ON</em>
                 </button>
               </div>
+              <div class="pane-auto-foot">
+                <span data-i18n="paneAutoMode">local only</span>
+                <button type="button" id="pane-auto-copy" data-i18n="paneAutoCopy">JSONコピー</button>
+              </div>
+              <div class="pane-auto-feedback" id="pane-auto-feedback" aria-live="polite"></div>
             </div>
             <div class="language-switch" role="group" aria-label="表示言語">
               <button type="button" data-lang-option="ja">日本語</button>

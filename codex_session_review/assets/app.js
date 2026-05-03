@@ -45,6 +45,11 @@ const I18N = {
     paneAutoLowerRight: "右下",
     paneAutoEnabled: "{label} 自動継続 ON",
     paneAutoDisabled: "{label} 自動継続 OFF",
+    paneAutoOn: "ON",
+    paneAutoOff: "OFF",
+    paneAutoSummary: "{count}/4 ON",
+    paneAutoCopy: "JSONコピー",
+    paneAutoCopied: "コピーしました",
     guideAccessTitle: "URLの使い分け",
     guideAccessPersonal: "個人用: 実セッション入りのため、このpublic demoには含めない。",
     guideAccessDistribution: "配布用: sample fixtureだけで生成。公開前に -Distribution guard を通し、個人セッション・ローカルパス・bypass token を混ぜない。",
@@ -301,6 +306,11 @@ const I18N = {
     paneAutoLowerRight: "lower right",
     paneAutoEnabled: "{label} auto-continue on",
     paneAutoDisabled: "{label} auto-continue off",
+    paneAutoOn: "ON",
+    paneAutoOff: "OFF",
+    paneAutoSummary: "{count}/4 ON",
+    paneAutoCopy: "copy JSON",
+    paneAutoCopied: "copied",
     guideAccessTitle: "URL profiles",
     guideAccessPersonal: "Personal: contains real sessions and is intentionally not included in this public demo.",
     guideAccessDistribution: "Distribution: generated only from sample fixtures. Run the -Distribution guard before publishing so real sessions, local paths, and bypass tokens are not included.",
@@ -1060,7 +1070,24 @@ function savePaneAutomation() {
   localStorage.setItem(PANE_AUTOMATION_KEY, JSON.stringify(state.paneAutomation, null, 2));
 }
 
+function paneAutomationExportPayload() {
+  return {
+    schema_version: 1,
+    source: "codex-session-review-surface",
+    storage_key: PANE_AUTOMATION_KEY,
+    updated_at: new Date().toISOString(),
+    panes: { ...PANE_AUTOMATION_DEFAULT, ...state.paneAutomation },
+  };
+}
+
 function renderPaneAutomationControl() {
+  const enabledCount = Object.keys(PANE_AUTOMATION_DEFAULT).filter(
+    (pane) => state.paneAutomation[pane] !== false,
+  ).length;
+  const status = document.getElementById("pane-auto-status");
+  if (status) {
+    status.textContent = t("paneAutoSummary", { count: enabledCount });
+  }
   document.querySelectorAll("[data-pane-toggle]").forEach((button) => {
     const pane = button.dataset.paneToggle;
     const enabled = state.paneAutomation[pane] !== false;
@@ -1069,6 +1096,10 @@ function renderPaneAutomationControl() {
     button.classList.toggle("off", !enabled);
     button.title = enabled ? t("paneAutoEnabled", { label }) : t("paneAutoDisabled", { label });
     button.setAttribute("aria-label", button.title);
+    const statusLabel = button.querySelector("[data-pane-toggle-status]");
+    if (statusLabel) {
+      statusLabel.textContent = enabled ? t("paneAutoOn") : t("paneAutoOff");
+    }
   });
 }
 
@@ -1081,6 +1112,23 @@ function initPaneAutomationControl() {
       savePaneAutomation();
       renderPaneAutomationControl();
     });
+  });
+  document.getElementById("pane-auto-copy")?.addEventListener("click", async () => {
+    const feedback = document.getElementById("pane-auto-feedback");
+    const text = JSON.stringify(paneAutomationExportPayload(), null, 2);
+    try {
+      await navigator.clipboard.writeText(text);
+      if (feedback) {
+        feedback.textContent = t("paneAutoCopied");
+        window.setTimeout(() => {
+          feedback.textContent = "";
+        }, 1600);
+      }
+    } catch {
+      if (feedback) {
+        feedback.textContent = text;
+      }
+    }
   });
   renderPaneAutomationControl();
 }
