@@ -16,59 +16,65 @@ __INLINE_CSS__
     <main class="main-column">
       <section class="hero">
         <div class="hero-top">
-          <div>
+          <div class="hero-copy">
             <h1 data-i18n="appTitle">CodexセッションKanban</h1>
             <p data-i18n="appLead">
               直近の “短くない” Codex session を board 化。drag / status select は human override 扱いにして、
               後段 AI sync はそれを戻さない前提で使う。
             </p>
           </div>
-          <div class="pill-row">
-            <span class="pill"><strong data-i18n="pillModeKey">形式</strong> <span data-i18n="pillModeValue">静的HTML優先</span></span>
-            <span class="pill"><strong data-i18n="pillStorageKey">保存先</strong> localStorage</span>
-            <span class="pill"><strong data-i18n="pillOpsKey">運用</strong> <span data-i18n="pillOpsValue">AI優先 / 手動修正可</span></span>
-            <span class="pill access-pill" id="access-profile-pill"><strong data-i18n="pillAccessKey">用途</strong> 配布用・fixture</span>
-            <span class="pill" id="build-meta">built unknown</span>
-            <div class="pane-auto-control" aria-labelledby="pane-auto-title">
-              <div class="pane-auto-head">
-                <strong id="pane-auto-title" data-i18n="paneAutoTitle">Pane Auto</strong>
-                <span id="pane-auto-status">1/4 ON</span>
-              </div>
-              <div class="pane-auto-grid" id="pane-auto-grid">
-                <button type="button" data-pane-toggle="upper_left" aria-pressed="true">
-                  <span>UL</span>
-                  <small data-i18n="paneAutoUpperLeft">左上</small>
-                  <em data-pane-toggle-status>ON</em>
-                </button>
-                <button type="button" data-pane-toggle="upper_right" aria-pressed="false">
-                  <span>UR</span>
-                  <small data-i18n="paneAutoUpperRight">右上</small>
-                  <em data-pane-toggle-status>OFF</em>
-                </button>
-                <button type="button" data-pane-toggle="lower_left" aria-pressed="false">
-                  <span>LL</span>
-                  <small data-i18n="paneAutoLowerLeft">左下</small>
-                  <em data-pane-toggle-status>OFF</em>
-                </button>
-                <button type="button" data-pane-toggle="lower_right" aria-pressed="false">
-                  <span>LR</span>
-                  <small data-i18n="paneAutoLowerRight">右下</small>
-                  <em data-pane-toggle-status>OFF</em>
-                </button>
-              </div>
-              <div class="pane-auto-foot">
-                <span class="pane-auto-mode" id="pane-auto-mode" data-i18n="paneAutoModeLocal">local cache</span>
-                <button type="button" id="pane-auto-refresh" data-i18n="paneAutoRefresh">再読込</button>
-                <button type="button" id="pane-auto-apply" data-i18n="paneAutoApply">ローカル反映</button>
-                <button type="button" id="pane-auto-copy" data-i18n="paneAutoCopy">JSONコピー</button>
-              </div>
-              <div class="pane-auto-feedback" id="pane-auto-feedback" aria-live="polite"></div>
+          <div class="hero-side">
+            <div class="pill-row">
+              <span class="pill"><strong data-i18n="pillModeKey">形式</strong> <span data-i18n="pillModeValue">静的HTML優先</span></span>
+              <span class="pill"><strong data-i18n="pillStorageKey">保存先</strong> localStorage</span>
+              <span class="pill"><strong data-i18n="pillOpsKey">運用</strong> <span data-i18n="pillOpsValue">AI優先 / 手動修正可</span></span>
+              <span class="pill access-pill" id="access-profile-pill"><strong data-i18n="pillAccessKey">用途</strong> 配布用・fixture</span>
+              <span class="pill" id="build-meta">built unknown</span>
             </div>
-            <div class="language-switch" role="group" aria-label="表示言語">
-              <button type="button" data-lang-option="ja">日本語</button>
-              <button type="button" data-lang-option="en">EN</button>
+            <div class="hero-control-row">
+              <div class="pane-auto-control" aria-labelledby="pane-auto-title">
+                <div class="pane-auto-head">
+                  <strong id="pane-auto-title" data-i18n="paneAutoTitle">Pane Auto</strong>
+                  <span id="pane-auto-status">1/4 ON</span>
+                </div>
+                <div class="pane-auto-grid" id="pane-auto-grid">
+                  <button type="button" data-pane-toggle="upper_left" aria-pressed="true">
+                    <span>UL</span>
+                    <small data-i18n="paneAutoUpperLeft">左上</small>
+                    <em data-pane-toggle-status>ON</em>
+                  </button>
+                  <button type="button" data-pane-toggle="upper_right" aria-pressed="false">
+                    <span>UR</span>
+                    <small data-i18n="paneAutoUpperRight">右上</small>
+                    <em data-pane-toggle-status>OFF</em>
+                  </button>
+                  <button type="button" data-pane-toggle="lower_left" aria-pressed="false">
+                    <span>LL</span>
+                    <small data-i18n="paneAutoLowerLeft">左下</small>
+                    <em data-pane-toggle-status>OFF</em>
+                  </button>
+                  <button type="button" data-pane-toggle="lower_right" aria-pressed="false">
+                    <span>LR</span>
+                    <small data-i18n="paneAutoLowerRight">右下</small>
+                    <em data-pane-toggle-status>OFF</em>
+                  </button>
+                </div>
+                <div class="pane-auto-foot">
+                  <span class="pane-auto-mode" id="pane-auto-mode" data-i18n="paneAutoModeLocal">local cache</span>
+                  <button type="button" id="pane-auto-refresh" data-i18n="paneAutoRefresh">再読込</button>
+                  <button type="button" id="pane-auto-apply" data-i18n="paneAutoApply">ローカル反映</button>
+                  <button type="button" id="pane-auto-copy" data-i18n="paneAutoCopy">JSONコピー</button>
+                </div>
+                <div class="pane-auto-feedback" id="pane-auto-feedback" aria-live="polite"></div>
+              </div>
+              <div class="hero-actions">
+                <div class="language-switch" role="group" aria-label="表示言語">
+                  <button type="button" data-lang-option="ja">日本語</button>
+                  <button type="button" data-lang-option="en">EN</button>
+                </div>
+                <button class="help-button" id="workflow-help-button" type="button" data-i18n="guideButton">使い方</button>
+              </div>
             </div>
-            <button class="help-button" id="workflow-help-button" type="button" data-i18n="guideButton">使い方</button>
           </div>
         </div>
         <div class="workflow-help" id="workflow-help" hidden>
