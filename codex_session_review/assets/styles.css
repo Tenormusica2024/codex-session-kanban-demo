@@ -104,11 +104,9 @@ body {
 }
 
 .hero-control-row {
-  display: flex;
-  align-items: flex-start;
-  justify-content: flex-end;
+  display: grid;
+  justify-items: end;
   gap: 12px;
-  flex-wrap: wrap;
 }
 
 .hero-actions {
@@ -172,6 +170,13 @@ body {
   background: rgba(100, 210, 255, 0.14);
 }
 
+.pane-auto-toggle.active {
+  color: #06101d;
+  border-color: rgba(100, 210, 255, 0.5);
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  box-shadow: 0 8px 18px rgba(100, 210, 255, 0.18);
+}
+
 .language-switch {
   display: inline-flex;
   align-items: center;
@@ -199,6 +204,7 @@ body {
 
 .pane-auto-control {
   display: grid;
+  justify-self: start;
   gap: 4px;
   width: 280px;
   max-width: 100%;
@@ -1271,7 +1277,7 @@ button.secondary,
 
   .hero-side .pill-row,
   .hero-control-row {
-    justify-content: flex-start;
+    justify-items: start;
   }
 
   .hero-actions {

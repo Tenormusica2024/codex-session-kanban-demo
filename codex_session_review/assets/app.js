@@ -1,6 +1,7 @@
 const STORAGE_KEY = "codex-session-review:v1";
 const LANGUAGE_KEY = "codex-session-review:language";
 const PANE_AUTOMATION_KEY = "codex-session-review:pane-automation:v1";
+const PANE_AUTOMATION_PANEL_KEY = "codex-session-review:pane-automation-panel-open";
 const PANE_AUTOMATION_BRIDGE_URL = "http://127.0.0.1:8766/pane-automation";
 const PANE_AUTOMATION_DEFAULT = {
   upper_left: true,
@@ -39,6 +40,9 @@ const I18N = {
     accessPersonal: "個人用・保護URL",
     accessDistribution: "配布用・fixture",
     paneAutoTitle: "Pane Auto",
+    paneAutoToggle: "Pane Auto",
+    paneAutoShow: "Pane Autoを表示",
+    paneAutoHide: "Pane Autoを非表示",
     paneAutoModeLocal: "local cache",
     paneAutoModeBridge: "bridge同期",
     paneAutoModePending: "未反映",
@@ -303,6 +307,9 @@ const I18N = {
     accessPersonal: "personal / protected",
     accessDistribution: "distribution / fixture",
     paneAutoTitle: "Pane Auto",
+    paneAutoToggle: "Pane Auto",
+    paneAutoShow: "show Pane Auto",
+    paneAutoHide: "hide Pane Auto",
     paneAutoModeLocal: "local cache",
     paneAutoModeBridge: "bridge sync",
     paneAutoModePending: "pending",
@@ -573,6 +580,7 @@ const state = {
   paneAutomation: { ...PANE_AUTOMATION_DEFAULT },
   paneAutomationBridgeOnline: null,
   paneAutomationDirty: false,
+  paneAutomationPanelOpen: localStorage.getItem(PANE_AUTOMATION_PANEL_KEY) === "true",
   lang: localStorage.getItem(LANGUAGE_KEY) || "ja",
 };
 
@@ -1079,6 +1087,10 @@ function savePaneAutomation() {
   localStorage.setItem(PANE_AUTOMATION_KEY, JSON.stringify(state.paneAutomation, null, 2));
 }
 
+function savePaneAutomationPanelOpen() {
+  localStorage.setItem(PANE_AUTOMATION_PANEL_KEY, String(state.paneAutomationPanelOpen));
+}
+
 function normalizePaneAutomationPanes(panes) {
   return Object.keys(PANE_AUTOMATION_DEFAULT).reduce((result, pane) => {
     result[pane] = panes?.[pane] ?? PANE_AUTOMATION_DEFAULT[pane];
@@ -1137,6 +1149,19 @@ async function refreshPaneAutomationFromBridge({ quiet = false } = {}) {
 }
 
 function renderPaneAutomationControl() {
+  const panel = document.getElementById("pane-auto-control");
+  const toggle = document.getElementById("pane-auto-toggle");
+  if (panel) {
+    panel.hidden = !state.paneAutomationPanelOpen;
+  }
+  if (toggle) {
+    toggle.setAttribute("aria-expanded", String(state.paneAutomationPanelOpen));
+    toggle.setAttribute(
+      "aria-label",
+      state.paneAutomationPanelOpen ? t("paneAutoHide") : t("paneAutoShow"),
+    );
+    toggle.classList.toggle("active", state.paneAutomationPanelOpen);
+  }
   const enabledCount = Object.keys(PANE_AUTOMATION_DEFAULT).filter(
     (pane) => state.paneAutomation[pane] !== false,
   ).length;
@@ -1170,6 +1195,11 @@ function renderPaneAutomationControl() {
 
 function initPaneAutomationControl() {
   state.paneAutomation = loadPaneAutomation();
+  document.getElementById("pane-auto-toggle")?.addEventListener("click", () => {
+    state.paneAutomationPanelOpen = !state.paneAutomationPanelOpen;
+    savePaneAutomationPanelOpen();
+    renderPaneAutomationControl();
+  });
   document.querySelectorAll("[data-pane-toggle]").forEach((button) => {
     button.addEventListener("click", () => {
       const pane = button.dataset.paneToggle;

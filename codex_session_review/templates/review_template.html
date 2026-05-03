@@ -32,7 +32,15 @@ __INLINE_CSS__
               <span class="pill" id="build-meta">built unknown</span>
             </div>
             <div class="hero-control-row">
-              <div class="pane-auto-control" aria-labelledby="pane-auto-title">
+              <div class="hero-actions">
+                <div class="language-switch" role="group" aria-label="表示言語">
+                  <button type="button" data-lang-option="ja">日本語</button>
+                  <button type="button" data-lang-option="en">EN</button>
+                </div>
+                <button class="help-button pane-auto-toggle" id="pane-auto-toggle" type="button" aria-controls="pane-auto-control" aria-expanded="false" data-i18n="paneAutoToggle">Pane Auto</button>
+                <button class="help-button" id="workflow-help-button" type="button" data-i18n="guideButton">使い方</button>
+              </div>
+              <div class="pane-auto-control" id="pane-auto-control" aria-labelledby="pane-auto-title" hidden>
                 <div class="pane-auto-head">
                   <strong id="pane-auto-title" data-i18n="paneAutoTitle">Pane Auto</strong>
                   <span id="pane-auto-status">1/4 ON</span>
@@ -61,13 +69,6 @@ __INLINE_CSS__
                   <button type="button" id="pane-auto-apply" data-i18n="paneAutoApply">ローカル反映</button>
                 </div>
                 <div class="pane-auto-feedback" id="pane-auto-feedback" aria-live="polite"></div>
-              </div>
-              <div class="hero-actions">
-                <div class="language-switch" role="group" aria-label="表示言語">
-                  <button type="button" data-lang-option="ja">日本語</button>
-                  <button type="button" data-lang-option="en">EN</button>
-                </div>
-                <button class="help-button" id="workflow-help-button" type="button" data-i18n="guideButton">使い方</button>
               </div>
             </div>
           </div>

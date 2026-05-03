@@ -147,6 +147,8 @@ async function main() {
       return acc;
     }, {}),
     paneAutomationMode: document.querySelector("#pane-auto-mode")?.textContent?.trim() || "",
+    paneAutomationHidden: document.querySelector("#pane-auto-control")?.hidden ?? null,
+    paneAutomationExpanded: document.querySelector("#pane-auto-toggle")?.getAttribute("aria-expanded") || "",
     viewport: { width: window.innerWidth, height: window.innerHeight },
     scrollWidth: document.documentElement.scrollWidth,
     hasHorizontalOverflow: document.documentElement.scrollWidth > window.innerWidth + 2,
@@ -168,7 +170,12 @@ async function main() {
   if (!/bridge/.test(initial.paneAutomationMode)) {
     errors.push(`pane automation mode did not show bridge sync: ${initial.paneAutomationMode}`);
   }
+  if (initial.paneAutomationHidden !== true || initial.paneAutomationExpanded !== "false") {
+    errors.push(`pane automation panel should start collapsed: hidden=${initial.paneAutomationHidden}, expanded=${initial.paneAutomationExpanded}`);
+  }
 
+  await page.click("#pane-auto-toggle");
+  await page.waitForFunction(() => document.querySelector("#pane-auto-control")?.hidden === false);
   await page.locator('[data-pane-toggle="upper_right"]').click();
   const pendingPaneAutomationMode = await page
     .locator("#pane-auto-mode")
@@ -189,6 +196,8 @@ async function main() {
     }, {}),
     feedback: document.querySelector("#pane-auto-feedback")?.textContent?.trim() || "",
     mode: document.querySelector("#pane-auto-mode")?.textContent?.trim() || "",
+    hidden: document.querySelector("#pane-auto-control")?.hidden ?? null,
+    expanded: document.querySelector("#pane-auto-toggle")?.getAttribute("aria-expanded") || "",
   }));
   paneAutomation.postedCount = paneAutomationPosts.length;
   paneAutomation.lastPost = paneAutomationPosts.at(-1) || null;
@@ -200,6 +209,9 @@ async function main() {
   }
   if (!/bridge/.test(paneAutomation.mode)) {
     errors.push(`pane automation mode did not stay bridge synced: ${paneAutomation.mode}`);
+  }
+  if (paneAutomation.hidden !== false || paneAutomation.expanded !== "true") {
+    errors.push(`pane automation panel did not stay expanded after toggle: hidden=${paneAutomation.hidden}, expanded=${paneAutomation.expanded}`);
   }
 
   await page.getByRole("button", { name: "EN" }).click();
