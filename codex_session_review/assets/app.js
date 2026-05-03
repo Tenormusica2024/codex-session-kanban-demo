@@ -1,11 +1,12 @@
 const STORAGE_KEY = "codex-session-review:v1";
 const LANGUAGE_KEY = "codex-session-review:language";
 const PANE_AUTOMATION_KEY = "codex-session-review:pane-automation:v1";
+const PANE_AUTOMATION_BRIDGE_URL = "http://127.0.0.1:8766/pane-automation";
 const PANE_AUTOMATION_DEFAULT = {
   upper_left: true,
-  upper_right: true,
-  lower_left: true,
-  lower_right: true,
+  upper_right: false,
+  lower_left: false,
+  lower_right: false,
 };
 const PANE_AUTOMATION_LABEL_KEYS = {
   upper_left: "paneAutoUpperLeft",
@@ -48,7 +49,10 @@ const I18N = {
     paneAutoOn: "ON",
     paneAutoOff: "OFF",
     paneAutoSummary: "{count}/4 ON",
+    paneAutoApply: "ローカル反映",
     paneAutoCopy: "JSONコピー",
+    paneAutoApplied: "反映しました",
+    paneAutoBridgeOffline: "bridge未接続",
     paneAutoCopied: "コピーしました",
     guideAccessTitle: "URLの使い分け",
     guideAccessPersonal: "個人用: 実セッション入りのため、このpublic demoには含めない。",
@@ -309,7 +313,10 @@ const I18N = {
     paneAutoOn: "ON",
     paneAutoOff: "OFF",
     paneAutoSummary: "{count}/4 ON",
+    paneAutoApply: "apply local",
     paneAutoCopy: "copy JSON",
+    paneAutoApplied: "applied",
+    paneAutoBridgeOffline: "bridge offline",
     paneAutoCopied: "copied",
     guideAccessTitle: "URL profiles",
     guideAccessPersonal: "Personal: contains real sessions and is intentionally not included in this public demo.",
@@ -1112,6 +1119,30 @@ function initPaneAutomationControl() {
       savePaneAutomation();
       renderPaneAutomationControl();
     });
+  });
+  document.getElementById("pane-auto-apply")?.addEventListener("click", async () => {
+    const feedback = document.getElementById("pane-auto-feedback");
+    const payload = paneAutomationExportPayload();
+    try {
+      const response = await fetch(PANE_AUTOMATION_BRIDGE_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      if (feedback) {
+        feedback.textContent = t("paneAutoApplied");
+        window.setTimeout(() => {
+          feedback.textContent = "";
+        }, 1600);
+      }
+    } catch {
+      if (feedback) {
+        feedback.textContent = t("paneAutoBridgeOffline");
+      }
+    }
   });
   document.getElementById("pane-auto-copy")?.addEventListener("click", async () => {
     const feedback = document.getElementById("pane-auto-feedback");

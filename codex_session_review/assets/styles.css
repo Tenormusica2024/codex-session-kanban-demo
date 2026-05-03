@@ -266,7 +266,7 @@ body {
 .pane-auto-foot button {
   border: 1px solid rgba(151, 169, 195, 0.18);
   border-radius: 999px;
-  padding: 4px 8px;
+  padding: 4px 7px;
   color: var(--muted);
   background: rgba(255, 255, 255, 0.035);
   font-size: 0.62rem;
@@ -277,6 +277,12 @@ body {
 .pane-auto-foot button:hover {
   color: var(--text);
   border-color: rgba(100, 210, 255, 0.44);
+}
+
+#pane-auto-apply {
+  color: #06101d;
+  border-color: rgba(66, 211, 146, 0.4);
+  background: linear-gradient(135deg, rgba(100, 210, 255, 0.92), rgba(66, 211, 146, 0.82));
 }
 
 .pane-auto-feedback {
