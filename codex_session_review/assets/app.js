@@ -48,8 +48,6 @@ const I18N = {
     paneAutoLowerRight: "右下",
     paneAutoEnabled: "{label} 自動継続 ON",
     paneAutoDisabled: "{label} 自動継続 OFF",
-    paneAutoOn: "ON",
-    paneAutoOff: "OFF",
     paneAutoSummary: "{count}/4 ON",
     paneAutoRefresh: "再読込",
     paneAutoApply: "ローカル反映",
@@ -316,8 +314,6 @@ const I18N = {
     paneAutoLowerRight: "lower right",
     paneAutoEnabled: "{label} auto-continue on",
     paneAutoDisabled: "{label} auto-continue off",
-    paneAutoOn: "ON",
-    paneAutoOff: "OFF",
     paneAutoSummary: "{count}/4 ON",
     paneAutoRefresh: "refresh",
     paneAutoApply: "apply local",
@@ -1173,10 +1169,6 @@ function renderPaneAutomationControl() {
     button.classList.toggle("off", !enabled);
     button.title = enabled ? t("paneAutoEnabled", { label }) : t("paneAutoDisabled", { label });
     button.setAttribute("aria-label", button.title);
-    const statusLabel = button.querySelector("[data-pane-toggle-status]");
-    if (statusLabel) {
-      statusLabel.textContent = enabled ? t("paneAutoOn") : t("paneAutoOff");
-    }
   });
 }
 

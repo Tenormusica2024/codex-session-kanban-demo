@@ -200,7 +200,7 @@ body {
 .pane-auto-control {
   display: grid;
   gap: 6px;
-  width: 300px;
+  width: 280px;
   max-width: 100%;
   padding: 8px;
   border: 1px solid rgba(100, 210, 255, 0.22);
@@ -241,11 +241,13 @@ body {
 }
 
 .pane-auto-grid button {
-  display: grid;
-  place-items: center;
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 4px;
   min-width: 0;
-  min-height: 34px;
-  padding: 5px 7px;
+  min-height: 28px;
+  padding: 4px 7px;
   border: 1px solid rgba(100, 210, 255, 0.36);
   border-radius: 10px;
   color: #06101d;
@@ -274,21 +276,10 @@ body {
 }
 
 .pane-auto-grid button small {
-  margin-top: 2px;
   font-size: 0.62rem;
   font-weight: 800;
   line-height: 1;
   opacity: 0.82;
-}
-
-.pane-auto-grid button em {
-  margin-top: 4px;
-  font-size: 0.56rem;
-  font-style: normal;
-  font-weight: 900;
-  letter-spacing: 0.08em;
-  line-height: 1;
-  opacity: 0.76;
 }
 
 .pane-auto-foot {
