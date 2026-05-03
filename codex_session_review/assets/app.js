@@ -51,11 +51,9 @@ const I18N = {
     paneAutoSummary: "{count}/4 ON",
     paneAutoRefresh: "再読込",
     paneAutoApply: "ローカル反映",
-    paneAutoCopy: "JSONコピー",
     paneAutoLoaded: "bridgeから読込",
     paneAutoApplied: "反映しました",
     paneAutoBridgeOffline: "bridge未接続",
-    paneAutoCopied: "コピーしました",
     guideAccessTitle: "URLの使い分け",
     guideAccessPersonal: "個人用: 実セッション入りのため、このpublic demoには含めない。",
     guideAccessDistribution: "配布用: sample fixtureだけで生成。公開前に -Distribution guard を通し、個人セッション・ローカルパス・bypass token を混ぜない。",
@@ -317,11 +315,9 @@ const I18N = {
     paneAutoSummary: "{count}/4 ON",
     paneAutoRefresh: "refresh",
     paneAutoApply: "apply local",
-    paneAutoCopy: "copy JSON",
     paneAutoLoaded: "loaded from bridge",
     paneAutoApplied: "applied",
     paneAutoBridgeOffline: "bridge offline",
-    paneAutoCopied: "copied",
     guideAccessTitle: "URL profiles",
     guideAccessPersonal: "Personal: contains real sessions and is intentionally not included in this public demo.",
     guideAccessDistribution: "Distribution: generated only from sample fixtures. Run the -Distribution guard before publishing so real sessions, local paths, and bypass tokens are not included.",
@@ -1206,23 +1202,6 @@ function initPaneAutomationControl() {
   });
   document.getElementById("pane-auto-refresh")?.addEventListener("click", () => {
     refreshPaneAutomationFromBridge();
-  });
-  document.getElementById("pane-auto-copy")?.addEventListener("click", async () => {
-    const feedback = document.getElementById("pane-auto-feedback");
-    const text = JSON.stringify(paneAutomationExportPayload(), null, 2);
-    try {
-      await navigator.clipboard.writeText(text);
-      if (feedback) {
-        feedback.textContent = t("paneAutoCopied");
-        window.setTimeout(() => {
-          feedback.textContent = "";
-        }, 1600);
-      }
-    } catch {
-      if (feedback) {
-        feedback.textContent = text;
-      }
-    }
   });
   renderPaneAutomationControl();
   refreshPaneAutomationFromBridge({ quiet: true });

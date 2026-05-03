@@ -181,7 +181,6 @@ async function main() {
   await page.waitForTimeout(100);
   await page.click("#pane-auto-refresh");
   await page.waitForFunction(() => document.querySelector('[data-pane-toggle="upper_right"]')?.getAttribute("aria-pressed") === "false");
-  await page.click("#pane-auto-copy");
   const paneAutomation = await page.evaluate(() => ({
     postedCount: window.__paneAutomationPostCount || 0,
     ui: [...document.querySelectorAll("[data-pane-toggle]")].reduce((acc, button) => {
@@ -190,7 +189,6 @@ async function main() {
     }, {}),
     feedback: document.querySelector("#pane-auto-feedback")?.textContent?.trim() || "",
     mode: document.querySelector("#pane-auto-mode")?.textContent?.trim() || "",
-    copiedText: window.__copiedText || "",
   }));
   paneAutomation.postedCount = paneAutomationPosts.length;
   paneAutomation.lastPost = paneAutomationPosts.at(-1) || null;
@@ -202,9 +200,6 @@ async function main() {
   }
   if (!/bridge/.test(paneAutomation.mode)) {
     errors.push(`pane automation mode did not stay bridge synced: ${paneAutomation.mode}`);
-  }
-  if (!/pane-automation/.test(paneAutomation.copiedText) || !/"lower_right": true/.test(paneAutomation.copiedText)) {
-    errors.push("pane automation copy JSON did not expose the current pane state");
   }
 
   await page.getByRole("button", { name: "EN" }).click();
