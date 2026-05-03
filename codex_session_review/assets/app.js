@@ -39,7 +39,8 @@ const I18N = {
     accessPersonal: "個人用・保護URL",
     accessDistribution: "配布用・fixture",
     paneAutoTitle: "Pane Auto",
-    paneAutoMode: "local only",
+    paneAutoModeLocal: "local cache",
+    paneAutoModeBridge: "bridge同期",
     paneAutoUpperLeft: "左上",
     paneAutoUpperRight: "右上",
     paneAutoLowerLeft: "左下",
@@ -305,7 +306,8 @@ const I18N = {
     accessPersonal: "personal / protected",
     accessDistribution: "distribution / fixture",
     paneAutoTitle: "Pane Auto",
-    paneAutoMode: "local only",
+    paneAutoModeLocal: "local cache",
+    paneAutoModeBridge: "bridge sync",
     paneAutoUpperLeft: "upper left",
     paneAutoUpperRight: "upper right",
     paneAutoLowerLeft: "lower left",
@@ -575,6 +577,7 @@ const state = {
   dragId: null,
   archiveExpanded: {},
   paneAutomation: { ...PANE_AUTOMATION_DEFAULT },
+  paneAutomationBridgeOnline: null,
   lang: localStorage.getItem(LANGUAGE_KEY) || "ja",
 };
 
@@ -1120,6 +1123,7 @@ async function refreshPaneAutomationFromBridge({ quiet = false } = {}) {
       throw new Error("invalid pane automation bridge response");
     }
     state.paneAutomation = normalizePaneAutomationPanes(payload.panes);
+    state.paneAutomationBridgeOnline = true;
     savePaneAutomation();
     renderPaneAutomationControl();
     if (!quiet) {
@@ -1127,6 +1131,8 @@ async function refreshPaneAutomationFromBridge({ quiet = false } = {}) {
     }
     return true;
   } catch {
+    state.paneAutomationBridgeOnline = false;
+    renderPaneAutomationControl();
     if (!quiet) {
       setPaneAutomationFeedback("paneAutoBridgeOffline", 0);
     }
@@ -1141,6 +1147,13 @@ function renderPaneAutomationControl() {
   const status = document.getElementById("pane-auto-status");
   if (status) {
     status.textContent = t("paneAutoSummary", { count: enabledCount });
+  }
+  const mode = document.getElementById("pane-auto-mode");
+  if (mode) {
+    const bridgeOnline = state.paneAutomationBridgeOnline === true;
+    mode.textContent = bridgeOnline ? t("paneAutoModeBridge") : t("paneAutoModeLocal");
+    mode.classList.toggle("is-online", bridgeOnline);
+    mode.classList.toggle("is-local", !bridgeOnline);
   }
   document.querySelectorAll("[data-pane-toggle]").forEach((button) => {
     const pane = button.dataset.paneToggle;
@@ -1178,8 +1191,12 @@ function initPaneAutomationControl() {
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
       }
+      state.paneAutomationBridgeOnline = true;
+      renderPaneAutomationControl();
       setPaneAutomationFeedback("paneAutoApplied");
     } catch {
+      state.paneAutomationBridgeOnline = false;
+      renderPaneAutomationControl();
       setPaneAutomationFeedback("paneAutoBridgeOffline", 0);
     }
   });

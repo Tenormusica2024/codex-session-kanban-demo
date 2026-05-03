@@ -146,6 +146,7 @@ async function main() {
       acc[button.dataset.paneToggle] = button.getAttribute("aria-pressed") === "true";
       return acc;
     }, {}),
+    paneAutomationMode: document.querySelector("#pane-auto-mode")?.textContent?.trim() || "",
     viewport: { width: window.innerWidth, height: window.innerHeight },
     scrollWidth: document.documentElement.scrollWidth,
     hasHorizontalOverflow: document.documentElement.scrollWidth > window.innerWidth + 2,
@@ -164,6 +165,9 @@ async function main() {
   if (initial.paneAutomation.upper_left !== false || initial.paneAutomation.lower_right !== true) {
     errors.push(`pane automation did not load bridge state: ${JSON.stringify(initial.paneAutomation)}`);
   }
+  if (!/bridge/.test(initial.paneAutomationMode)) {
+    errors.push(`pane automation mode did not show bridge sync: ${initial.paneAutomationMode}`);
+  }
 
   await page.locator('[data-pane-toggle="upper_right"]').click();
   await page.click("#pane-auto-apply");
@@ -178,6 +182,7 @@ async function main() {
       return acc;
     }, {}),
     feedback: document.querySelector("#pane-auto-feedback")?.textContent?.trim() || "",
+    mode: document.querySelector("#pane-auto-mode")?.textContent?.trim() || "",
     copiedText: window.__copiedText || "",
   }));
   paneAutomation.postedCount = paneAutomationPosts.length;
@@ -187,6 +192,9 @@ async function main() {
   }
   if (paneAutomation.ui.upper_right !== false || paneAutomation.ui.lower_right !== true) {
     errors.push(`pane automation refresh did not restore bridge state: ${JSON.stringify(paneAutomation.ui)}`);
+  }
+  if (!/bridge/.test(paneAutomation.mode)) {
+    errors.push(`pane automation mode did not stay bridge synced: ${paneAutomation.mode}`);
   }
   if (!/pane-automation/.test(paneAutomation.copiedText) || !/"lower_right": true/.test(paneAutomation.copiedText)) {
     errors.push("pane automation copy JSON did not expose the current pane state");

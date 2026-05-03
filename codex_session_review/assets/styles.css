@@ -264,6 +264,39 @@ body {
   font-size: 0.64rem;
 }
 
+.pane-auto-mode {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 20px;
+  padding: 3px 7px;
+  border-radius: 999px;
+  color: var(--muted);
+  background: rgba(151, 169, 195, 0.08);
+  border: 1px solid rgba(151, 169, 195, 0.16);
+  font-weight: 800;
+}
+
+.pane-auto-mode::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(151, 169, 195, 0.8);
+  box-shadow: 0 0 0 2px rgba(151, 169, 195, 0.08);
+}
+
+.pane-auto-mode.is-online {
+  color: var(--accent-2);
+  border-color: rgba(66, 211, 146, 0.28);
+  background: rgba(66, 211, 146, 0.09);
+}
+
+.pane-auto-mode.is-online::before {
+  background: var(--accent-2);
+  box-shadow: 0 0 0 2px rgba(66, 211, 146, 0.12);
+}
+
 .pane-auto-foot button {
   border: 1px solid rgba(151, 169, 195, 0.18);
   border-radius: 999px;
