@@ -1,5 +1,18 @@
 const STORAGE_KEY = "codex-session-review:v1";
 const LANGUAGE_KEY = "codex-session-review:language";
+const PANE_AUTOMATION_KEY = "codex-session-review:pane-automation:v1";
+const PANE_AUTOMATION_DEFAULT = {
+  upper_left: true,
+  upper_right: true,
+  lower_left: true,
+  lower_right: true,
+};
+const PANE_AUTOMATION_LABEL_KEYS = {
+  upper_left: "paneAutoUpperLeft",
+  upper_right: "paneAutoUpperRight",
+  lower_left: "paneAutoLowerLeft",
+  lower_right: "paneAutoLowerRight",
+};
 const STATUSES = [
   "Need Review",
   "Pending",
@@ -24,6 +37,14 @@ const I18N = {
     pillAccessKey: "用途",
     accessPersonal: "個人用・保護URL",
     accessDistribution: "配布用・fixture",
+    paneAutoTitle: "Pane Auto",
+    paneAutoMode: "local only",
+    paneAutoUpperLeft: "左上",
+    paneAutoUpperRight: "右上",
+    paneAutoLowerLeft: "左下",
+    paneAutoLowerRight: "右下",
+    paneAutoEnabled: "{label} 自動継続 ON",
+    paneAutoDisabled: "{label} 自動継続 OFF",
     guideAccessTitle: "URLの使い分け",
     guideAccessPersonal: "個人用: 実セッション入りのため、このpublic demoには含めない。",
     guideAccessDistribution: "配布用: sample fixtureだけで生成。公開前に -Distribution guard を通し、個人セッション・ローカルパス・bypass token を混ぜない。",
@@ -272,6 +293,14 @@ const I18N = {
     pillAccessKey: "access",
     accessPersonal: "personal / protected",
     accessDistribution: "distribution / fixture",
+    paneAutoTitle: "Pane Auto",
+    paneAutoMode: "local only",
+    paneAutoUpperLeft: "upper left",
+    paneAutoUpperRight: "upper right",
+    paneAutoLowerLeft: "lower left",
+    paneAutoLowerRight: "lower right",
+    paneAutoEnabled: "{label} auto-continue on",
+    paneAutoDisabled: "{label} auto-continue off",
     guideAccessTitle: "URL profiles",
     guideAccessPersonal: "Personal: contains real sessions and is intentionally not included in this public demo.",
     guideAccessDistribution: "Distribution: generated only from sample fixtures. Run the -Distribution guard before publishing so real sessions, local paths, and bypass tokens are not included.",
@@ -524,6 +553,7 @@ const state = {
   selectedCandidateIndex: 0,
   dragId: null,
   archiveExpanded: {},
+  paneAutomation: { ...PANE_AUTOMATION_DEFAULT },
   lang: localStorage.getItem(LANGUAGE_KEY) || "ja",
 };
 
@@ -1015,6 +1045,44 @@ function loadOverrides() {
 
 function saveOverrides() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state.overrides, null, 2));
+}
+
+function loadPaneAutomation() {
+  try {
+    const stored = JSON.parse(localStorage.getItem(PANE_AUTOMATION_KEY) || "{}");
+    return { ...PANE_AUTOMATION_DEFAULT, ...stored };
+  } catch {
+    return { ...PANE_AUTOMATION_DEFAULT };
+  }
+}
+
+function savePaneAutomation() {
+  localStorage.setItem(PANE_AUTOMATION_KEY, JSON.stringify(state.paneAutomation, null, 2));
+}
+
+function renderPaneAutomationControl() {
+  document.querySelectorAll("[data-pane-toggle]").forEach((button) => {
+    const pane = button.dataset.paneToggle;
+    const enabled = state.paneAutomation[pane] !== false;
+    const label = t(PANE_AUTOMATION_LABEL_KEYS[pane] || pane);
+    button.setAttribute("aria-pressed", String(enabled));
+    button.classList.toggle("off", !enabled);
+    button.title = enabled ? t("paneAutoEnabled", { label }) : t("paneAutoDisabled", { label });
+    button.setAttribute("aria-label", button.title);
+  });
+}
+
+function initPaneAutomationControl() {
+  state.paneAutomation = loadPaneAutomation();
+  document.querySelectorAll("[data-pane-toggle]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const pane = button.dataset.paneToggle;
+      state.paneAutomation[pane] = !(state.paneAutomation[pane] !== false);
+      savePaneAutomation();
+      renderPaneAutomationControl();
+    });
+  });
+  renderPaneAutomationControl();
 }
 
 function getMergedSessions() {
@@ -3144,6 +3212,7 @@ function init() {
 
   applyStaticI18n();
   updateHeroMeta();
+  initPaneAutomationControl();
   const workflowHelp = document.getElementById("workflow-help");
   document.getElementById("workflow-help-button")?.addEventListener("click", () => {
     workflowHelp.hidden = !workflowHelp.hidden;
@@ -3157,6 +3226,7 @@ function init() {
       localStorage.setItem(LANGUAGE_KEY, state.lang);
       applyStaticI18n();
       updateHeroMeta();
+      renderPaneAutomationControl();
       renderRepoFilter();
       renderStatusFilter();
       renderClusterFilter();

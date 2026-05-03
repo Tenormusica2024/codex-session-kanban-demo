@@ -29,6 +29,30 @@ __INLINE_CSS__
             <span class="pill"><strong data-i18n="pillOpsKey">運用</strong> <span data-i18n="pillOpsValue">AI優先 / 手動修正可</span></span>
             <span class="pill access-pill" id="access-profile-pill"><strong data-i18n="pillAccessKey">用途</strong> 配布用・fixture</span>
             <span class="pill" id="build-meta">built unknown</span>
+            <div class="pane-auto-control" aria-labelledby="pane-auto-title">
+              <div class="pane-auto-head">
+                <strong id="pane-auto-title" data-i18n="paneAutoTitle">Pane Auto</strong>
+                <span data-i18n="paneAutoMode">local only</span>
+              </div>
+              <div class="pane-auto-grid" id="pane-auto-grid">
+                <button type="button" data-pane-toggle="upper_left" aria-pressed="true">
+                  <span>UL</span>
+                  <small data-i18n="paneAutoUpperLeft">左上</small>
+                </button>
+                <button type="button" data-pane-toggle="upper_right" aria-pressed="true">
+                  <span>UR</span>
+                  <small data-i18n="paneAutoUpperRight">右上</small>
+                </button>
+                <button type="button" data-pane-toggle="lower_left" aria-pressed="true">
+                  <span>LL</span>
+                  <small data-i18n="paneAutoLowerLeft">左下</small>
+                </button>
+                <button type="button" data-pane-toggle="lower_right" aria-pressed="true">
+                  <span>LR</span>
+                  <small data-i18n="paneAutoLowerRight">右下</small>
+                </button>
+              </div>
+            </div>
             <div class="language-switch" role="group" aria-label="表示言語">
               <button type="button" data-lang-option="ja">日本語</button>
               <button type="button" data-lang-option="en">EN</button>

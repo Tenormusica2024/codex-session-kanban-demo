@@ -161,6 +161,83 @@ body {
   box-shadow: 0 8px 18px rgba(100, 210, 255, 0.18);
 }
 
+.pane-auto-control {
+  display: grid;
+  gap: 6px;
+  min-width: 152px;
+  padding: 8px;
+  border: 1px solid rgba(100, 210, 255, 0.22);
+  border-radius: 16px;
+  background:
+    linear-gradient(135deg, rgba(100, 210, 255, 0.09), rgba(138, 125, 255, 0.06)),
+    rgba(255, 255, 255, 0.035);
+}
+
+.pane-auto-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.pane-auto-head strong {
+  color: var(--text);
+}
+
+.pane-auto-head span {
+  color: var(--muted);
+}
+
+.pane-auto-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 5px;
+}
+
+.pane-auto-grid button {
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  min-height: 34px;
+  padding: 5px 7px;
+  border: 1px solid rgba(100, 210, 255, 0.36);
+  border-radius: 10px;
+  color: #06101d;
+  background: linear-gradient(135deg, rgba(100, 210, 255, 0.95), rgba(66, 211, 146, 0.88));
+  box-shadow: 0 8px 20px rgba(66, 211, 146, 0.12);
+  cursor: pointer;
+}
+
+.pane-auto-grid button[aria-pressed="false"] {
+  color: var(--muted);
+  border-color: rgba(151, 169, 195, 0.18);
+  background: rgba(255, 255, 255, 0.035);
+  box-shadow: none;
+}
+
+.pane-auto-grid button:hover {
+  transform: translateY(-1px);
+  border-color: rgba(100, 210, 255, 0.58);
+}
+
+.pane-auto-grid button span {
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  line-height: 1;
+}
+
+.pane-auto-grid button small {
+  margin-top: 2px;
+  font-size: 0.62rem;
+  font-weight: 800;
+  line-height: 1;
+  opacity: 0.82;
+}
+
 .workflow-help {
   margin-top: 16px;
   padding: 16px;
@@ -1050,6 +1127,10 @@ button.secondary,
     flex-direction: column;
     align-items: stretch;
   }
+
+  .pane-auto-control {
+    width: 100%;
+  }
 }
 
 .timeline-list {
@@ -1142,6 +1223,10 @@ button.secondary,
   .toolbar-group,
   .toolbar-actions {
     width: 100%;
+  }
+
+  .pane-auto-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
   .toolbar label {
