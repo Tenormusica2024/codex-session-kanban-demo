@@ -148,6 +148,7 @@ async function main() {
     }, {}),
     paneAutomationMode: document.querySelector("#pane-auto-mode")?.textContent?.trim() || "",
     paneAutomationHidden: document.querySelector("#pane-auto-control")?.hidden ?? null,
+    paneAutomationDisplay: window.getComputedStyle(document.querySelector("#pane-auto-control")).display,
     paneAutomationExpanded: document.querySelector("#pane-auto-toggle")?.getAttribute("aria-expanded") || "",
     viewport: { width: window.innerWidth, height: window.innerHeight },
     scrollWidth: document.documentElement.scrollWidth,
@@ -170,12 +171,15 @@ async function main() {
   if (!/bridge/.test(initial.paneAutomationMode)) {
     errors.push(`pane automation mode did not show bridge sync: ${initial.paneAutomationMode}`);
   }
-  if (initial.paneAutomationHidden !== true || initial.paneAutomationExpanded !== "false") {
-    errors.push(`pane automation panel should start collapsed: hidden=${initial.paneAutomationHidden}, expanded=${initial.paneAutomationExpanded}`);
+  if (initial.paneAutomationHidden !== true || initial.paneAutomationDisplay !== "none" || initial.paneAutomationExpanded !== "false") {
+    errors.push(`pane automation panel should start collapsed: hidden=${initial.paneAutomationHidden}, display=${initial.paneAutomationDisplay}, expanded=${initial.paneAutomationExpanded}`);
   }
 
   await page.click("#pane-auto-toggle");
-  await page.waitForFunction(() => document.querySelector("#pane-auto-control")?.hidden === false);
+  await page.waitForFunction(() => {
+    const panel = document.querySelector("#pane-auto-control");
+    return panel?.hidden === false && window.getComputedStyle(panel).display !== "none";
+  });
   await page.locator('[data-pane-toggle="upper_right"]').click();
   const pendingPaneAutomationMode = await page
     .locator("#pane-auto-mode")
@@ -197,6 +201,7 @@ async function main() {
     feedback: document.querySelector("#pane-auto-feedback")?.textContent?.trim() || "",
     mode: document.querySelector("#pane-auto-mode")?.textContent?.trim() || "",
     hidden: document.querySelector("#pane-auto-control")?.hidden ?? null,
+    display: window.getComputedStyle(document.querySelector("#pane-auto-control")).display,
     expanded: document.querySelector("#pane-auto-toggle")?.getAttribute("aria-expanded") || "",
   }));
   paneAutomation.postedCount = paneAutomationPosts.length;
@@ -210,8 +215,8 @@ async function main() {
   if (!/bridge/.test(paneAutomation.mode)) {
     errors.push(`pane automation mode did not stay bridge synced: ${paneAutomation.mode}`);
   }
-  if (paneAutomation.hidden !== false || paneAutomation.expanded !== "true") {
-    errors.push(`pane automation panel did not stay expanded after toggle: hidden=${paneAutomation.hidden}, expanded=${paneAutomation.expanded}`);
+  if (paneAutomation.hidden !== false || paneAutomation.display === "none" || paneAutomation.expanded !== "true") {
+    errors.push(`pane automation panel did not stay expanded after toggle: hidden=${paneAutomation.hidden}, display=${paneAutomation.display}, expanded=${paneAutomation.expanded}`);
   }
 
   await page.getByRole("button", { name: "EN" }).click();
