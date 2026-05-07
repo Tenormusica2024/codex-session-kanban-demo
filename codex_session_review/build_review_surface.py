@@ -1,17 +1,50 @@
 from __future__ import annotations
 
 import argparse
+import ctypes
+import hashlib
 import json
-import os
 import math
+import os
 import re
+import time
 from collections import Counter
+from copy import deepcopy
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
+try:
+    from codex_session_review.title_classification_rules import (
+        LLMWIKI_REPORT_VISIBILITY_LABEL,
+        LLMWIKI_REPORT_VISIBILITY_TOPIC_SUFFIX,
+        RULESET_ID,
+        SUPABASE_RLS_SECURITY_LABEL,
+        SUPABASE_RLS_SECURITY_TOPIC_SUFFIX,
+        compose_llmwiki_report_visibility_title,
+        has_creative_asset_signal,
+        infer_project_name_from_text,
+        is_llmwiki_report_visibility_signal,
+        is_supabase_rls_security_signal,
+    )
+except ModuleNotFoundError:
+    from title_classification_rules import (
+        LLMWIKI_REPORT_VISIBILITY_LABEL,
+        LLMWIKI_REPORT_VISIBILITY_TOPIC_SUFFIX,
+        RULESET_ID,
+        SUPABASE_RLS_SECURITY_LABEL,
+        SUPABASE_RLS_SECURITY_TOPIC_SUFFIX,
+        compose_llmwiki_report_visibility_title,
+        has_creative_asset_signal,
+        infer_project_name_from_text,
+        is_llmwiki_report_visibility_signal,
+        is_supabase_rls_security_signal,
+    )
 
+
+CACHE_VERSION = 1
+PARSE_CACHE_FINGERPRINT = "parse-v2-stream-bounded"
 JST = timezone(timedelta(hours=9))
 STATUS_ORDER = [
     "Need Review",
@@ -58,10 +91,12 @@ REPO_SCOPED_TOPIC_KEYS = {
     "deploy",
     "grok4cic-clipboard",
     "kanban-automation",
+    LLMWIKI_REPORT_VISIBILITY_TOPIC_SUFFIX,
     "portfolio-page-improvement",
     "privatize",
     "repo-review",
     "sales-channel",
+    SUPABASE_RLS_SECURITY_TOPIC_SUFFIX,
     "dashboard-freshness",
     "demand-index",
     "teaser-lp",
@@ -219,8 +254,243 @@ def clip(text: str, limit: int) -> str:
     return text[: limit - 1].rstrip() + "…"
 
 
-def load_jsonl(path: Path) -> list[dict[str, Any]]:
-    return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+def iter_jsonl(path: Path):
+    with path.open("r", encoding="utf-8") as handle:
+        for raw in handle:
+            raw = raw.strip()
+            if not raw:
+                continue
+            try:
+                yield json.loads(raw)
+            except json.JSONDecodeError:
+                continue
+
+
+def session_id_from_path(path: Path) -> str | None:
+    match = re.search(r"([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})", path.name, re.IGNORECASE)
+    return match.group(1) if match else None
+
+
+def load_fixed_session_ids(paths: list[Path] | None) -> set[str]:
+    fixed: set[str] = set()
+    for path in paths or []:
+        if not path or not path.exists():
+            continue
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        overrides = data.get("overrides") if isinstance(data, dict) and isinstance(data.get("overrides"), dict) else data
+        if not isinstance(overrides, dict):
+            continue
+        for key, value in overrides.items():
+            if str(key).startswith("__cluster__:"):
+                continue
+            if not isinstance(value, dict):
+                continue
+            if value.get("status") in {"Done", "Dropped"}:
+                fixed.add(str(key))
+    return fixed
+
+
+def append_bounded(items: list[str], value: str, *, max_items: int = 260, max_chars: int = 6000) -> None:
+    if not value:
+        return
+    items.append(clip(value, max_chars))
+    if len(items) > max_items:
+        del items[: len(items) - max_items]
+
+
+def parse_session_file(path: Path) -> SessionAccumulator | None:
+    fallback_id = session_id_from_path(path) or path.stem
+    acc = SessionAccumulator(session_id=fallback_id, source_file=str(path))
+    seen = False
+    for line in iter_jsonl(path):
+        seen = True
+        timestamp = line.get("timestamp")
+        if timestamp:
+            if not acc.start_at:
+                acc.start_at = timestamp
+            acc.end_at = timestamp
+        payload = line.get("payload", {})
+        line_type = line.get("type")
+        if line_type == "session_meta":
+            acc.session_id = payload.get("id") or acc.session_id
+            acc.start_at = payload.get("timestamp") or acc.start_at
+            acc.session_cwd = payload.get("cwd") or acc.session_cwd
+            if acc.session_cwd:
+                acc.cwds.append(acc.session_cwd)
+        elif line_type == "turn_context":
+            cwd = payload.get("cwd")
+            if cwd:
+                acc.cwds.append(cwd)
+        elif line_type == "event_msg":
+            payload_type = payload.get("type")
+            if payload_type == "user_message":
+                message = payload.get("message", "").strip()
+                if message:
+                    append_bounded(acc.user_messages, message, max_items=320, max_chars=6000)
+                    acc.timeline_messages.append(("user", clip(message, 6000)))
+            elif payload_type == "exec_command_end":
+                acc.command_count += 1
+                cwd = payload.get("cwd")
+                if cwd:
+                    acc.cwds.append(cwd)
+            elif payload_type == "task_started":
+                acc.task_started += 1
+            elif payload_type == "task_complete":
+                acc.task_completed += 1
+        elif line_type == "response_item" and payload.get("type") == "message" and payload.get("role") == "assistant":
+            assistant_text = extract_message_text(payload)
+            if assistant_text:
+                append_bounded(acc.assistant_messages, assistant_text, max_items=520, max_chars=8000)
+                acc.timeline_messages.append(("assistant", clip(assistant_text, 8000)))
+        if len(acc.timeline_messages) > 900:
+            del acc.timeline_messages[: len(acc.timeline_messages) - 900]
+    if not seen:
+        return None
+    return acc
+
+
+def current_algorithm_fingerprint() -> str:
+    return f"{PARSE_CACHE_FINGERPRINT}:{RULESET_ID}"
+
+
+def accumulator_to_cache(acc: SessionAccumulator) -> dict[str, Any]:
+    return {
+        "session_id": acc.session_id,
+        "source_file": acc.source_file,
+        "start_at": acc.start_at,
+        "end_at": acc.end_at,
+        "session_cwd": acc.session_cwd,
+        "user_messages": acc.user_messages,
+        "assistant_messages": acc.assistant_messages,
+        "timeline_messages": acc.timeline_messages,
+        "cwds": acc.cwds,
+        "command_count": acc.command_count,
+        "task_completed": acc.task_completed,
+        "task_started": acc.task_started,
+    }
+
+
+def accumulator_from_cache(data: dict[str, Any]) -> SessionAccumulator | None:
+    if not isinstance(data, dict):
+        return None
+    session_id = data.get("session_id")
+    source_file = data.get("source_file")
+    if not session_id or not source_file:
+        return None
+    acc = SessionAccumulator(
+        session_id=str(session_id),
+        source_file=str(source_file),
+        start_at=data.get("start_at"),
+        end_at=data.get("end_at"),
+        session_cwd=data.get("session_cwd"),
+        user_messages=list(data.get("user_messages") or []),
+        assistant_messages=list(data.get("assistant_messages") or []),
+        timeline_messages=[tuple(item) for item in (data.get("timeline_messages") or []) if isinstance(item, list | tuple) and len(item) == 2],
+        cwds=list(data.get("cwds") or []),
+        command_count=int(data.get("command_count") or 0),
+        task_completed=int(data.get("task_completed") or 0),
+        task_started=int(data.get("task_started") or 0),
+    )
+    return acc
+
+
+def load_summary_cache(path: Path | None, algorithm_fingerprint: str) -> dict[str, Any]:
+    if not path or not path.exists():
+        return {"version": CACHE_VERSION, "algorithm_fingerprint": algorithm_fingerprint, "entries": {}}
+    try:
+        cache = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {"version": CACHE_VERSION, "algorithm_fingerprint": algorithm_fingerprint, "entries": {}}
+    if (
+        cache.get("version") != CACHE_VERSION
+        or cache.get("algorithm_fingerprint") != algorithm_fingerprint
+        or not isinstance(cache.get("entries"), dict)
+    ):
+        return {"version": CACHE_VERSION, "algorithm_fingerprint": algorithm_fingerprint, "entries": {}}
+    return cache
+
+
+def save_summary_cache(path: Path | None, cache: dict[str, Any]) -> None:
+    if not path:
+        return
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(cache, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def session_file_fingerprint(path: Path, stat: Any | None = None) -> dict[str, Any]:
+    stat = stat or path.stat()
+    return {
+        "mtime_ns": getattr(stat, "st_mtime_ns", int(stat.st_mtime * 1_000_000_000)),
+        "size": stat.st_size,
+    }
+
+
+def is_cache_hit(entry: dict[str, Any] | None, fingerprint: dict[str, Any]) -> bool:
+    return bool(entry and entry.get("fingerprint") == fingerprint)
+
+
+def refresh_cached_summary(summary: dict[str, Any], now: datetime) -> dict[str, Any]:
+    refreshed = deepcopy(summary)
+    refreshed["recency_label"] = recency_label(iso_to_dt(refreshed.get("end_at")), now)
+    return refreshed
+
+
+def process_memory_metrics_mb() -> dict[str, float]:
+    if os.name != "nt":
+        return {}
+    try:
+        class PROCESS_MEMORY_COUNTERS(ctypes.Structure):
+            _fields_ = [
+                ("cb", ctypes.c_ulong),
+                ("PageFaultCount", ctypes.c_ulong),
+                ("PeakWorkingSetSize", ctypes.c_size_t),
+                ("WorkingSetSize", ctypes.c_size_t),
+                ("QuotaPeakPagedPoolUsage", ctypes.c_size_t),
+                ("QuotaPagedPoolUsage", ctypes.c_size_t),
+                ("QuotaPeakNonPagedPoolUsage", ctypes.c_size_t),
+                ("QuotaNonPagedPoolUsage", ctypes.c_size_t),
+                ("PagefileUsage", ctypes.c_size_t),
+                ("PeakPagefileUsage", ctypes.c_size_t),
+            ]
+
+        counters = PROCESS_MEMORY_COUNTERS()
+        counters.cb = ctypes.sizeof(PROCESS_MEMORY_COUNTERS)
+        handle = ctypes.windll.kernel32.GetCurrentProcess()
+        psapi = ctypes.WinDLL("psapi.dll")
+        psapi.GetProcessMemoryInfo.argtypes = [ctypes.c_void_p, ctypes.POINTER(PROCESS_MEMORY_COUNTERS), ctypes.c_ulong]
+        psapi.GetProcessMemoryInfo.restype = ctypes.c_int
+        ok = psapi.GetProcessMemoryInfo(handle, ctypes.byref(counters), counters.cb)
+        if not ok:
+            return {}
+        return {
+            "working_set_mb": round(counters.WorkingSetSize / 1024 / 1024, 1),
+            "peak_working_set_mb": round(counters.PeakWorkingSetSize / 1024 / 1024, 1),
+            "pagefile_mb": round(counters.PagefileUsage / 1024 / 1024, 1),
+            "peak_pagefile_mb": round(counters.PeakPagefileUsage / 1024 / 1024, 1),
+        }
+    except Exception:
+        return {}
+
+
+def build_perf_warnings(metrics: dict[str, Any]) -> list[str]:
+    warnings: list[str] = []
+    elapsed = float(metrics.get("elapsed_seconds_total") or 0)
+    peak_ws = float(metrics.get("peak_working_set_mb") or 0)
+    peak_pf = float(metrics.get("peak_pagefile_mb") or 0)
+    parsed = int(metrics.get("parsed_files") or 0)
+    cache_hits = int(metrics.get("cache_hits") or 0)
+    if elapsed > 60:
+        warnings.append(f"elapsed_seconds_total>{60}: {elapsed}")
+    if peak_ws > 1024:
+        warnings.append(f"peak_working_set_mb>{1024}: {peak_ws}")
+    if peak_pf > 2048:
+        warnings.append(f"peak_pagefile_mb>{2048}: {peak_pf}")
+    if parsed > 100 and cache_hits == 0:
+        warnings.append(f"full_parse_after_cache_reset: parsed_files={parsed}")
+    return warnings
 
 
 def extract_message_text(message_payload: dict[str, Any]) -> str:
@@ -577,6 +847,12 @@ def is_weak_task_title(text: str) -> bool:
 def concrete_title_from_topic(repo_name: str, topic_label: str, latest_change: str, fallback: str, context: str = "") -> str:
     latest_source = f"{latest_change or ''}\n{context or ''}"
     latest = latest_source.lower()
+    if topic_label == LLMWIKI_REPORT_VISIBILITY_LABEL:
+        return compose_llmwiki_report_visibility_title(latest_source)
+    if topic_label == SUPABASE_RLS_SECURITY_LABEL:
+        if "public.benchmarks" in latest or "benchmarks" in latest:
+            return f"{repo_name}のSupabase RLS公開read-only設定修正"
+        return f"{repo_name}のSupabase Security Advisor RLS修正"
     if topic_label == "grok4cic運用":
         latest_only = (latest_change or "").lower()
         if "image2" in latest_only or "画像" in latest_only or "chatgpt" in latest_only:
@@ -609,6 +885,8 @@ def concrete_title_from_topic(repo_name: str, topic_label: str, latest_change: s
         return f"{repo_name}の表示文言・レイアウト修正"
     if topic_label == "需要レンズ指数設計":
         return f"{repo_name}の需要・マネタイズ指数設計"
+    if topic_label == "タスク別送信者名":
+        return "タスク別送信者名の整理"
     if topic_label == "B2Bポートフォリオページ改善":
         if "ai組み込み開発" in latest.lower() or "ai-integration" in latest.lower():
             return "B2BポートフォリオのAI組み込み開発ページ改善"
@@ -625,6 +903,20 @@ def concrete_title_from_topic(repo_name: str, topic_label: str, latest_change: s
         return "LLMWIKI 週次レビューと取り込み整理"
     if topic_label == "ブックマーク推薦重複抑止":
         return "Xブックマーク推薦の採用済み反映"
+    if topic_label == "Xブックマーク推薦品質改善":
+        return "Xブックマーク推薦の内容調査品質改善"
+    if topic_label in {"Codex review surface運用改善", "Codexセッションkanban運用改善"}:
+        return "Codexセッションkanbanの定期実行・同期改善"
+    if topic_label == "Codexセッションkanbanタイトル分類改善":
+        return "Codexセッションkanbanのタイトル分類・quality gate改善"
+    if topic_label == "Cloudflare公開設定":
+        return f"{repo_name}のCloudflare Access/Pages設定"
+    if topic_label == "idle-continue代理ツール":
+        if "残タスク" in latest_source or "remaining-task" in latest:
+            return f"{repo_name}の残タスク自動送信判定修正"
+        if "transcript" in latest or "clipboard" in latest or "クリップボード" in latest_source:
+            return f"{repo_name}のclipboard送信・TRANSCRIPT処理改善"
+        return f"{repo_name}のidle-continue代理判定修正"
     structured = compose_task_title_from_intent(repo_name, topic_label, latest_source)
     if structured:
         return structured
@@ -636,6 +928,8 @@ def concrete_title_from_topic(repo_name: str, topic_label: str, latest_change: s
 RECOMPOSABLE_TOPIC_LABELS = {
     "LinkedInオファー返信方針",
     "LLMWIKIクエリ報告メール重複抑止",
+    LLMWIKI_REPORT_VISIBILITY_LABEL,
+    SUPABASE_RLS_SECURITY_LABEL,
     "go-robustスキル移植",
     "grok4cic運用",
     "クリエイティブ素材",
@@ -648,6 +942,7 @@ RECOMPOSABLE_TOPIC_LABELS = {
     "ネットワーク不安定の原因調査",
     "ブックマーク見直し",
     "ブックマーク推薦重複抑止",
+    "Xブックマーク推薦品質改善",
     "メールリンク未生成調査",
     "メール運用",
     "ランキング鮮度・sparkline修正",
@@ -657,6 +952,11 @@ RECOMPOSABLE_TOPIC_LABELS = {
     "LLMWIKI品質レビュー導線改善",
     "ログイン・手続き",
     "private化",
+    "idle-continue代理ツール",
+    "Codex review surface運用改善",
+    "Codexセッションkanban運用改善",
+    "Codexセッションkanbanタイトル分類改善",
+    "Cloudflare公開設定",
     "repoレビュー",
 }
 
@@ -726,6 +1026,8 @@ def extract_action_phrase(text: str, topic_label: str) -> str:
         return "整理"
     if topic_label == "レビュー修正点DB/hook連携":
         return "整備"
+    if topic_label == SUPABASE_RLS_SECURITY_LABEL:
+        return "修正"
     if topic_label == "ランキング鮮度・sparkline修正":
         return "修正"
     if topic_label == "デプロイ":
@@ -748,11 +1050,13 @@ def extract_action_phrase(text: str, topic_label: str) -> str:
         "ナレッジ取り込み": "整理",
         "転職・求人選別": "整理",
         "レビュー修正点DB/hook連携": "整備",
+        SUPABASE_RLS_SECURITY_LABEL: "修正",
         "ランキング鮮度・sparkline修正": "修正",
         "デプロイ": "デプロイ",
         "UI表示修正": "修正",
     }
     return defaults.get(topic_label, "整理")
+
 
 
 def extract_object_phrase(text: str, topic_label: str) -> str:
@@ -793,6 +1097,12 @@ def extract_object_phrase(text: str, topic_label: str) -> str:
         if "db" in lowered_text or "データベース" in text:
             return "レビュー修正点DB"
         return "レビュースキル改善ワークフロー"
+    if topic_label == SUPABASE_RLS_SECURITY_LABEL:
+        if "public.benchmarks" in lowered_text or "benchmarks" in lowered_text:
+            return "Supabase RLS公開read-only設定"
+        if "security advisor" in lowered_text:
+            return "Supabase Security Advisor RLS"
+        return "Supabase RLS/security設定"
     if topic_label == "ランキング鮮度・sparkline修正":
         if "sparkline" in lowered_text or "折れ線" in text:
             return "ランキング鮮度とsparkline表示"
@@ -831,6 +1141,12 @@ def extract_object_phrase(text: str, topic_label: str) -> str:
         return "メール運用"
     if topic_label in {"メールリンク未生成調査", "LLMWIKIクエリ報告メール重複抑止", "タスク別送信者名"}:
         return topic_label
+    if topic_label == LLMWIKI_REPORT_VISIBILITY_LABEL:
+        return compose_llmwiki_report_visibility_title(text)
+    if topic_label == "idle-continue代理ツール":
+        if any(token in lowered_text for token in ("gpt-5.4", "llm", "idle_continue", "自動送信", "残タスク", "代理")):
+            return "LLM代理継続判定"
+        return "idle-continue運用"
     if topic_label == "repoレビュー":
         if "readme" in lowered_text and ("preview" in lowered_text or "プレビュー" in text or "実画面" in text):
             return "READMEライブダッシュボードプレビュー"
@@ -995,6 +1311,13 @@ def collect_topic_signal_context(user_messages: list[str], assistant_messages: l
         "snapshot",
         "鮮度",
         "vercel",
+        "supabase",
+        "rls",
+        "rls_disabled_in_public",
+        "security advisor",
+        "public.benchmarks",
+        "hzofpqlhrlveqnjsoaae",
+        "ai-model-tracker",
     )
     messages = [*user_messages, *assistant_messages]
     project_context_text = "\n".join(messages).lower()
@@ -1034,9 +1357,9 @@ def build_deep_summary_ja(current_goal: str, latest_change: str, blocker: str | 
 def build_summary_ja(current_goal: str, latest_change: str, blocker: str | None, follow_up_count: int, task_shift: bool) -> str:
     parts = [current_goal]
     if blocker:
-        parts.append(f"現状: {blocker}")
+        parts.append(blocker)
     elif latest_change and compact_japanese_excerpt(latest_change, 80) != compact_japanese_excerpt(current_goal, 80):
-        parts.append(f"現状: {compact_japanese_excerpt(latest_change, 90)}")
+        parts.append(compact_japanese_excerpt(latest_change, 90))
     elif follow_up_count > 0:
         parts.append(f"follow-up {follow_up_count}件")
     if task_shift:
@@ -1135,12 +1458,19 @@ def cluster_task_body_ja(cluster_label: str | None, current_goal: str) -> str:
         "メール運用": "AI秘書メールやLLMWIKI報告メールの運用を整理するタスク。生成、重複抑止、送信履歴、再通知条件を確認する。",
         "メールリンク未生成調査": "AI秘書メールでリンクが未生成になる原因を切り分けるタスク。入力、テンプレート、生成処理、投稿経路を確認する。",
         "LLMWIKIクエリ報告メール重複抑止": "LLMWIKIクエリ報告メールの重複を抑止するタスク。重複検知、失敗理由、送信履歴の掃除を確認する。",
+        LLMWIKI_REPORT_VISIBILITY_LABEL: "LLMWIKI Research Linksの表示、成功判定、score、要確認理由が実態と一致するか確認するタスク。",
+        SUPABASE_RLS_SECURITY_LABEL: "SupabaseのRLS/security設定を修正するタスク。public schemaの公開read-only範囲、anon/authenticated policy、Security Advisorの残警告を確認する。",
         "タスク別送信者名": "タスク別にメール送信者名を分ける運用を整理するタスク。別Gmail、Send mail as alias、件名プレフィックスのどれで扱うか確認する。",
         "ブックマーク見直し": "ブックマーク管理サイトとGitHubピン留めrepoの見直しタスク。反映済み変更と残件を整理し、次に入れ替える対象を判断する。",
         "ネットワーク不安定の原因調査": "ネットワーク不安定の原因を切り分けるタスク。回線、無線、時間帯、機器設定のどこに問題があるかを確認する。",
         "LinkedInオファー確認: 前田空我": "LinkedInオファー内容を確認するタスク。返信要否、条件、次に確認する情報を整理する。",
         "agent.md / .claude 読み順確認": "agent.md / .claude / Codex側instructionの読み順と責務を整理するタスク。実際に参照される順序と衝突を確認する。",
         "go-robustスキル移植": "go-robustスキルをCodex側でも使えるように移植・整理するタスク。既存のClaude Code運用との差分と配置先を確認する。",
+        "Codex review surface運用改善": "Codexセッションkanban画面の定期実行、remote overrides同期、固定済みskip、性能指標を改善するタスク。次回実行で同じカードを読み続けない状態にする。",
+        "Codexセッションkanban運用改善": "Codexセッションkanban画面の定期実行、remote overrides同期、固定済みskip、性能指標を改善するタスク。次回実行で同じカードを読み続けない状態にする。",
+        "Codexセッションkanbanタイトル分類改善": "Codexセッションkanban画面のタイトル分類、topic抽出、unknown調査、quality gateを改善するタスク。誤分類を公開せず、再発時に停止・調査できる状態にする。",
+        "Xブックマーク推薦品質改善": "Xブックマーク推薦の内容調査品質を改善するタスク。README取得、default branch、推薦文の具体性、ユーザーへの丸投げ表現を整理する。",
+        "Cloudflare公開設定": "Cloudflare Pages / Access の公開設定を進めるタスク。Wrangler認証、Pages project、Access Application、deploy状態を確認する。",
         "private化": "公開不要なGitHub repoをprivate化するタスク。対象repo、fork扱い、公開し続ける理由の有無を整理する。",
         "転職・求人選別": "転職・求人候補を整理するタスク。候補企業、年収条件、応募優先度、保留条件を確認する。",
         "求人紹介返信方針": "求人紹介への返信方針を整理するタスク。温度感、返信文面、応募/面談に進む条件を確認する。",
@@ -1179,13 +1509,18 @@ def build_task_body_summary_ja(
         blocker = None
         pendingish = False
     if blocker:
-        notes.append(f"現状: {blocker}。")
+        if blocker == "保留条件が残っている":
+            pass
+        elif "blocked" in blocker.lower() or "止ま" in blocker:
+            notes.append("停止箇所と再開条件を確認する。")
+        else:
+            notes.append(f"{blocker}。")
     elif doneish:
-        notes.append("直近は完了寄り。反映済み範囲と残件だけ確認する。")
+        notes.append("反映済み範囲と残件を確認する。")
     elif pendingish:
-        notes.append("直近は保留寄り。再開条件を確認する。")
+        notes.append("再開条件を確認する。")
     if task_shift:
-        notes.append("直近topicを現在タスクとして扱う。")
+        notes.append("最新の実作業を現在タスクとして扱う。")
     return clip(" ".join([body, *notes]), 260)
 
 
@@ -1211,6 +1546,10 @@ def latest_task_context_note_ja(cluster_label: str | None, latest_change: str) -
         return "LPの見せ方、素材、未完了画面を整理する。"
     if cluster_label == "クリエイティブ素材" and any(token in lowered for token in ("image", "画像", "prompt", "プロンプト", "chatgpt", "cic")):
         return "生成経路、成果物品質、再現性課題を整理する。"
+    if cluster_label == LLMWIKI_REPORT_VISIBILITY_LABEL and is_llmwiki_report_visibility_signal(text):
+        return "失敗/暫定fallback/score/成功ログの表示が実態と一致するか確認する。"
+    if cluster_label == SUPABASE_RLS_SECURITY_LABEL and is_supabase_rls_security_signal(text):
+        return "RLS有効化、公開SELECT policy、Security Advisorの残警告を確認する。"
     if cluster_label == "B2Bポートフォリオページ改善" and any(token in text for token in ("図解", "ページ", "文言", "ワークフロー")):
         return "ページ内容、図解、文言、公開反映を整理する。"
     if cluster_label == "需要レンズ指数設計" and any(token in text for token in ("指数", "マネタイズ", "需要", "供給")):
@@ -1232,9 +1571,16 @@ def revise_task_body_ja(cluster_label: str | None, current_goal: str, base_body:
         "タスク別送信者名": "送信者名やaliasの扱いを整理し、メール運用の見え方を決める。",
         "ナレッジ取り込み": "LLMWIKIの過去分・週次分を見て、取り込む候補と保留を分ける。",
         "kanban自動化": "Codexセッションをkanban候補へ整理し、統合・状態判定・human lockの境界を整える。",
+        LLMWIKI_REPORT_VISIBILITY_LABEL: "LLMWIKI Research Linksの成功/失敗表示、score、要確認理由、local fallbackの見せ方を確認する。",
+        SUPABASE_RLS_SECURITY_LABEL: "SupabaseのRLS、公開read-only policy、Security Advisorの残警告を確認する。",
         "LinkedInオファー返信方針": "LinkedIn関連は原則まとめ、直近の送信者と返信温度感を確認する。",
         "ブックマーク見直し": "ブックマーク管理サイトとGitHubピン留めrepoの見直しを扱う。統合/分割は保留観察する。",
         "ブックマーク推薦重複抑止": "Xブックマーク推薦で採用済み・既存実装ありの候補を再推薦しないよう、除外記録と検知経路を確認する。",
+        "Xブックマーク推薦品質改善": "Xブックマーク推薦の内容調査品質、README取得、推薦文の具体性を改善する。",
+        "Codex review surface運用改善": "Codexセッションkanbanの定期実行、remote overrides同期、固定済みskip、性能指標を確認する。",
+        "Codexセッションkanban運用改善": "Codexセッションkanbanの定期実行、remote overrides同期、固定済みskip、性能指標を確認する。",
+        "Codexセッションkanbanタイトル分類改善": "Codexセッションkanbanのタイトル分類、topic抽出、unknown調査、quality gateを確認する。",
+        "Cloudflare公開設定": "Cloudflare Pages / Access の認証、公開設定、deploy状態を確認する。",
         "B2Bポートフォリオページ改善": "B2Bポートフォリオのページ内容、図解、文言、公開反映を確認する。",
         "LLMWIKI品質レビュー導線改善": "LLMWIKIの自動収集・品質レビュー・恒久配置済み資料の参照導線を改善する。",
     }
@@ -1249,7 +1595,7 @@ def revise_task_body_ja(cluster_label: str | None, current_goal: str, base_body:
         body = re.sub(r"タスク。", "。", body)
     latest_note = latest_task_context_note_ja(label, latest_change)
     if latest_note and latest_note not in body:
-        body = f"{body} 現在地: {latest_note}"
+        body = f"{body} {latest_note}"
     body = re.sub(r"。。+", "。", body)
     return body
 
@@ -1296,7 +1642,11 @@ def derive_mail_topic(topic_text: str) -> tuple[str, str, str]:
         return "mail-link-generation", "メールリンク未生成調査", "mail link generation failure"
     if "重複" in topic_text or "かぶ" in topic_text:
         return "mail-duplicate-suppression", "LLMWIKIクエリ報告メール重複抑止", "mail duplicate suppression"
-    if "送信者名" in topic_text or "別 gmail" in topic_text or "alias" in topic_text:
+    if (
+        "送信者名" in topic_text
+        or "別 gmail" in topic_text
+        or ("alias" in topic_text and any(token in topic_text for token in ("gmail", "メール", "送信者")))
+    ):
         return "mail-sender-identity", "タスク別送信者名", "mail sender identity"
     return "mail", "メール運用", "mail / gmail operation"
 
@@ -1377,15 +1727,104 @@ def derive_topic_key(
             "実画面確認",
         )
     )
+    idle_continue_signal = any(
+        token in current_phase_activity
+        for token in (
+            "idle_continue",
+            "idle-continue",
+            "idle-continue-question",
+            "same_display_without_thinking",
+            "自動送信",
+            "残タスクを進めて",
+            "残タスクは？",
+            "pane auto",
+            "transcript",
+            "clipboard copy",
+            "ctrl+v",
+            "貼り付け",
+        )
+    ) and any(
+        token in current_phase_activity
+        for token in (
+            "web-remote-desktop",
+            "llm",
+            "gpt-5.4",
+            "watcher",
+            "監視プロセス",
+            "スクリプト",
+            "自動実行",
+        )
+    )
     project_dof_context = repo_name == "project-dof" or "project-dof" in topic_text or "project dof" in topic_text
     project_entity_conflict = repo_name != "project-dof" and "なかも" in topic_text
-    creative_signal = any(
-        token in topic_text
-        for token in ("画像生成", "image generation", "image2", "gpt image", "プロンプト", "キャラ", "character")
-    )
+    creative_signal = has_creative_asset_signal(topic_text, project_dof_context=project_dof_context)
     project_scoped_creative_signal = creative_signal and not project_entity_conflict and (
         project_dof_context or ("なかも" not in topic_text and not near_future_dashboard_signal)
     )
+    codex_review_surface_title_quality = (
+        repo_name == "openclaw-secretary"
+        and any(
+            token in current_phase_activity
+            for token in (
+                "codex_session_review",
+                "codex-session-review",
+                "review surface",
+                "build_review_surface",
+                "title_classification_rules",
+                "quality gate",
+                "quality_report",
+            )
+        )
+        and any(
+            token in current_phase_activity
+            for token in (
+                "タイトル",
+                "title",
+                "topic",
+                "誤分類",
+                "分類",
+                "unknown",
+                "再発防止",
+                "stale context",
+                "quality gate",
+                "unknown_repo_sessions",
+                "topic_title_mismatches",
+                "stale_context_topic_risks",
+            )
+        )
+    )
+    if codex_review_surface_title_quality:
+        return f"{repo_name}:codex-review-surface-title-quality", "Codexセッションkanbanタイトル分類改善", 94, "latest phase / codex session kanban title classification and quality gate"
+    codex_review_surface_operation_current = (
+        repo_name == "openclaw-secretary"
+        and any(
+            token in current_phase_activity
+            for token in (
+                "codex_session_review",
+                "codex-session-review",
+                "review.html",
+                "review surface",
+                "overrides.local.json",
+            )
+        )
+        and any(
+            token in current_phase_activity
+            for token in (
+                "定期実行",
+                "scheduler",
+                "remote overrides",
+                "vercel-cli",
+                "parse cache",
+                "build_metrics",
+                "perf_status",
+                "skipped_fixed",
+                "メモリ",
+                "最適化",
+            )
+        )
+    )
+    if codex_review_surface_operation_current:
+        return f"{repo_name}:codex-review-surface", "Codexセッションkanban運用改善", 90, "latest phase / codex session kanban operation"
     if "kanban" in topic_text or "カンバン" in topic_text or "human override" in topic_text or ("ボード" in topic_text and "ai秘書" in topic_text):
         return f"{repo_name}:kanban-automation", "kanban自動化", 86, "kanban / session automation"
     # If the latest substantive exchange clearly moved into a concrete
@@ -1393,6 +1832,20 @@ def derive_topic_key(
     # snippets from the same long session.  This prevents entry prompts like
     # "内容確認/差分確認/送信者名" from becoming the kanban task after the
     # session has already progressed to actual work.
+    if is_llmwiki_report_visibility_signal(current_phase_activity):
+        return (
+            f"{repo_name}:{LLMWIKI_REPORT_VISIBILITY_TOPIC_SUFFIX}",
+            LLMWIKI_REPORT_VISIBILITY_LABEL,
+            92,
+            "latest phase / LLMWIKI Research Links visibility and success-state bug",
+        )
+    if is_supabase_rls_security_signal(current_phase_activity):
+        return (
+            f"{repo_name}:{SUPABASE_RLS_SECURITY_TOPIC_SUFFIX}",
+            SUPABASE_RLS_SECURITY_LABEL,
+            92,
+            "latest phase / Supabase RLS security advisor fix",
+        )
     if any(token in current_phase_activity for token in ("quality_reviewer", "query_quality_trend", "review_log", "durable auto-collect", "llmwiki-research")):
         return f"{repo_name}:knowledge-quality-review", "LLMWIKI品質レビュー導線改善", 88, "latest phase / llmwiki quality review pipeline"
     portfolio_page_phase = repo_name == "portfolio" and any(
@@ -1411,6 +1864,8 @@ def derive_topic_key(
     )
     if portfolio_page_phase:
         return f"{repo_name}:portfolio-page-improvement", "B2Bポートフォリオページ改善", 88, "latest phase / portfolio page implementation"
+    if idle_continue_signal:
+        return f"{repo_name}:idle-continue-agent", "idle-continue代理ツール", 90, "latest phase / idle-continue and clipboard automation"
     b2b_sales_signal = any(
         token in topic_text
         for token in (
@@ -1455,6 +1910,83 @@ def derive_topic_key(
     )
     if bookmark_recommendation_latest:
         return "global:bookmark-recommendation-dedupe", "ブックマーク推薦重複抑止", 82, "latest phase / bookmark recommendation dedupe"
+    codex_review_surface_current = (
+        repo_name == "openclaw-secretary"
+        and any(
+            token in activity_text
+            for token in (
+                "codex_session_review",
+                "review.html",
+                "codex-session-review",
+                "review surface",
+                "overrides.local.json",
+            )
+        )
+        and any(
+            token in current_phase_activity
+            for token in (
+                "定期実行",
+                "scheduler",
+                "remote overrides",
+                "vercel-cli",
+                "parse cache",
+                "build_metrics",
+                "perf_status",
+                "skipped_fixed",
+                "メモリ",
+                "最適化",
+            )
+        )
+    )
+    if codex_review_surface_current:
+        return f"{repo_name}:codex-review-surface", "Codexセッションkanban運用改善", 90, "latest phase / codex session kanban operation"
+    bookmark_recommendation_quality = any(
+        token in activity_text
+        for token in (
+            "xブックマーク再確認アドバイザー",
+            "bookmark_recheck_advisor",
+            "README取得失敗",
+            "README/default branch",
+            "おすすめする側が内容を調査",
+            "内容調査をさぼ",
+        )
+    ) and any(
+        token in current_phase_activity
+        for token in ("README", "default_branch", "default branch", "内容調査", "推薦", "bookmark_recheck_advisor")
+    )
+    if bookmark_recommendation_quality:
+        return f"{repo_name}:bookmark-recommendation-quality", "Xブックマーク推薦品質改善", 88, "latest phase / bookmark recommendation quality"
+    cloudflare_current = (
+        repo_name != "unknown"
+        and any(token in current_phase_activity for token in ("cloudflare", "wrangler", "access", "oauth", "pages project", "cf:deploy", "cf:login"))
+        and any(token in current_phase_activity for token in ("認証", "authorize", "callback", "deploy", "公開", "設定", "access"))
+    )
+    if cloudflare_current:
+        return f"{repo_name}:cloudflare-access-pages", "Cloudflare公開設定", 88, "latest phase / Cloudflare Access Pages setup"
+    review_feedback_current = any(
+        token in current_phase_activity
+        for token in (
+            "claude-review-pdca",
+            "pdca_bridge_runner",
+            "recorded_feedback",
+            "review-fix-pipeline",
+            "producer/runbook",
+            "live-run",
+            "レビュースキル",
+            "修正点db",
+        )
+    ) and any(
+        token in current_phase_activity
+        for token in ("feedback", "修正点", "db", "hook", "dashboard", "runbook", "producer")
+    )
+    if review_feedback_current:
+        return f"{repo_name}:review-feedback-memory", "レビュー修正点DB/hook連携", 88, "latest phase / review feedback DB workflow"
+    skill_migration_current = (
+        repo_name in {"sc-gr", "sc-ifr", "sc-ir"}
+        or any(token in current_phase_activity for token in ("sc-gr", "sc-ifr", "sc-ir", "go-robust", "/go-robust", "intent-first-review"))
+    ) and any(token in current_phase_activity for token in ("skill", "スキル", "移植", "description", "validation", "alias"))
+    if skill_migration_current:
+        return f"{repo_name}:go-robust-skill", "go-robustスキル移植", 88, "latest phase / Codex skill migration"
     career_text = deep_activity_text
     career_direct_tokens = ("求人", "転職", "応募候補", "求人選別", "年収", "カオナビ", "finatext", "ジーニー", "linkedin", "linkedin-offer-responder", "オファー", "松尾研究所", "渡邊", "前田")
     career_context_tokens = ("返信", "文面", "面談", "ポジション", "案件", "求人", "転職", "linkedin", "オファー")
@@ -1473,11 +2005,17 @@ def derive_topic_key(
     # in a long session do not become the current task unless the latest anchor agrees.
     mail_current_signal = any(
         token in current_phase_activity
-        for token in ("リンク未生成", "未生成", "送信者名", "別 gmail", "alias", "重複", "llmwikiクエリ報告", "メール", "gmail")
+        for token in ("リンク未生成", "未生成", "送信者名", "別 gmail", "重複", "llmwikiクエリ報告", "メール", "gmail")
     )
     mail_anchor_text = current_phase_activity if mail_current_signal else topic_text
+    sender_identity_signal = (
+        "送信者名" in mail_anchor_text
+        or "別 gmail" in mail_anchor_text
+        or ("alias" in mail_anchor_text and any(token in mail_anchor_text for token in ("gmail", "メール", "送信者")))
+    )
     concrete_mail_signal = (
-        any(token in mail_anchor_text for token in ("リンク未生成", "送信者名", "別 gmail", "alias"))
+        any(token in mail_anchor_text for token in ("リンク未生成", "未生成"))
+        or sender_identity_signal
         or ("重複" in mail_anchor_text and any(token in mail_anchor_text for token in ("メール", "gmail", "llmwikiクエリ報告")))
     )
     if concrete_mail_signal:
@@ -1487,16 +2025,38 @@ def derive_topic_key(
             return f"global:{key}", label, 78, f"{reason} / {lineage_reason}"
         return f"{repo_name}:{key}", label, 86, reason
     topic_rules: list[tuple[bool, str, str, str]] = [
+        (
+            any(token in topic_text for token in ("codex_session_review", "review.html", "codex-session-review", "overrides.local.json"))
+            and any(token in topic_text for token in ("定期実行", "scheduler", "remote overrides", "parse cache", "perf_status", "skipped_fixed", "メモリ", "最適化")),
+            "codex-review-surface",
+            "Codexセッションkanban運用改善",
+            "codex session review surface operation",
+        ),
+        (
+            any(token in topic_text for token in ("xブックマーク再確認アドバイザー", "bookmark_recheck_advisor", "README取得失敗", "おすすめする側が内容を調査")),
+            "bookmark-recommendation-quality",
+            "Xブックマーク推薦品質改善",
+            "bookmark recommendation quality",
+        ),
+        (
+            any(token in topic_text for token in ("cloudflare", "wrangler", "cf:deploy", "cf:login", "pages project", "access application", "oauth"))
+            and any(token in topic_text for token in ("認証", "authorize", "callback", "deploy", "公開", "設定", "access")),
+            "cloudflare-access-pages",
+            "Cloudflare公開設定",
+            "Cloudflare Access / Pages setup",
+        ),
         (any(token in topic_text for token in ("スタート時", "起動時", "自動起動", "startup")), "startup-control", "スタート時の自動起動処理無効化", "startup control"),
         (any(token in topic_text for token in ("回線", "無線", "ソフトバンク", "ネットワーク", "tp-link")), "network-instability", "ネットワーク不安定の原因調査", "network troubleshooting"),
         (("修正点" in topic_text and ("db" in topic_text or "データベース" in topic_text) and ("hook" in topic_text or "呼び出す" in topic_text)) or ("claude-review-pdca" in topic_text and "レビュースキル" in topic_text), "review-feedback-memory", "レビュー修正点DB/hook連携", "review feedback DB / hook workflow"),
-        (near_future_dashboard_signal or (("ランキング" in topic_text or "ranking" in topic_text) and any(token in topic_text for token in ("sparkline", "折れ線", "棒グラフ", "snapshot", "鮮度", "vercel", "dashboard", "ダッシュボード"))), "dashboard-freshness", "ランキング鮮度・sparkline修正", "ranking freshness / sparkline display"),
+        (is_supabase_rls_security_signal(topic_text), SUPABASE_RLS_SECURITY_TOPIC_SUFFIX, SUPABASE_RLS_SECURITY_LABEL, "Supabase RLS security advisor fix"),
+        (near_future_dashboard_signal, "dashboard-freshness", "ランキング鮮度・sparkline修正", "near-future demand lens ranking freshness / sparkline display"),
         (any(token in topic_text for token in ("改行", "配色", "余白", "レイアウト", "表示崩れ", "表示文言")) and any(token in topic_text for token in ("修正", "改善", "調整")), "ui-fix", "UI表示修正", "UI copy / layout fix"),
         (any(token in topic_text for token in ("ティザー", "teaser", "lp-v", "lp.html")), "teaser-lp", "ティザーLP", "same artifact / teaser LP"),
         (("private化" in topic_text or "不要公開" in topic_text), "privatize", "private化", "repo privacy / privatize"),
         (("ピン留め" in topic_text or "ブックマーク管理" in topic_text), "bookmark-review", "ブックマーク見直し", "bookmark / pinned repo review"),
         (project_scoped_creative_signal, "creative-assets", "クリエイティブ素材", "creative assets / character / prompt"),
         (("grok4cic" in topic_text or "クリップボード" in topic_text or "clipboard" in topic_text), "grok4cic-clipboard", "grok4cic運用", "grok4cic / clipboard operation"),
+        (any(token in topic_text for token in ("idle_continue", "idle-continue", "自動送信", "代理", "残タスクを進めて", "残タスクは？")) and any(token in topic_text for token in ("llm", "gpt-5.4", "web-remote-desktop", "webリモートデスク", "スクリプト", "自動実行")), "idle-continue-agent", "idle-continue代理ツール", "idle-continue / LLM continuation agent"),
         (any(token in text for token in ("repo", "リポジトリ", "状態・品質", "品質確認", "進捗確認")), "repo-review", "repoレビュー", "repo status / quality review"),
         (any(token in topic_text for token in ("deploy", "デプロイ", "vercel", "公開")), "deploy", "デプロイ", "deployment / publish"),
         (
@@ -1569,6 +2129,17 @@ def derive_task_cluster(repo_name: str, first_user_line: str, summary: str) -> t
 
 
 def derive_repo_name(paths: list[str], session: SessionAccumulator) -> str:
+    early_user_text = "\n".join(session.user_messages[:6]).lower()
+    if any(
+        token in early_user_text
+        for token in (
+            "codex_session_review",
+            "review.html",
+            "codex-session-review",
+            "openclaw-secretary",
+        )
+    ) or ("codex-session-kanban" in early_user_text and "定期実行" in early_user_text):
+        return "openclaw-secretary"
     candidates: Counter[str] = Counter()
     home = str(Path.home()).lower()
     for raw in paths:
@@ -1590,6 +2161,16 @@ def derive_repo_name(paths: list[str], session: SessionAccumulator) -> str:
             continue
         if "-" in hit or "_" in hit:
             candidates[hit] += 1
+    session_signal_text = "\n".join(
+        [
+            *session.user_messages,
+            *session.assistant_messages,
+            *(text for _role, text in session.timeline_messages),
+        ]
+    )
+    inferred_project = infer_project_name_from_text(session_signal_text)
+    if inferred_project:
+        candidates[inferred_project] += 4
     return candidates.most_common(1)[0][0] if candidates else "unknown"
 
 
@@ -2077,6 +2658,9 @@ def derive_task_title_ja(cluster: dict[str, Any]) -> str:
     repo_name = repos[0] if repos else "unknown"
     if label == "grok4cic運用" and repo_name != "unknown":
         return concrete_title_from_topic(repo_name, label, cluster.get("latest_meaningful_change") or "", "grok4cic のクリップボード運用ルール整理")
+    if label == LLMWIKI_REPORT_VISIBILITY_LABEL:
+        context = "\n".join(str(item) for item in cluster.get("representative_titles", []))
+        return concrete_title_from_topic(repo_name, label, cluster.get("latest_meaningful_change") or "", "LLMWIKI Research Links の表示・成功判定修正", context)
     if label == "クリエイティブ素材" and repo_name != "unknown":
         context = "\n".join(str(item) for item in cluster.get("representative_titles", []))
         return concrete_title_from_topic(repo_name, label, cluster.get("latest_meaningful_change") or "", f"{repo_name}の画像・プロンプト素材検証", context)
@@ -2092,6 +2676,8 @@ def derive_task_title_ja(cluster: dict[str, Any]) -> str:
         return concrete_title_from_topic(repo_name, label, cluster.get("latest_meaningful_change") or "", "転職・求人候補の整理", "\n".join(str(item) for item in cluster.get("representative_titles", [])))
     if label == "レビュー修正点DB/hook連携":
         return concrete_title_from_topic(repo_name, label, cluster.get("latest_meaningful_change") or "", "レビュー修正点DB/hook連携", "\n".join(str(item) for item in cluster.get("representative_titles", [])))
+    if label == SUPABASE_RLS_SECURITY_LABEL:
+        return concrete_title_from_topic(repo_name, label, cluster.get("latest_meaningful_change") or "", "Supabase RLS/security修正", "\n".join(str(item) for item in cluster.get("representative_titles", [])))
     if label == "ランキング鮮度・sparkline修正":
         return concrete_title_from_topic(repo_name, label, cluster.get("latest_meaningful_change") or "", "ランキング鮮度・sparkline修正", "\n".join(str(item) for item in cluster.get("representative_titles", [])))
     if label == "デプロイ" and repo_name != "unknown":
@@ -2100,6 +2686,8 @@ def derive_task_title_ja(cluster: dict[str, Any]) -> str:
         return concrete_title_from_topic(repo_name, label, cluster.get("latest_meaningful_change") or "", f"{repo_name}の表示文言・レイアウト修正", "\n".join(str(item) for item in cluster.get("representative_titles", [])))
     if label == "ブックマーク推薦重複抑止":
         return concrete_title_from_topic(repo_name, label, cluster.get("latest_meaningful_change") or "", "Xブックマーク推薦の採用済み反映", "\n".join(str(item) for item in cluster.get("representative_titles", [])))
+    if label == "Codexセッションkanbanタイトル分類改善":
+        return concrete_title_from_topic(repo_name, label, cluster.get("latest_meaningful_change") or "", "Codexセッションkanbanのタイトル分類・quality gate改善", "\n".join(str(item) for item in cluster.get("representative_titles", [])))
     mapping = {
         "ナレッジ取り込み": "LLMWIKI 週次レビューと取り込み整理",
         "ブックマーク見直し": "ブックマーク管理サイト / ピン留め repo 見直し",
@@ -2107,6 +2695,7 @@ def derive_task_title_ja(cluster: dict[str, Any]) -> str:
         "メール運用": "AI秘書メール運用の整理",
         "メールリンク未生成調査": "メールリンク未生成調査",
         "LLMWIKIクエリ報告メール重複抑止": "LLMWIKIクエリ報告メール重複抑止",
+        LLMWIKI_REPORT_VISIBILITY_LABEL: "LLMWIKI Research Links の失敗/score誤表示修正",
         "タスク別送信者名": "タスク別送信者名",
         "ログイン・手続き": "e-Tax 還付申告の状態確認",
         "ティザーLP": "project-dof ティザーLP制作",
@@ -2121,6 +2710,7 @@ def derive_task_title_ja(cluster: dict[str, Any]) -> str:
         "選考結果返信方針": "選考結果返信方針",
         "LinkedInオファー返信方針": "LinkedInオファー返信方針",
         "レビュー修正点DB/hook連携": "レビュー修正点DB/hook連携",
+        SUPABASE_RLS_SECURITY_LABEL: "Supabase RLS/security修正",
         "ランキング鮮度・sparkline修正": "ランキング鮮度・sparkline修正",
         "需要レンズ指数設計": "near-future-demand-lensの需要・マネタイズ指数設計",
         "デプロイ": "公開反映",
@@ -2216,7 +2806,13 @@ def derive_task_next_action_ja(cluster: dict[str, Any]) -> str:
         "ナレッジ取り込み": "今週分の query / レポートをまとめて、取り込む価値が高い項目と保留項目を仕分ける",
         "ブックマーク見直し": "ブックマーク管理サイトと pinned repo の反映済み変更・残件を確認し、次に入れ替える対象を決める",
         "ブックマーク推薦重複抑止": "採用済み/既存実装ありの返信が除外記録に入るか確認し、再推薦されない状態に固定する",
+        "Xブックマーク推薦品質改善": "README取得と推薦文生成の失敗理由を確認し、内容調査済みと呼べる最低情報を固定する",
+        "Codex review surface運用改善": "remote overrides同期・固定済みskip・性能指標が次回定期実行でも維持されるか確認する",
+        "Codexセッションkanban運用改善": "remote overrides同期・固定済みskip・性能指標が次回定期実行でも維持されるか確認する",
+        "Codexセッションkanbanタイトル分類改善": "誤分類サンプルをfixture化し、title/topic/quality gateが次回定期実行でも維持されるか確認する",
+        "Cloudflare公開設定": "Wrangler認証・Pages project・Access設定のどこで止まっているかを確認する",
         "メール運用": "メール生成・重複抑止・送信履歴のどこが残件かを確認し、運用ルールに固定する",
+        LLMWIKI_REPORT_VISIBILITY_LABEL: "失敗/暫定fallback/score/成功ログの表示が実態と一致するか確認する",
         "クリエイティブ素材": "成果物を目視確認し、品質不足・再生成条件・次に使う経路を1つに絞る",
         "ティザーLP": "次に詰める画面/素材/公開確認を1つに絞り、LP制作の続きに入る",
         "repoレビュー": "反映済み変更、未解決PR/未追跡ファイル、次の実装単位を確認する",
@@ -2233,6 +2829,7 @@ def derive_task_next_action_ja(cluster: dict[str, Any]) -> str:
         "選考結果返信方針": "選考結果への感謝と次に進めたい求人を短く返せる文面に整える",
         "LinkedInオファー返信方針": "直近の送信者・対象ポジションを確認し、返信文面と温度感を整える",
         "レビュー修正点DB/hook連携": "レビューで出た実装修正点をDBに保存し、次回hookで呼び出せるかを確認する",
+        SUPABASE_RLS_SECURITY_LABEL: "SupabaseのRLS有効化・公開SELECT policy・Security Advisor残警告を確認する",
         "ランキング鮮度・sparkline修正": "当日snapshotの自動生成とsparkline再スケールが本番表示に反映されているか確認する",
         "需要レンズ指数設計": "外部ソースから buyer_demand / supply_pressure / entry_cost などへ入れる raw evidence JSON を作る",
         "メールリンク未生成調査": "リンク未生成の原因を入力・テンプレート・投稿経路のどこかに切り分ける",
@@ -2324,6 +2921,8 @@ QUALITY_WEAK_TITLE_TERMS = ("内容確認", "状態・品質確認", "状態確�
 
 def title_quality_issues(title: str) -> list[str]:
     issues: list[str] = []
+    if title.lower().startswith("unknown") or "unknownの" in title:
+        issues.append("unknown-project-title")
     if is_surface_artifact_title(title):
         issues.append("surface-artifact-title")
     if any(term in title for term in QUALITY_WEAK_TITLE_TERMS):
@@ -2331,6 +2930,57 @@ def title_quality_issues(title: str) -> list[str]:
     if title.endswith(("の整理", "を整理")):
         issues.append("over-generic-organize-title")
     return issues
+
+
+def investigate_unknown_repo_session(item: dict[str, Any]) -> dict[str, Any]:
+    """Return deterministic follow-up evidence when repo inference failed.
+
+    This is the scheduled-run equivalent of "do not shrug with unknown":
+    before publishing, show which local evidence was searched and which
+    project/repo candidates were found so the next fix can update rules rather
+    than hand-editing a title.
+    """
+    evidence_text = "\n".join(
+        str(part)
+        for part in (
+            item.get("title"),
+            item.get("topic_label"),
+            item.get("current_goal"),
+            item.get("first_user_message"),
+            item.get("latest_meaningful_change"),
+            item.get("latest_phase_context"),
+            item.get("last_assistant_message"),
+            "\n".join(str(path) for path in item.get("active_paths") or []),
+            item.get("source_file"),
+        )
+        if part
+    )
+    candidate = infer_project_name_from_text(evidence_text)
+    path_candidates: list[str] = []
+    for raw_path in item.get("active_paths") or []:
+        name = Path(str(raw_path)).name
+        if name and name.lower() not in {"tenormusica", "users"}:
+            path_candidates.append(name)
+    if not candidate and path_candidates:
+        candidate = path_candidates[0]
+    inspected_signals = []
+    for token in (
+        "source_file",
+        "active_paths",
+        "first_user_message",
+        "latest_phase_context",
+        "last_assistant_message",
+        "project_ref",
+        "service/project name",
+    ):
+        inspected_signals.append(token)
+    return {
+        "candidate_repo": candidate or "",
+        "candidate_paths": list(dict.fromkeys(path_candidates))[:5],
+        "inspected": inspected_signals,
+        "evidence_excerpt": compact_japanese_excerpt(evidence_text, 360),
+        "next_fix": "add project hint or topic-specific repo inference before allowing scheduled deploy",
+    }
 
 
 def build_quality_report(sessions: list[dict[str, Any]], task_clusters: list[dict[str, Any]], suggested_tasks: list[dict[str, Any]]) -> dict[str, Any]:
@@ -2355,6 +3005,21 @@ def build_quality_report(sessions: list[dict[str, Any]], task_clusters: list[dic
         }
         for item in suggested_tasks
         if title_quality_issues(item.get("title_ja", ""))
+    ]
+    unknown_repo_sessions = [
+        {
+            "session_id": item.get("session_id"),
+            "title": item.get("title"),
+            "primary_repo": item.get("primary_repo"),
+            "topic_key": item.get("topic_key"),
+            "topic_label": item.get("topic_label"),
+            "latest_meaningful_change": item.get("latest_meaningful_change"),
+            "investigation": investigate_unknown_repo_session(item),
+            "issue": "repo/project inference returned unknown; inspect session text before publishing scheduled output",
+        }
+        for item in sessions
+        if str(item.get("primary_repo") or "").lower() in {"", "unknown"}
+        or str(item.get("topic_key") or "").lower().startswith("unknown:")
     ]
     suspicious_merges = [
         {
@@ -2417,8 +3082,38 @@ def build_quality_report(sessions: list[dict[str, Any]], task_clusters: list[dic
                 "latest_meaningful_change": item.get("latest_meaningful_change"),
                 "issue": "portfolio B2B sales-channel work was absorbed by stale creative/ChatGPT context",
             })
+        if topic_label == "クリエイティブ素材" and is_llmwiki_report_visibility_signal(phase_text):
+            stale_context_topic_risks.append({
+                "session_id": item.get("session_id"),
+                "title": item.get("title"),
+                "primary_repo": repo,
+                "topic_label": topic_label,
+                "latest_meaningful_change": item.get("latest_meaningful_change"),
+                "issue": "LLMWIKI Research Links visibility work was absorbed by stale creative/ChatGPT context",
+            })
+        if topic_label == "ランキング鮮度・sparkline修正" and is_supabase_rls_security_signal(phase_text):
+            stale_context_topic_risks.append({
+                "session_id": item.get("session_id"),
+                "title": item.get("title"),
+                "primary_repo": repo,
+                "topic_label": topic_label,
+                "latest_meaningful_change": item.get("latest_meaningful_change"),
+                "issue": "Supabase RLS/security work was absorbed by stale dashboard freshness context",
+            })
+        if topic_label == "ランキング鮮度・sparkline修正" and repo != "near-future-demand-lens":
+            stale_context_topic_risks.append({
+                "session_id": item.get("session_id"),
+                "title": item.get("title"),
+                "primary_repo": repo,
+                "topic_label": topic_label,
+                "latest_meaningful_change": item.get("latest_meaningful_change"),
+                "issue": "ranking freshness topic is reserved for near-future-demand-lens; investigate stale context or wrong repo/topic merge",
+            })
         phase_conflict_rules = [
             ("クリエイティブ素材", ("bing", "google", "business", "ビジネスプロフィール", "販路", "オーナー確認"), "latest phase looks like B2B sales-channel, not creative assets"),
+            ("クリエイティブ素材", ("local_wiki_fallback", "research links", "成功ログ", "成功扱い", "暫定成功", "score", "誤表示", "search_local_fallback"), "latest phase looks like LLMWIKI report visibility, not creative assets"),
+            ("ランキング鮮度・sparkline修正", ("supabase", "rls", "rls_disabled_in_public", "security advisor", "public.benchmarks", "public policy"), "latest phase looks like Supabase RLS/security, not ranking freshness"),
+            ("ランキング鮮度・sparkline修正", ("clipboard", "クリップボード", "ctrl+v", "貼り付け", "transcript", "idle-continue", "idle_continue", "same_display_without_thinking", "watcher", "監視プロセス", "残タスクを進めて"), "latest phase looks like idle-continue/clipboard automation, not ranking freshness"),
             ("LinkedInオファー返信方針", ("指数", "需給", "需要", "供給圧", "マネタイズ", "raw evidence"), "latest phase looks like demand-index work, not LinkedIn reply"),
             ("タスク別送信者名", ("デプロイ", "本番", "production", "vercel", "workflow", "反映済"), "latest phase looks like implementation/deploy work, not mail sender identity"),
         ]
@@ -2476,9 +3171,10 @@ def build_quality_report(sessions: list[dict[str, Any]], task_clusters: list[dic
                 }
             )
     return {
-        "status": "needs-review" if (weak_sessions or weak_candidates or suspicious_merges or project_entity_mismatches or stale_context_topic_risks or topic_title_mismatches) else "ok",
+        "status": "needs-review" if (weak_sessions or weak_candidates or unknown_repo_sessions or suspicious_merges or project_entity_mismatches or stale_context_topic_risks or topic_title_mismatches) else "ok",
         "weak_session_titles": weak_sessions,
         "weak_candidate_titles": weak_candidates,
+        "unknown_repo_sessions": unknown_repo_sessions,
         "suspicious_merges": suspicious_merges,
         "project_entity_mismatches": project_entity_mismatches,
         "stale_context_topic_risks": stale_context_topic_risks,
@@ -2486,185 +3182,148 @@ def build_quality_report(sessions: list[dict[str, Any]], task_clusters: list[dic
     }
 
 
-
-def _coerce_text_parts(value: Any) -> list[str]:
-    if value is None:
-        return []
-    if isinstance(value, str):
-        return [value]
-    if isinstance(value, (int, float, bool)):
-        return [str(value)]
-    if isinstance(value, list):
-        parts: list[str] = []
-        for item in value:
-            parts.extend(_coerce_text_parts(item))
-        return parts
-    if isinstance(value, dict):
-        parts: list[str] = []
-        for key in ("text", "content", "message", "summary", "title"):
-            if key in value:
-                parts.extend(_coerce_text_parts(value.get(key)))
-        return parts
-    return [str(value)]
-
-
-def estimate_session_text_stats(session: dict[str, Any]) -> tuple[int, int]:
-    fields = [
-        "title",
-        "summary",
-        "task_body_summary",
-        "current_goal",
-        "deep_summary",
-        "latest_meaningful_change",
-        "latest_phase_context",
-        "blocker",
-        "first_user_message",
-        "last_user_message",
-        "last_assistant_message",
-        "suggested_reason",
-    ]
-    parts: list[str] = []
-    for field in fields:
-        parts.extend(_coerce_text_parts(session.get(field)))
-    for field in ("evidence_messages", "recent_user_messages", "timeline_messages"):
-        parts.extend(_coerce_text_parts(session.get(field)))
-    chars = len("\n".join(item for item in parts if item))
-    # Deliberately a rough review-sorting signal, not billing-grade token accounting.
-    estimated_tokens = math.ceil(chars / 4) if chars else 0
-    return chars, estimated_tokens
-
-
-def apply_lightweight_prioritization_stats(bundle: dict[str, Any]) -> dict[str, Any]:
-    sessions = bundle.get("sessions") or []
-    by_id: dict[str, dict[str, Any]] = {}
-    for session in sessions:
-        if not isinstance(session, dict):
-            continue
-        chars, estimated_tokens = estimate_session_text_stats(session)
-        session["text_size_chars"] = int(session.get("text_size_chars") or chars)
-        session["estimated_tokens"] = int(session.get("estimated_tokens") or estimated_tokens)
-        command_count = int(session.get("command_count") or 0)
-        activity_score = int(session.get("activity_score") or 0)
-        related_count = int(session.get("related_session_count") or 1)
-        high_activity = bool(session.get("high_activity_signal")) or command_count >= 25 or activity_score >= 120
-        large_session = bool(session.get("large_session_signal")) or session["estimated_tokens"] >= 700 or command_count >= 50
-        flags = set(session.get("prioritization_flags") or [])
-        if high_activity:
-            flags.add("high-activity")
-        if large_session:
-            flags.add("large-session")
-        if related_count >= 2:
-            flags.add("multi-session")
-        session["high_activity_signal"] = high_activity
-        session["large_session_signal"] = large_session
-        session["prioritization_flags"] = sorted(flags)
-        if session.get("session_id"):
-            by_id[str(session["session_id"])] = session
-
-    for cluster in bundle.get("task_clusters") or []:
-        if not isinstance(cluster, dict):
-            continue
-        members = [by_id[item] for item in cluster.get("session_ids") or [] if item in by_id]
-        if not members:
-            continue
-        cluster["estimated_tokens_total"] = sum(int(item.get("estimated_tokens") or 0) for item in members)
-        cluster["estimated_tokens_max"] = max(int(item.get("estimated_tokens") or 0) for item in members)
-        cluster["high_activity_count"] = sum(1 for item in members if item.get("high_activity_signal"))
-        cluster["large_session_count"] = sum(1 for item in members if item.get("large_session_signal"))
-
-    cluster_lookup = {item.get("cluster_key"): item for item in (bundle.get("task_clusters") or []) if isinstance(item, dict)}
-    for task in bundle.get("suggested_tasks") or []:
-        if not isinstance(task, dict):
-            continue
-        cluster = cluster_lookup.get(task.get("cluster_key"))
-        if cluster:
-            task["estimated_tokens_total"] = cluster.get("estimated_tokens_total", 0)
-            task["estimated_tokens_max"] = cluster.get("estimated_tokens_max", 0)
-            task["high_activity_count"] = cluster.get("high_activity_count", 0)
-            task["large_session_count"] = cluster.get("large_session_count", 0)
-    return bundle
-
-def collect_sessions(codex_home: Path, days: int, max_sessions: int, min_user_messages: int) -> dict[str, Any]:
+def collect_sessions(
+    codex_home: Path,
+    days: int,
+    max_sessions: int,
+    min_user_messages: int,
+    cache_json: Path | None = None,
+    fixed_overrides_json: list[Path] | None = None,
+) -> dict[str, Any]:
+    started = time.perf_counter()
     now = datetime.now(timezone.utc)
     cutoff = now - timedelta(days=days)
-    session_files = sorted(
-        codex_home.joinpath("sessions").rglob("*.jsonl"),
-        key=lambda path: path.stat().st_mtime,
-        reverse=True,
-    )
+    algorithm_fingerprint = current_algorithm_fingerprint()
+    cache = load_summary_cache(cache_json, algorithm_fingerprint)
+    cache_entries = cache.setdefault("entries", {})
+    fixed_session_ids = load_fixed_session_ids(fixed_overrides_json)
+    file_stats = []
+    for path in codex_home.joinpath("sessions").rglob("*.jsonl"):
+        try:
+            stat = path.stat()
+        except OSError:
+            continue
+        file_stats.append((path, stat))
+    file_stats.sort(key=lambda item: item[1].st_mtime, reverse=True)
 
     sessions: list[dict[str, Any]] = []
-    for path in session_files:
-        modified = datetime.fromtimestamp(path.stat().st_mtime, timezone.utc)
+    metrics = {
+        "cache_version": CACHE_VERSION,
+        "cache_algorithm": algorithm_fingerprint[:12],
+        "session_files_seen": len(file_stats),
+        "recent_files_considered": 0,
+        "cache_hits": 0,
+        "cache_misses": 0,
+        "cache_recomputed": 0,
+        "parsed_files": 0,
+        "skipped_empty": 0,
+        "skipped_short": 0,
+        "skipped_fixed": 0,
+        "selected_sessions": 0,
+    }
+    for path, stat in file_stats:
+        modified = datetime.fromtimestamp(stat.st_mtime, timezone.utc)
         if modified < cutoff:
             break
+        metrics["recent_files_considered"] += 1
 
-        lines = load_jsonl(path)
-        if not lines:
+        cache_key = str(path)
+        path_session_id = session_id_from_path(path)
+        if path_session_id and path_session_id in fixed_session_ids:
+            metrics["skipped_fixed"] += 1
+            continue
+        fingerprint = session_file_fingerprint(path, stat)
+        cached_entry = cache_entries.get(cache_key)
+        if is_cache_hit(cached_entry, fingerprint):
+            metrics["cache_hits"] += 1
+            summary = None
+            cached_acc = accumulator_from_cache(cached_entry.get("parsed_acc")) if isinstance(cached_entry, dict) else None
+            if cached_acc:
+                metrics["cache_recomputed"] += 1
+                summary = summarize_session(cached_acc, now)
+            elif isinstance(cached_entry.get("summary"), dict):
+                summary = refresh_cached_summary(cached_entry["summary"], now)
+            if not isinstance(summary, dict):
+                if cached_entry.get("skip_reason") == "short":
+                    metrics["skipped_short"] += 1
+                else:
+                    metrics["skipped_empty"] += 1
+                continue
+            if summary.get("session_id") in fixed_session_ids:
+                metrics["skipped_fixed"] += 1
+                continue
+            if summary.get("user_message_count", 0) < min_user_messages:
+                metrics["skipped_short"] += 1
+                continue
+            sessions.append(summary)
+            if len(sessions) >= max_sessions:
+                break
             continue
 
-        meta_payload = next((line.get("payload", {}) for line in lines if line.get("type") == "session_meta"), {})
-        acc = SessionAccumulator(
-            session_id=meta_payload.get("id") or path.stem,
-            source_file=str(path),
-            start_at=meta_payload.get("timestamp"),
-            end_at=lines[-1].get("timestamp"),
-            session_cwd=meta_payload.get("cwd"),
-        )
-        if acc.session_cwd:
-            acc.cwds.append(acc.session_cwd)
-
-        for line in lines:
-            payload = line.get("payload", {})
-            line_type = line.get("type")
-            if line_type == "turn_context":
-                cwd = payload.get("cwd")
-                if cwd:
-                    acc.cwds.append(cwd)
-            elif line_type == "event_msg":
-                payload_type = payload.get("type")
-                if payload_type == "user_message":
-                    message = payload.get("message", "").strip()
-                    if message:
-                        acc.user_messages.append(message)
-                        acc.timeline_messages.append(("user", message))
-                elif payload_type == "exec_command_end":
-                    acc.command_count += 1
-                    cwd = payload.get("cwd")
-                    if cwd:
-                        acc.cwds.append(cwd)
-                elif payload_type == "task_started":
-                    acc.task_started += 1
-                elif payload_type == "task_complete":
-                    acc.task_completed += 1
-            elif line_type == "response_item" and payload.get("type") == "message" and payload.get("role") == "assistant":
-                assistant_text = extract_message_text(payload)
-                if assistant_text:
-                    acc.assistant_messages.append(assistant_text)
-                    acc.timeline_messages.append(("assistant", assistant_text))
+        metrics["cache_misses"] += 1
+        metrics["parsed_files"] += 1
+        acc = parse_session_file(path)
+        if not acc:
+            cache_entries[cache_key] = {
+                "fingerprint": fingerprint,
+                "summary": None,
+                "skip_reason": "empty",
+            }
+            metrics["skipped_empty"] += 1
+            continue
 
         summary = summarize_session(acc, now)
         if not summary:
+            cache_entries[cache_key] = {
+                "fingerprint": fingerprint,
+                "summary": None,
+                "skip_reason": "empty",
+            }
+            metrics["skipped_empty"] += 1
             continue
+        if summary.get("session_id") in fixed_session_ids:
+            cache_entries[cache_key] = {
+                "fingerprint": fingerprint,
+                "summary": summary,
+                "parsed_acc": accumulator_to_cache(acc),
+            }
+            metrics["skipped_fixed"] += 1
+            continue
+        cache_entries[cache_key] = {
+            "fingerprint": fingerprint,
+            "summary": summary,
+            "parsed_acc": accumulator_to_cache(acc),
+        }
         if summary["user_message_count"] < min_user_messages:
+            cache_entries[cache_key]["skip_reason"] = "short"
+            metrics["skipped_short"] += 1
             continue
         sessions.append(summary)
         if len(sessions) >= max_sessions:
             break
 
+    metrics["selected_sessions"] = len(sessions)
+    metrics["elapsed_seconds_collect"] = round(time.perf_counter() - started, 3)
+    save_summary_cache(cache_json, cache)
+
     task_clusters = enrich_task_clusters(sessions)
     suggested_tasks = build_suggested_tasks(task_clusters)
-    bundle = {
+    metrics["elapsed_seconds_total"] = round(time.perf_counter() - started, 3)
+    metrics.update(process_memory_metrics_mb())
+    perf_warnings = build_perf_warnings(metrics)
+    metrics["perf_status"] = "warn" if perf_warnings else "ok"
+    if perf_warnings:
+        metrics["perf_warnings"] = perf_warnings
+    return {
         "generated_at": datetime.now(JST).isoformat(timespec="seconds"),
         "source": str(codex_home),
         "mode": "auto-first-with-optional-human-override",
         "sessions": sessions,
         "task_clusters": task_clusters,
         "suggested_tasks": suggested_tasks,
+        "quality_report": build_quality_report(sessions, task_clusters, suggested_tasks),
+        "build_metrics": metrics,
     }
-    apply_lightweight_prioritization_stats(bundle)
-    bundle["quality_report"] = build_quality_report(sessions, task_clusters, suggested_tasks)
-    return bundle
 
 
 def render_markdown(bundle: dict[str, Any]) -> str:
@@ -2702,7 +3361,15 @@ def render_markdown(bundle: dict[str, Any]) -> str:
     quality_report = bundle.get("quality_report", {})
     if quality_report and quality_report.get("status") != "ok":
         lines.extend(["", "## Quality warnings"])
-        for key in ("weak_candidate_titles", "weak_session_titles", "suspicious_merges"):
+        for key in (
+            "weak_candidate_titles",
+            "weak_session_titles",
+            "unknown_repo_sessions",
+            "suspicious_merges",
+            "project_entity_mismatches",
+            "stale_context_topic_risks",
+            "topic_title_mismatches",
+        ):
             rows = quality_report.get(key) or []
             if rows:
                 lines.append(f"### {key}")
@@ -2728,195 +3395,7 @@ def render_markdown(bundle: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
-
-
-def slugify(value: str) -> str:
-    return re.sub(r"[^a-z0-9]+", "-", value.lower()).strip("-")
-
-
-def provider_status(value: Any) -> str:
-    raw = str(value or "").strip().lower()
-    if raw in {"done", "completed", "complete", "success", "closed"}:
-        return "Done"
-    if raw in {"dropped", "cancelled", "canceled", "wontfix", "archived"}:
-        return "Dropped"
-    if raw in {"blocked", "error", "failed", "waiting-on-user"}:
-        return "Blocked"
-    if raw in {"pending", "waiting", "paused", "todo", "backlog"}:
-        return "Pending"
-    if raw in {"in progress", "in_progress", "active", "running", "working"}:
-        return "In Progress"
-    if value in STATUS_ORDER:
-        return str(value)
-    return "Need Review"
-
-
-def infer_provider(item: dict[str, Any], board_provider: str | None = None) -> str:
-    explicit = item.get("provider") or item.get("source_tool") or item.get("tool") or board_provider
-    if explicit:
-        return str(explicit)
-    keys = set(item.keys())
-    if {"uuid", "cwd"} & keys and ("messages" in keys or "transcript" in keys):
-        return "claude-code"
-    if {"workspace", "conversation"} & keys or "cursor_session_id" in keys:
-        return "cursor-agent"
-    if {"history", "model"} <= keys or "gemini_session_id" in keys:
-        return "gemini-cli"
-    return "generic-ai-session"
-
-
-def text_from_provider_content(content: Any) -> str:
-    if content is None:
-        return ""
-    if isinstance(content, str):
-        return content.strip()
-    if isinstance(content, list):
-        chunks: list[str] = []
-        for part in content:
-            if isinstance(part, str):
-                chunks.append(part)
-            elif isinstance(part, dict):
-                chunks.append(str(part.get("text") or part.get("content") or part.get("value") or ""))
-        return "\n".join(chunk for chunk in chunks if chunk).strip()
-    if isinstance(content, dict):
-        if "parts" in content:
-            return text_from_provider_content(content.get("parts"))
-        return str(content.get("text") or content.get("content") or content.get("message") or content.get("value") or "").strip()
-    return str(content).strip()
-
-
-def provider_messages(item: dict[str, Any]) -> list[tuple[str, str]]:
-    raw_messages = (
-        item.get("timeline_messages")
-        or item.get("messages")
-        or item.get("conversation")
-        or item.get("turns")
-        or item.get("history")
-        or item.get("events")
-        or []
-    )
-    messages: list[tuple[str, str]] = []
-    if not isinstance(raw_messages, list):
-        return messages
-    for raw in raw_messages:
-        if isinstance(raw, (list, tuple)) and len(raw) >= 2:
-            role = str(raw[0] or "user").lower()
-            text = text_from_provider_content(raw[1])
-        elif isinstance(raw, dict):
-            role = str(raw.get("role") or raw.get("speaker") or raw.get("type") or "user").lower()
-            text = text_from_provider_content(raw.get("content") or raw.get("message") or raw.get("text") or raw.get("parts"))
-        else:
-            role = "user"
-            text = text_from_provider_content(raw)
-        if not text:
-            continue
-        if role in {"assistant", "model", "agent", "ai"}:
-            role = "assistant"
-        elif role in {"system", "tool", "function"}:
-            role = "system"
-        else:
-            role = "user"
-        messages.append((role, text))
-    return messages
-
-
-def repo_from_provider_item(item: dict[str, Any]) -> str:
-    value = item.get("primary_repo") or item.get("repo") or item.get("repository") or item.get("project") or item.get("workspace_name")
-    if value:
-        return str(value)
-    path_value = item.get("workspace") or item.get("cwd") or item.get("session_cwd") or item.get("project_path")
-    if path_value:
-        normalized = str(path_value).replace("\\", "/").rstrip("/")
-        name = normalized.split("/")[-1]
-        return name or "unknown"
-    return "unknown"
-
-
-def normalize_provider_session(item: dict[str, Any], index: int, board_provider: str | None = None) -> dict[str, Any]:
-    if not isinstance(item, dict):
-        item = {"summary": str(item)}
-    provider = infer_provider(item, board_provider)
-    messages = provider_messages(item)
-    user_messages = [text for role, text in messages if role == "user"]
-    assistant_messages = [text for role, text in messages if role == "assistant"]
-    evidence = item.get("evidence_messages") if isinstance(item.get("evidence_messages"), list) else []
-    if not evidence:
-        evidence = [clip(text, 180) for text in (user_messages + assistant_messages)[:4] if text]
-    title = item.get("title") or item.get("title_ja") or item.get("title_en") or item.get("current_goal") or item.get("goal")
-    if not title:
-        title = clip(user_messages[-1] if user_messages else (item.get("summary") or item.get("prompt") or f"Imported {provider} session {index + 1}"), 80)
-    summary = item.get("summary") or item.get("summary_ja") or item.get("summary_en") or item.get("current_goal") or item.get("goal")
-    if not summary:
-        source = item.get("description") or item.get("prompt") or (" / ".join(evidence[:2]) if evidence else title)
-        summary = clip(str(source), 220)
-    start_at = item.get("start_at") or item.get("created_at") or item.get("createdAt") or item.get("timestamp") or item.get("startTime") or item.get("end_at") or datetime.now(JST).isoformat(timespec="seconds")
-    end_at = item.get("end_at") or item.get("updated_at") or item.get("updatedAt") or item.get("lastUpdated") or item.get("endTime") or start_at
-    session_id = item.get("session_id") or item.get("id") or item.get("uuid") or item.get("conversation_id") or item.get("cursor_session_id") or item.get("gemini_session_id") or item.get("name") or f"imported-{provider}-{index + 1}"
-    normalized = {
-        **item,
-        "session_id": str(session_id),
-        "title": str(title),
-        "summary": str(summary),
-        "suggested_status": provider_status(item.get("suggested_status") or item.get("currentStatus") or item.get("status") or item.get("state")),
-        "primary_repo": repo_from_provider_item(item),
-        "start_at": str(start_at),
-        "end_at": str(end_at),
-        "evidence_messages": evidence,
-        "first_user_message": item.get("first_user_message") or (user_messages[0] if user_messages else ""),
-        "last_assistant_message": item.get("last_assistant_message") or (assistant_messages[-1] if assistant_messages else ""),
-        "user_message_count": item.get("user_message_count") or len(user_messages),
-        "assistant_message_count": item.get("assistant_message_count") or len(assistant_messages),
-        "command_count": item.get("command_count") or len([role for role, _ in messages if role == "system"]),
-        "activity_score": item.get("activity_score") or max(1, len(messages) * 8 + len(evidence) * 5),
-        "provider": provider,
-        "provider_session_type": item.get("provider_session_type") or item.get("format") or f"{provider}-import",
-        "provider_source": item.get("provider_source") or item.get("source") or "provider-import",
-    }
-    cluster_key = normalized.get("task_cluster_key") or normalized.get("topic_key") or f"{normalized['primary_repo']}:{slugify(str(title)) or normalized['session_id']}"
-    normalized.setdefault("task_cluster_key", cluster_key)
-    normalized.setdefault("topic_key", cluster_key)
-    normalized.setdefault("lineage_key", cluster_key)
-    normalized.setdefault("task_cluster_label", normalized.get("topic_label") or str(title))
-    normalized.setdefault("topic_label", normalized.get("task_cluster_label"))
-    normalized.setdefault("lineage_label", normalized.get("task_cluster_label"))
-    return normalized
-
-
-def normalize_import_bundle(raw: Any) -> dict[str, Any]:
-    if isinstance(raw, list):
-        board: dict[str, Any] = {"sessions": raw}
-    elif isinstance(raw, dict):
-        board = dict(raw)
-    else:
-        raise SystemExit("input JSON must be an object or an array of sessions")
-    sessions = board.get("sessions") or board.get("conversations") or board.get("items") or []
-    if not isinstance(sessions, list):
-        raise SystemExit("input JSON must contain a sessions array")
-    board_provider = board.get("provider") or board.get("source_tool")
-    board["sessions"] = [normalize_provider_session(item, index, board_provider) for index, item in enumerate(sessions)]
-    board.setdefault("generated_at", datetime.now(JST).isoformat(timespec="seconds"))
-    board.setdefault("source", "provider-import")
-    board.setdefault("schema_version", "0.2.1")
-    providers = sorted({item.get("provider", "generic-ai-session") for item in board["sessions"]})
-    if providers:
-        board.setdefault("supported_providers", providers)
-    return board
-
-
-
-
-def read_app_version(root: Path) -> str:
-    package_path = root.parent / "package.json"
-    try:
-        package = json.loads(package_path.read_text(encoding="utf-8"))
-        version = str(package.get("version") or "").strip()
-        return version or "unknown"
-    except Exception:
-        return "unknown"
-
-
 def render_html(bundle: dict[str, Any], root: Path) -> str:
-    bundle["app_version"] = read_app_version(root)
     template = root.joinpath("templates", "review_template.html").read_text(encoding="utf-8")
     css = root.joinpath("assets", "styles.css").read_text(encoding="utf-8").rstrip()
     js = root.joinpath("assets", "app.js").read_text(encoding="utf-8").rstrip()
@@ -2927,24 +3406,21 @@ def render_html(bundle: dict[str, Any], root: Path) -> str:
 
 
 PRIVATE_PATTERNS = [
-    "C:\\Users\\",
+    "Tenormusica",
+    "dragonrondo",
+    "SundererD27468",
+    "C:\\\\Users\\\\",
     "C:/Users/",
-    "vercel-protection-bypass",
-    "BEGIN PRIVATE KEY",
-    "gmail_token",
-    "credentials.json",
+    "DBJ",
+    "ezlize.com",
+    "codex-session-review-surface.vercel.app",
+    "x-vercel-protection-bypass",
 ]
-
-
-def get_private_patterns() -> list[str]:
-    extra = os.environ.get("CODEX_REVIEW_PRIVATE_MARKERS", "")
-    extra_patterns = [item.strip() for item in extra.split(";") if item.strip()]
-    return PRIVATE_PATTERNS + extra_patterns
 
 
 def find_private_markers(bundle: dict[str, Any]) -> list[str]:
     text = json.dumps(bundle, ensure_ascii=False)
-    return sorted({pattern for pattern in get_private_patterns() if pattern in text})
+    return sorted({pattern for pattern in PRIVATE_PATTERNS if pattern in text})
 
 
 def parse_args() -> argparse.Namespace:
@@ -2958,6 +3434,14 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--days", type=int, default=7)
     parser.add_argument("--max-sessions", type=int, default=40)
     parser.add_argument("--min-user-messages", type=int, default=4)
+    parser.add_argument("--cache-json", type=Path, help="Optional session summary cache. Unchanged jsonl files are reused by mtime+size fingerprint.")
+    parser.add_argument(
+        "--fixed-overrides-json",
+        type=Path,
+        action="append",
+        default=[],
+        help="Optional overrides JSON. Sessions fixed as Done/Dropped are skipped during collection.",
+    )
     return parser.parse_args()
 
 
@@ -2965,26 +3449,16 @@ def main() -> None:
     args = parse_args()
     root = Path(__file__).resolve().parent
     if args.input_json:
-        bundle = normalize_import_bundle(json.loads(args.input_json.read_text(encoding="utf-8")))
-        sessions = bundle.get("sessions", [])
-        if sessions and not bundle.get("task_clusters"):
-            bundle["task_clusters"] = enrich_task_clusters(sessions)
-        if bundle.get("task_clusters") and not bundle.get("suggested_tasks"):
-            bundle["suggested_tasks"] = build_suggested_tasks(bundle["task_clusters"])
-        if sessions and bundle.get("task_clusters") and bundle.get("suggested_tasks"):
-            apply_lightweight_prioritization_stats(bundle)
-        if sessions and bundle.get("task_clusters") and bundle.get("suggested_tasks") and not bundle.get("quality_report"):
-            bundle["quality_report"] = build_quality_report(sessions, bundle["task_clusters"], bundle["suggested_tasks"])
+        bundle = json.loads(args.input_json.read_text(encoding="utf-8"))
     else:
         bundle = collect_sessions(
             codex_home=args.codex_home,
             days=args.days,
             max_sessions=args.max_sessions,
             min_user_messages=args.min_user_messages,
+            cache_json=args.cache_json,
+            fixed_overrides_json=args.fixed_overrides_json,
         )
-    apply_lightweight_prioritization_stats(bundle)
-    bundle["app_version"] = read_app_version(root)
-
     if args.distribution:
         bundle["surface_mode"] = "distribution"
         private_markers = find_private_markers(bundle)
@@ -3005,6 +3479,8 @@ def main() -> None:
     print(f"built {args.output}")
     print(f"sessions: {len(bundle.get('sessions', []))}")
     print(f"source: {bundle.get('source')}")
+    if bundle.get("build_metrics"):
+        print(f"build_metrics: {json.dumps(bundle.get('build_metrics'), ensure_ascii=False, sort_keys=True)}")
     if args.json_output:
         print(f"json: {args.json_output}")
     if args.markdown_output:
