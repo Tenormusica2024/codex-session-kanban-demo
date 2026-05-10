@@ -3,6 +3,7 @@ const LANGUAGE_KEY = "codex-session-review:language";
 const PANE_AUTOMATION_KEY = "codex-session-review:pane-automation:v1";
 const PANE_AUTOMATION_PANEL_KEY = "codex-session-review:pane-automation-panel-open";
 const PANE_AUTOMATION_BRIDGE_URL = "http://127.0.0.1:8766/pane-automation";
+const PANE_AUTOMATION_REFRESH_INTERVAL_MS = 15000;
 const PANE_AUTOMATION_DEFAULT = {
   upper_left: true,
   upper_right: false,
@@ -46,6 +47,7 @@ const I18N = {
     paneAutoModeLocal: "local cache",
     paneAutoModeBridge: "bridge同期",
     paneAutoModePending: "未反映",
+    paneAutoModeApplying: "反映中",
     paneAutoUpperLeft: "左上",
     paneAutoUpperRight: "右上",
     paneAutoLowerLeft: "左下",
@@ -57,6 +59,7 @@ const I18N = {
     paneAutoApply: "ローカル反映",
     paneAutoLoaded: "bridgeから読込",
     paneAutoApplied: "反映しました",
+    paneAutoApplyFailed: "反映失敗: bridge状態に戻しました",
     paneAutoBridgeOffline: "bridge未接続",
     guideAccessTitle: "URLの使い分け",
     guideAccessPersonal: "個人用: 実セッション入りのため、このpublic demoには含めない。",
@@ -313,6 +316,7 @@ const I18N = {
     paneAutoModeLocal: "local cache",
     paneAutoModeBridge: "bridge sync",
     paneAutoModePending: "pending",
+    paneAutoModeApplying: "applying",
     paneAutoUpperLeft: "upper left",
     paneAutoUpperRight: "upper right",
     paneAutoLowerLeft: "lower left",
@@ -324,6 +328,7 @@ const I18N = {
     paneAutoApply: "apply local",
     paneAutoLoaded: "loaded from bridge",
     paneAutoApplied: "applied",
+    paneAutoApplyFailed: "apply failed: restored bridge state",
     paneAutoBridgeOffline: "bridge offline",
     guideAccessTitle: "URL profiles",
     guideAccessPersonal: "Personal: contains real sessions and is intentionally not included in this public demo.",
@@ -580,6 +585,7 @@ const state = {
   paneAutomation: { ...PANE_AUTOMATION_DEFAULT },
   paneAutomationBridgeOnline: null,
   paneAutomationDirty: false,
+  paneAutomationApplying: false,
   paneAutomationPanelOpen: localStorage.getItem(PANE_AUTOMATION_PANEL_KEY) === "true",
   lang: localStorage.getItem(LANGUAGE_KEY) || "ja",
 };
@@ -1120,6 +1126,9 @@ function setPaneAutomationFeedback(messageKey, timeout = 1600) {
 }
 
 async function refreshPaneAutomationFromBridge({ quiet = false } = {}) {
+  if (state.paneAutomationApplying) {
+    return false;
+  }
   try {
     const response = await fetch(PANE_AUTOMATION_BRIDGE_URL, { method: "GET" });
     if (!response.ok) {
@@ -1148,6 +1157,58 @@ async function refreshPaneAutomationFromBridge({ quiet = false } = {}) {
   }
 }
 
+async function applyPaneAutomationToBridge(nextPanes, { quiet = false } = {}) {
+  const previous = { ...state.paneAutomation };
+  const normalized = normalizePaneAutomationPanes(nextPanes);
+  state.paneAutomation = normalized;
+  state.paneAutomationDirty = true;
+  state.paneAutomationApplying = true;
+  savePaneAutomation();
+  renderPaneAutomationControl();
+  try {
+    const response = await fetch(PANE_AUTOMATION_BRIDGE_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        schema_version: 1,
+        source: "codex-session-review-surface",
+        storage_key: PANE_AUTOMATION_KEY,
+        updated_at: new Date().toISOString(),
+        panes: normalized,
+      }),
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok || !payload?.ok) {
+      throw new Error(payload?.error || `HTTP ${response.status}`);
+    }
+    // The bridge/backend state is the source of truth.  Prefer the echoed
+    // bridge panes when present; otherwise keep the exact payload that was
+    // acknowledged.  This avoids showing a local-only state as active.
+    state.paneAutomation = normalizePaneAutomationPanes(payload.panes || normalized);
+    state.paneAutomationBridgeOnline = true;
+    state.paneAutomationDirty = false;
+    savePaneAutomation();
+    if (!quiet) {
+      setPaneAutomationFeedback("paneAutoApplied");
+    }
+    return true;
+  } catch {
+    // Revert immediately on failed apply.  A Pane Auto button must never make
+    // the UI look enabled/disabled when the local bridge did not accept it.
+    state.paneAutomation = previous;
+    state.paneAutomationBridgeOnline = false;
+    state.paneAutomationDirty = false;
+    savePaneAutomation();
+    if (!quiet) {
+      setPaneAutomationFeedback("paneAutoApplyFailed", 0);
+    }
+    return false;
+  } finally {
+    state.paneAutomationApplying = false;
+    renderPaneAutomationControl();
+  }
+}
+
 function renderPaneAutomationControl() {
   const panel = document.getElementById("pane-auto-control");
   const toggle = document.getElementById("pane-auto-toggle");
@@ -1173,14 +1234,17 @@ function renderPaneAutomationControl() {
   if (mode) {
     const bridgeOnline = state.paneAutomationBridgeOnline === true;
     const pending = state.paneAutomationDirty === true;
-    mode.textContent = pending
-      ? t("paneAutoModePending")
-      : bridgeOnline
-        ? t("paneAutoModeBridge")
-        : t("paneAutoModeLocal");
+    const applying = state.paneAutomationApplying === true;
+    mode.textContent = applying
+      ? t("paneAutoModeApplying")
+      : pending
+        ? t("paneAutoModePending")
+        : bridgeOnline
+          ? t("paneAutoModeBridge")
+          : t("paneAutoModeLocal");
     mode.classList.toggle("is-online", bridgeOnline && !pending);
     mode.classList.toggle("is-local", !bridgeOnline && !pending);
-    mode.classList.toggle("is-pending", pending);
+    mode.classList.toggle("is-pending", pending || applying);
   }
   document.querySelectorAll("[data-pane-toggle]").forEach((button) => {
     const pane = button.dataset.paneToggle;
@@ -1190,7 +1254,12 @@ function renderPaneAutomationControl() {
     button.classList.toggle("off", !enabled);
     button.title = enabled ? t("paneAutoEnabled", { label }) : t("paneAutoDisabled", { label });
     button.setAttribute("aria-label", button.title);
+    button.disabled = state.paneAutomationApplying === true;
   });
+  const applyButton = document.getElementById("pane-auto-apply");
+  if (applyButton) {
+    applyButton.disabled = state.paneAutomationApplying === true;
+  }
 }
 
 function initPaneAutomationControl() {
@@ -1201,40 +1270,35 @@ function initPaneAutomationControl() {
     renderPaneAutomationControl();
   });
   document.querySelectorAll("[data-pane-toggle]").forEach((button) => {
-    button.addEventListener("click", () => {
+    button.addEventListener("click", async () => {
+      if (state.paneAutomationApplying) {
+        return;
+      }
       const pane = button.dataset.paneToggle;
-      state.paneAutomation[pane] = !(state.paneAutomation[pane] !== false);
-      state.paneAutomationDirty = true;
-      savePaneAutomation();
-      renderPaneAutomationControl();
+      const next = { ...state.paneAutomation };
+      next[pane] = !(next[pane] !== false);
+      await applyPaneAutomationToBridge(next);
     });
   });
   document.getElementById("pane-auto-apply")?.addEventListener("click", async () => {
-    const payload = paneAutomationExportPayload();
-    try {
-      const response = await fetch(PANE_AUTOMATION_BRIDGE_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
-      state.paneAutomationBridgeOnline = true;
-      state.paneAutomationDirty = false;
-      renderPaneAutomationControl();
-      setPaneAutomationFeedback("paneAutoApplied");
-    } catch {
-      state.paneAutomationBridgeOnline = false;
-      renderPaneAutomationControl();
-      setPaneAutomationFeedback("paneAutoBridgeOffline", 0);
-    }
+    await applyPaneAutomationToBridge(paneAutomationExportPayload().panes);
   });
   document.getElementById("pane-auto-refresh")?.addEventListener("click", () => {
     refreshPaneAutomationFromBridge();
   });
   renderPaneAutomationControl();
   refreshPaneAutomationFromBridge({ quiet: true });
+  window.setInterval(() => {
+    refreshPaneAutomationFromBridge({ quiet: true });
+  }, PANE_AUTOMATION_REFRESH_INTERVAL_MS);
+  window.addEventListener("focus", () => {
+    refreshPaneAutomationFromBridge({ quiet: true });
+  });
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") {
+      refreshPaneAutomationFromBridge({ quiet: true });
+    }
+  });
 }
 
 function getMergedSessions() {

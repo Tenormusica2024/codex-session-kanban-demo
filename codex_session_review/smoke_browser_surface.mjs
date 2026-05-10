@@ -181,15 +181,14 @@ async function main() {
     return panel?.hidden === false && window.getComputedStyle(panel).display !== "none";
   });
   await page.locator('[data-pane-toggle="upper_right"]').click();
-  const pendingPaneAutomationMode = await page
+  await page.waitForTimeout(100);
+  const appliedPaneAutomationMode = await page
     .locator("#pane-auto-mode")
     .textContent()
     .then((text) => text?.trim() || "");
-  if (!/未反映|pending/.test(pendingPaneAutomationMode)) {
-    errors.push(`pane automation mode did not show pending local change: ${pendingPaneAutomationMode}`);
+  if (!/bridge/.test(appliedPaneAutomationMode)) {
+    errors.push(`pane automation mode did not return to bridge sync after one-click apply: ${appliedPaneAutomationMode}`);
   }
-  await page.click("#pane-auto-apply");
-  await page.waitForTimeout(100);
   await page.click("#pane-auto-refresh");
   await page.waitForFunction(() => document.querySelector('[data-pane-toggle="upper_right"]')?.getAttribute("aria-pressed") === "false");
   const paneAutomation = await page.evaluate(() => ({
@@ -207,7 +206,7 @@ async function main() {
   paneAutomation.postedCount = paneAutomationPosts.length;
   paneAutomation.lastPost = paneAutomationPosts.at(-1) || null;
   if (paneAutomation.postedCount !== 1 || paneAutomation.lastPost?.panes?.upper_right !== true) {
-    errors.push(`pane automation apply did not post toggled state: ${JSON.stringify(paneAutomation.lastPost)}`);
+    errors.push(`pane automation toggle did not post immediately: ${JSON.stringify(paneAutomation.lastPost)}`);
   }
   if (paneAutomation.ui.upper_right !== false || paneAutomation.ui.lower_right !== true) {
     errors.push(`pane automation refresh did not restore bridge state: ${JSON.stringify(paneAutomation.ui)}`);
@@ -326,6 +325,23 @@ async function main() {
   if (!guideOpen || !guideClosed) {
     errors.push(`guide shortcuts failed: open=${guideOpen}, closed=${guideClosed}`);
   }
+
+  await page.evaluate(() => {
+    const search = document.querySelector("#search-input");
+    if (search) {
+      search.value = "";
+      search.dispatchEvent(new Event("input", { bubbles: true }));
+      search.blur();
+    }
+    for (const id of ["repo-filter", "status-filter", "cluster-filter", "attention-filter"]) {
+      const select = document.querySelector(`#${id}`);
+      if (select) {
+        select.value = "all";
+        select.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+    }
+  });
+  await page.waitForFunction(() => document.querySelectorAll(".candidate-card").length > 0);
 
   const firstCandidate = page.locator(".candidate-card").first();
   const candidateCardsBeforeKeyboardAdd = await page.evaluate(() => document.querySelectorAll(".candidate-card").length);
