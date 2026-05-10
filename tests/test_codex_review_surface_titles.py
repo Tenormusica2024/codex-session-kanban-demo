@@ -1,5 +1,6 @@
 import sys
 import unittest
+from datetime import datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -14,6 +15,7 @@ from codex_session_review.build_review_surface import (
     derive_repo_name,
     derive_topic_key,
     SessionAccumulator,
+    summarize_session,
 )
 
 
@@ -275,6 +277,135 @@ class CodexReviewSurfaceTitleTest(unittest.TestCase):
             "fallback",
         )
         self.assertEqual(title, "Codexセッションkanbanの定期実行・同期改善")
+
+    def test_near_future_product_work_is_not_absorbed_by_idle_continue(self):
+        topic_key, topic_label, confidence, reason = derive_topic_key(
+            repo_name="near-future-demand-lens",
+            task_cluster_label="今すぐ対応可能な残タスク",
+            title="今すぐ対応可能な残タスク",
+            current_goal="今すぐ対応可能な残タスクを進める",
+            first_user_line="いますぐ対応可能な優先順位の高い残タスクを進めて",
+            latest_meaningful_change="duplicate-send guard 修正を Cloudflare private dashboard へ反映",
+            deep_context=(
+                "assistant: Daily Brief の duplicate-send guard 修正を Cloudflare private dashboard へ反映\n"
+                "assistant: npm run site:build / site:validate / ui:quality:hosted-gate / cf:deploy:verify pass\n"
+                "user: 残タスクを進めて\n"
+                "assistant: LLMWIKI事前値を public-safe sanitizer で抽象化"
+            ),
+        )
+
+        self.assertEqual(topic_key, "near-future-demand-lens:near-future-ops")
+        self.assertEqual(topic_label, "近未来予測レンズ運用改善")
+        self.assertGreaterEqual(confidence, 80)
+        self.assertIn("near-future demand lens operation", reason)
+
+        title = concrete_title_from_topic(
+            "near-future-demand-lens",
+            topic_label,
+            "duplicate-send guard 修正を Cloudflare private dashboard へ反映",
+            "fallback",
+        )
+        self.assertEqual(title, "近未来予測レンズのDaily Brief重複送信ガード反映")
+
+    def test_near_future_label_requires_repo_identity_not_user_wording_only(self):
+        topic_key, topic_label, confidence, reason = derive_topic_key(
+            repo_name="openclaw-secretary",
+            task_cluster_label="llm",
+            title="kanban分類確認",
+            current_goal="近未来予測レンズのパネルがない理由を調査",
+            first_user_line="近未来予測レンズのパネルがないのはなぜ？",
+            latest_meaningful_change="codex_session_review の topic 分類と quality gate を確認",
+            deep_context=(
+                "assistant: codex_session_review/build_review_surface.py を確認\n"
+                "assistant: unknown_repo_sessions / stale_context_topic_risks を確認"
+            ),
+        )
+
+        self.assertNotEqual(topic_key, "openclaw-secretary:near-future-ops")
+        self.assertNotEqual(topic_label, "近未来予測レンズ運用改善")
+
+    def test_repeated_residual_task_prompts_keep_assistant_work_anchor(self):
+        acc = SessionAccumulator(
+            session_id="residual-loop",
+            source_file="fixture.jsonl",
+            start_at="2026-05-09T09:00:00+09:00",
+            end_at="2026-05-09T10:00:00+09:00",
+            session_cwd="C:\\Users\\Tenormusica\\near-future-demand-lens",
+            cwds=["C:\\Users\\Tenormusica\\near-future-demand-lens"],
+        )
+        acc.user_messages.append("残タスクは？")
+        work_message = (
+            "対応済み。\n"
+            "## 進めたタスク\n"
+            "### Daily Brief duplicate-send guard を Cloudflare private dashboard へ反映\n"
+            "## 検証結果\n"
+            "- npm run site:build pass\n"
+            "- npm run cf:deploy:verify pass"
+        )
+        acc.assistant_messages.append(work_message)
+        acc.timeline_messages.append(("user", "残タスクは？"))
+        acc.timeline_messages.append(("assistant", work_message))
+        for _ in range(10):
+            user = "残タスクを進めて"
+            assistant = (
+                "現時点の残タスクはこの順です。\n"
+                "- Cloudflare Access 再ログイン後の hosted 認証済み目視\n"
+                "## 1. TODO/運用ドキュメントを最新状態へ更新\n"
+                "## 2. README / docs の細部リンク確認"
+            )
+            acc.user_messages.append(user)
+            acc.assistant_messages.append(assistant)
+            acc.timeline_messages.append(("user", user))
+            acc.timeline_messages.append(("assistant", assistant))
+
+        summary = summarize_session(acc, datetime.fromisoformat("2026-05-09T10:05:00+09:00"))
+
+        self.assertIsNotNone(summary)
+        assert summary is not None
+        self.assertEqual(summary["topic_key"], "near-future-demand-lens:near-future-ops")
+        self.assertEqual(summary["topic_label"], "近未来予測レンズ運用改善")
+        self.assertIn("Daily Brief", summary["current_goal"])
+        self.assertNotIn("残タスク", summary["current_goal"])
+
+    def test_residual_prompt_anchor_falls_back_to_body_when_heading_is_generic(self):
+        acc = SessionAccumulator(
+            session_id="generic-heading-loop",
+            source_file="fixture.jsonl",
+            start_at="2026-05-09T09:00:00+09:00",
+            end_at="2026-05-09T10:00:00+09:00",
+            session_cwd="C:\\Users\\Tenormusica\\near-future-demand-lens",
+            cwds=["C:\\Users\\Tenormusica\\near-future-demand-lens"],
+        )
+        acc.user_messages.append("残タスクは？")
+        work_message = (
+            "対応済み。\n"
+            "### 修正しました\n"
+            "Cloudflare Access Service Token policy を追加しました。\n"
+            "認証付きUI品質チェック pass。"
+        )
+        acc.assistant_messages.append(work_message)
+        acc.timeline_messages.append(("user", "残タスクは？"))
+        acc.timeline_messages.append(("assistant", work_message))
+        for _ in range(10):
+            user = "残タスクを進めて"
+            assistant = (
+                "現時点の残タスクはこの順です。\n"
+                "- Cloudflare Access 再ログイン後の hosted 認証済み目視\n"
+                "- README / docs の細部リンク確認"
+            )
+            acc.user_messages.append(user)
+            acc.assistant_messages.append(assistant)
+            acc.timeline_messages.append(("user", user))
+            acc.timeline_messages.append(("assistant", assistant))
+
+        summary = summarize_session(acc, datetime.fromisoformat("2026-05-09T10:05:00+09:00"))
+
+        self.assertIsNotNone(summary)
+        assert summary is not None
+        self.assertEqual(summary["topic_key"], "near-future-demand-lens:near-future-ops")
+        self.assertEqual(summary["topic_label"], "近未来予測レンズ運用改善")
+        self.assertIn("Cloudflare Access", summary["current_goal"])
+        self.assertNotIn("残タスク", summary["current_goal"])
 
 
 if __name__ == "__main__":

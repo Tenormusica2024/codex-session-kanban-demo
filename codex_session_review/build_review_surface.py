@@ -91,6 +91,7 @@ REPO_SCOPED_TOPIC_KEYS = {
     "deploy",
     "grok4cic-clipboard",
     "kanban-automation",
+    "near-future-ops",
     LLMWIKI_REPORT_VISIBILITY_TOPIC_SUFFIX,
     "portfolio-page-improvement",
     "privatize",
@@ -103,6 +104,12 @@ REPO_SCOPED_TOPIC_KEYS = {
     "ui-fix",
 }
 CONTINUE_TOKENS = ("go", "進めて", "すすめて", "続けて", "お願い", "それで進めて")
+RESIDUAL_TASK_PROMPT_PATTERNS = (
+    r"^(今すぐ|いますぐ)?対応可能な.*残タスク.*",
+    r"^残タスク(は|を|$|[？?])",
+    r"^.*優先順位.*残タスク.*進め.*",
+    r"^.*残タスク.*進め.*",
+)
 BLOCK_TOKENS = ("blocked", "credential", "provisioning required", "pending reason", "保留", "止まって", "ボトルネック")
 DONE_TOKENS = ("完了", "done", "投稿済み", "通った", "成功")
 CLUSTER_STOPWORDS = {
@@ -642,6 +649,16 @@ def normalize_user_message(text: str) -> str:
     return text
 
 
+def is_residual_task_prompt(text: str) -> bool:
+    cleaned = normalize_user_message(text or "")
+    lowered = cleaned.lower().strip()
+    if not lowered:
+        return False
+    if lowered in CONTINUE_TOKENS:
+        return True
+    return any(re.search(pattern, cleaned, flags=re.IGNORECASE) for pattern in RESIDUAL_TASK_PROMPT_PATTERNS)
+
+
 def normalize_assistant_message(text: str) -> str:
     text = strip_issue_wrapper(text).strip()
     if not text:
@@ -709,6 +726,99 @@ def pick_recent_excerpt(messages: list[str], *, assistant: bool = False) -> str:
     return ""
 
 
+def normalize_work_anchor_line(text: str) -> str:
+    cleaned = strip_issue_wrapper(text or "").strip()
+    cleaned = re.sub(r"^#{1,6}\s*", "", cleaned)
+    cleaned = cleaned.strip(" -:：*`")
+    cleaned = re.sub(r"\*{1,3}([^*]+)\*{1,3}", r"\1", cleaned)
+    cleaned = " ".join(cleaned.split())
+    return cleaned
+
+
+def is_generic_work_anchor_line(text: str) -> bool:
+    lowered = text.lower().strip()
+    if len(text) < 8:
+        return True
+    if re.match(r"^\d+[.)]\s*", text):
+        return True
+    generic_tokens = (
+        "進めたタスク",
+        "実施内容",
+        "検証結果",
+        "コミット",
+        "次に",
+        "次の",
+        "残タスク",
+        "ログ",
+        "まとめ",
+        "結論",
+        "対応済み",
+        "完了しました",
+    )
+    return any(token in lowered for token in generic_tokens)
+
+
+def extract_latest_work_anchor_from_assistant(messages: list[str]) -> str:
+    """Return the latest concrete work heading from assistant output.
+
+    This intentionally ignores repeated user prompts like "残タスクは？" and uses
+    assistant-reported work sections as the durable task anchor.
+    """
+    for raw in reversed(messages):
+        if (
+            "現時点の残タスク" in raw
+            or "次に即時対応可能な残タスク" in raw
+            or "今すぐ対応可能な残タスク" in raw
+        ):
+            continue
+        lines = [line.rstrip() for line in (raw or "").splitlines()]
+        for line in lines:
+            stripped = line.strip()
+            if not stripped.startswith("#"):
+                continue
+            anchor = normalize_work_anchor_line(stripped)
+            if not is_generic_work_anchor_line(anchor):
+                return clip(anchor, 140)
+        for line in lines:
+            anchor = normalize_work_anchor_line(line)
+            if not anchor:
+                continue
+            if re.match(r"^(対応済み|完了しました|実施内容|進めたタスク)", anchor):
+                continue
+            if any(
+                token in anchor.lower()
+                for token in (
+                    "cloudflare",
+                    "daily brief",
+                    "public-safe",
+                    "duplicate-send",
+                    "service token",
+                    "access policy",
+                    "playwright qa",
+                    "認証付きui",
+                    "ui品質",
+                    "todo/運用ドキュメント",
+                    "quality gate",
+                    "supabase",
+                    "llmwiki",
+                )
+            ):
+                if not is_generic_work_anchor_line(anchor):
+                    return clip(anchor, 140)
+    return ""
+
+
+def is_residual_task_response(text: str) -> bool:
+    cleaned = normalize_assistant_message(text or "")
+    lowered = cleaned.lower()
+    return (
+        "現時点の残タスク" in cleaned
+        or "次に即時対応可能な残タスク" in cleaned
+        or "今すぐ対応可能な残タスク" in cleaned
+        or lowered.startswith("sc-task-recommend を使います")
+    )
+
+
 def collect_latest_phase_context(timeline_messages: list[tuple[str, str]], max_items: int = 16) -> str:
     """Return the latest working phase, not the whole session."""
     rows: list[str] = []
@@ -717,7 +827,9 @@ def collect_latest_phase_context(timeline_messages: list[tuple[str, str]], max_i
         cleaned = normalizer(raw)
         if not cleaned:
             continue
-        if role == "user" and cleaned.lower() in CONTINUE_TOKENS:
+        if role == "user" and is_residual_task_prompt(cleaned):
+            continue
+        if role == "assistant" and is_residual_task_response(cleaned):
             continue
         rows.append(f"{role}: {clip(cleaned, 320)}")
         if len(rows) >= max_items:
@@ -884,7 +996,21 @@ def concrete_title_from_topic(repo_name: str, topic_label: str, latest_change: s
     if topic_label == "UI表示修正":
         return f"{repo_name}の表示文言・レイアウト修正"
     if topic_label == "需要レンズ指数設計":
+        if repo_name == "near-future-demand-lens":
+            return "近未来予測レンズの需要・マネタイズ指数設計"
         return f"{repo_name}の需要・マネタイズ指数設計"
+    if topic_label == "ランキング鮮度・sparkline修正" and repo_name == "near-future-demand-lens":
+        return "近未来予測レンズのランキング鮮度・sparkline修正"
+    if topic_label == "近未来予測レンズ運用改善":
+        if "service token" in latest or "access policy" in latest or "cloudflare access" in latest or "認証付きui" in latest_source:
+            return "近未来予測レンズのCloudflare Access/QA整備"
+        if "duplicate-send" in latest or "重複送信" in latest_source:
+            return "近未来予測レンズのDaily Brief重複送信ガード反映"
+        if "public-safe" in latest or "sanitizer" in latest:
+            return "近未来予測レンズのpublic-safe表示反映"
+        if "daily brief" in latest or "cloudflare" in latest or "private dashboard" in latest:
+            return "近未来予測レンズのCloudflare dashboard反映"
+        return "近未来予測レンズの運用改善"
     if topic_label == "タスク別送信者名":
         return "タスク別送信者名の整理"
     if topic_label == "B2Bポートフォリオページ改善":
@@ -947,6 +1073,7 @@ RECOMPOSABLE_TOPIC_LABELS = {
     "メール運用",
     "ランキング鮮度・sparkline修正",
     "需要レンズ指数設計",
+    "近未来予測レンズ運用改善",
     "レビュー修正点DB/hook連携",
     "B2Bポートフォリオページ改善",
     "LLMWIKI品質レビュー導線改善",
@@ -1480,6 +1607,7 @@ def cluster_task_body_ja(cluster_label: str | None, current_goal: str) -> str:
         "LinkedInオファー返信方針": "LinkedIn経由の求人・副業オファー返信方針を整理するタスク。送信者、対象ポジション、温度感、返信文面を確認する。",
         "レビュー修正点DB/hook連携": "レビューで出た実装修正点をDBに蓄積し、次回hookで呼び出すワークフローを整備するタスク。既存実装、未接続箇所、運用手順を確認する。",
         "ランキング鮮度・sparkline修正": "ランキング画面の鮮度表示とsparkline表示を修正するタスク。当日snapshot生成、Vercel反映、折れ線の見やすさを確認する。",
+        "近未来予測レンズ運用改善": "近未来予測レンズのDaily Brief、Cloudflare private dashboard、public-safe表示、重複送信ガードを確認するタスク。直近反映と残検証を整理する。",
     }
     if cluster_label in mapping:
         return mapping[cluster_label]
@@ -1554,6 +1682,8 @@ def latest_task_context_note_ja(cluster_label: str | None, latest_change: str) -
         return "ページ内容、図解、文言、公開反映を整理する。"
     if cluster_label == "需要レンズ指数設計" and any(token in text for token in ("指数", "マネタイズ", "需要", "供給")):
         return "指標定義、根拠ソース、今後の調整方針を整理する。"
+    if cluster_label == "近未来予測レンズ運用改善" and any(token in lowered for token in ("daily brief", "cloudflare", "private dashboard", "public-safe", "duplicate-send")):
+        return "Daily Brief、Cloudflare dashboard、public-safe表示、重複送信ガードの反映状態を整理する。"
     if cluster_label == "kanban自動化" and any(token in lowered for token in ("kanban", "candidate", "cluster", "session")):
         return "候補抽出、統合、状態判定の再発防止ルールを整理する。"
     return ""
@@ -1568,6 +1698,7 @@ def revise_task_body_ja(cluster_label: str | None, current_goal: str, base_body:
         "ランキング鮮度・sparkline修正": "ランキング画面の鮮度・グラフ表示・本番反映を確認する。",
         "クリエイティブ素材": "生成サービス、成果物品質、利用条件、再現性を確認する。",
         "grok4cic運用": "CiC経路、クリップボード投入、再現性を確認する。",
+        "近未来予測レンズ運用改善": "近未来予測レンズのDaily Brief、Cloudflare private dashboard、public-safe表示、重複送信ガードを確認する。",
         "タスク別送信者名": "送信者名やaliasの扱いを整理し、メール運用の見え方を決める。",
         "ナレッジ取り込み": "LLMWIKIの過去分・週次分を見て、取り込む候補と保留を分ける。",
         "kanban自動化": "Codexセッションをkanban候補へ整理し、統合・状態判定・human lockの境界を整える。",
@@ -1721,10 +1852,33 @@ def derive_topic_key(
             "bar chart",
             "snapshot",
             "鮮度",
-            "vercel",
-            "dashboard",
-            "ダッシュボード",
-            "実画面確認",
+        )
+    )
+    near_future_index_signal = (repo_name == "near-future-demand-lens" or "near-future-demand-lens" in topic_text) and any(
+        token in topic_text
+        for token in ("指数", "需給", "需要", "供給圧", "マネタイズ", "ソロプレナー", "persona_monetization", "buyer_demand", "supply_pressure", "raw evidence")
+    )
+    near_future_operation_signal = repo_name == "near-future-demand-lens" and any(
+        token in current_phase_activity
+        for token in (
+            "daily brief",
+            "cloudflare",
+            "private dashboard",
+            "public-safe",
+            "sanitizer",
+            "duplicate-send",
+            "重複送信",
+            "hosted-gate",
+            "cloudflare access",
+            "access policy",
+            "service token",
+            "playwright qa",
+            "認証付きui",
+            "ui品質",
+            "todo/運用ドキュメント",
+            "site:build",
+            "site:validate",
+            "cf:deploy",
         )
     )
     idle_continue_signal = any(
@@ -1864,6 +2018,12 @@ def derive_topic_key(
     )
     if portfolio_page_phase:
         return f"{repo_name}:portfolio-page-improvement", "B2Bポートフォリオページ改善", 88, "latest phase / portfolio page implementation"
+    if near_future_index_signal:
+        return f"{repo_name}:demand-index", "需要レンズ指数設計", 88, "near-future demand / monetization index"
+    if near_future_operation_signal:
+        return f"{repo_name}:near-future-ops", "近未来予測レンズ運用改善", 88, "latest phase / near-future demand lens operation"
+    if near_future_dashboard_signal:
+        return f"{repo_name}:dashboard-freshness", "ランキング鮮度・sparkline修正", 88, "ranking freshness / sparkline display"
     if idle_continue_signal:
         return f"{repo_name}:idle-continue-agent", "idle-continue代理ツール", 90, "latest phase / idle-continue and clipboard automation"
     b2b_sales_signal = any(
@@ -1885,14 +2045,6 @@ def derive_topic_key(
     )
     if b2b_sales_signal:
         return f"{repo_name}:sales-channel", "B2B販路拡大", 86, "B2B sales channel / Google Business Profile"
-    near_future_index_signal = (repo_name == "near-future-demand-lens" or "near-future-demand-lens" in topic_text) and any(
-        token in topic_text
-        for token in ("指数", "需給", "需要", "供給圧", "マネタイズ", "ソロプレナー", "persona_monetization", "buyer_demand", "supply_pressure", "raw evidence")
-    )
-    if near_future_index_signal:
-        return f"{repo_name}:demand-index", "需要レンズ指数設計", 86, "near-future demand / monetization index"
-    if near_future_dashboard_signal:
-        return f"{repo_name}:dashboard-freshness", "ランキング鮮度・sparkline修正", 86, "ranking freshness / sparkline display"
     bookmark_recommendation_latest = any(
         token in current_phase_activity
         for token in (
@@ -2321,6 +2473,13 @@ def summarize_session(acc: SessionAccumulator, now: datetime) -> dict[str, Any] 
     keywords = derive_message_keywords(task_cluster_label, repo_name, first_user_line)
     recent_user = pick_recent_excerpt(meaningful_users[-8:], assistant=False)
     recent_assistant = pick_recent_excerpt(acc.assistant_messages[-8:], assistant=True)
+    work_anchor = extract_latest_work_anchor_from_assistant(acc.assistant_messages)
+    residual_prompt_context = is_residual_task_prompt(first_user_line) or is_residual_task_prompt(recent_user)
+    if residual_prompt_context and work_anchor:
+        task_cluster_key, task_cluster_label = derive_task_cluster(repo_name, work_anchor, work_anchor)
+        display_title = normalize_title_for_display(work_anchor, repo_name, task_cluster_label)
+        keywords = derive_message_keywords(task_cluster_label, repo_name, work_anchor)
+        recent_user = work_anchor
     relevant_user, relevant_user_score = pick_relevant_excerpt(meaningful_users[-10:], keywords, assistant=False)
     relevant_assistant, relevant_assistant_score = pick_relevant_excerpt(acc.assistant_messages[-10:], keywords, assistant=True)
     assistant_unrelated = False
@@ -2334,19 +2493,25 @@ def summarize_session(acc: SessionAccumulator, now: datetime) -> dict[str, Any] 
     pendingish_signal = blocker is not None or ("保留" in assistant_for_summary) or ("pending" in assistant_for_summary.lower() if assistant_for_summary else False)
     task_shift_signal = assistant_unrelated
     latest_meaningful_change = normalize_latest_change_for_summary(assistant_for_summary or relevant_user)
+    if residual_prompt_context and work_anchor and is_residual_task_response(assistant_for_summary or last_assistant):
+        latest_meaningful_change = work_anchor
     topic_signal_context = collect_topic_signal_context(meaningful_users, acc.assistant_messages)
     latest_phase_context = collect_latest_phase_context(acc.timeline_messages)
+    recent_assistant_context = "" if residual_prompt_context and is_residual_task_response(recent_assistant) else recent_assistant
+    assistant_summary_context = "" if residual_prompt_context and is_residual_task_response(assistant_for_summary) else assistant_for_summary
+    last_assistant_context = "" if residual_prompt_context and is_residual_task_response(last_assistant) else last_assistant
     current_topic_context = "\n".join(
         dict.fromkeys(
             part
             for part in (
                 latest_phase_context,
+                work_anchor,
                 recent_user,
-                recent_assistant,
+                recent_assistant_context,
                 first_user_line,
                 relevant_user,
-                assistant_for_summary,
-                last_assistant,
+                assistant_summary_context,
+                last_assistant_context,
             )
             if part
         )
@@ -2680,6 +2845,8 @@ def derive_task_title_ja(cluster: dict[str, Any]) -> str:
         return concrete_title_from_topic(repo_name, label, cluster.get("latest_meaningful_change") or "", "Supabase RLS/security修正", "\n".join(str(item) for item in cluster.get("representative_titles", [])))
     if label == "ランキング鮮度・sparkline修正":
         return concrete_title_from_topic(repo_name, label, cluster.get("latest_meaningful_change") or "", "ランキング鮮度・sparkline修正", "\n".join(str(item) for item in cluster.get("representative_titles", [])))
+    if label == "近未来予測レンズ運用改善":
+        return concrete_title_from_topic(repo_name, label, cluster.get("latest_meaningful_change") or "", "近未来予測レンズの運用改善", "\n".join(str(item) for item in cluster.get("representative_titles", [])))
     if label == "デプロイ" and repo_name != "unknown":
         return concrete_title_from_topic(repo_name, label, cluster.get("latest_meaningful_change") or "", f"{repo_name}の公開反映", "\n".join(str(item) for item in cluster.get("representative_titles", [])))
     if label == "UI表示修正" and repo_name != "unknown":
@@ -2810,6 +2977,7 @@ def derive_task_next_action_ja(cluster: dict[str, Any]) -> str:
         "Codex review surface運用改善": "remote overrides同期・固定済みskip・性能指標が次回定期実行でも維持されるか確認する",
         "Codexセッションkanban運用改善": "remote overrides同期・固定済みskip・性能指標が次回定期実行でも維持されるか確認する",
         "Codexセッションkanbanタイトル分類改善": "誤分類サンプルをfixture化し、title/topic/quality gateが次回定期実行でも維持されるか確認する",
+        "近未来予測レンズ運用改善": "Daily Brief / Cloudflare dashboard / public-safe表示 / duplicate-send guard の反映済み範囲と残検証を確認する",
         "Cloudflare公開設定": "Wrangler認証・Pages project・Access設定のどこで止まっているかを確認する",
         "メール運用": "メール生成・重複抑止・送信履歴のどこが残件かを確認し、運用ルールに固定する",
         LLMWIKI_REPORT_VISIBILITY_LABEL: "失敗/暫定fallback/score/成功ログの表示が実態と一致するか確認する",
@@ -3070,6 +3238,18 @@ def build_quality_report(sessions: list[dict[str, Any]], task_clusters: list[dic
                 "topic_label": topic_label,
                 "latest_meaningful_change": item.get("latest_meaningful_change"),
                 "issue": "latest repo-specific demand-index work was absorbed by stale career context",
+            })
+        if repo == "near-future-demand-lens" and topic_label == "idle-continue代理ツール" and any(
+            token in phase_text
+            for token in ("daily brief", "cloudflare", "private dashboard", "public-safe", "sanitizer", "duplicate-send", "重複送信", "hosted-gate", "site:build", "site:validate", "cf:deploy")
+        ):
+            stale_context_topic_risks.append({
+                "session_id": item.get("session_id"),
+                "title": item.get("title"),
+                "primary_repo": repo,
+                "topic_label": topic_label,
+                "latest_meaningful_change": item.get("latest_meaningful_change"),
+                "issue": "near-future-demand-lens product/dashboard work was absorbed by residual idle-continue or remaining-task wording",
             })
         if repo == "portfolio" and topic_label == "クリエイティブ素材" and any(
             token in phase_text for token in ("bing", "google", "business", "ビジネスプロフィール", "販路", "オーナー確認")
