@@ -48,7 +48,13 @@
       "topic_key": "codex-kanban:external-sink-rescope",
       "topic_label": "External Kanban sink rescope",
       "lineage_key": "codex-kanban:external-sink-rescope",
-      "lineage_label": "External Kanban sink rescope"
+      "lineage_label": "External Kanban sink rescope",
+      "related_session_count": 1,
+      "related_session_ids": [
+        "sample-plane-poc"
+      ],
+      "cluster_dominant_status": "Blocked",
+      "task_cluster_family": "External Kanban sink rescope"
     },
     {
       "session_id": "sample-html-surface",
@@ -95,7 +101,14 @@
       "topic_key": "codex-kanban:static-review-surface",
       "topic_label": "Static review surface",
       "lineage_key": "codex-kanban:static-review-surface",
-      "lineage_label": "Static review surface"
+      "lineage_label": "Static review surface",
+      "related_session_count": 2,
+      "related_session_ids": [
+        "sample-html-surface",
+        "sample-static-surface-predecessor"
+      ],
+      "cluster_dominant_status": "In Progress",
+      "task_cluster_family": "Static review surface"
     },
     {
       "session_id": "sample-llmwiki-compare",
@@ -142,7 +155,13 @@
       "topic_key": "knowledge-ops:llmwiki-delta-review",
       "topic_label": "LLMWIKI delta review",
       "lineage_key": "knowledge-ops:llmwiki-delta-review",
-      "lineage_label": "LLMWIKI delta review"
+      "lineage_label": "LLMWIKI delta review",
+      "related_session_count": 1,
+      "related_session_ids": [
+        "sample-llmwiki-compare"
+      ],
+      "cluster_dominant_status": "Done",
+      "task_cluster_family": "LLMWIKI delta review"
     },
     {
       "session_id": "sample-static-surface-predecessor",
@@ -191,7 +210,14 @@
       "topic_label": "Static review surface",
       "lineage_key": "codex-kanban:static-review-surface",
       "lineage_label": "Static review surface",
-      "task_shift_signal": true
+      "task_shift_signal": true,
+      "related_session_count": 2,
+      "related_session_ids": [
+        "sample-html-surface",
+        "sample-static-surface-predecessor"
+      ],
+      "cluster_dominant_status": "In Progress",
+      "task_cluster_family": "Static review surface"
     },
     {
       "session_id": "sample-topic-shift-image-to-lp",
@@ -240,7 +266,13 @@
       "topic_label": "Teaser LP creative direction",
       "lineage_key": "project-dof:teaser-lp-creative",
       "lineage_label": "Teaser LP creative direction",
-      "task_shift_signal": true
+      "task_shift_signal": true,
+      "related_session_count": 1,
+      "related_session_ids": [
+        "sample-topic-shift-image-to-lp"
+      ],
+      "cluster_dominant_status": "Need Review",
+      "task_cluster_family": "Teaser LP creative direction"
     },
     {
       "session_id": "sample-needs-input-deploy",
@@ -289,7 +321,13 @@
       "topic_label": "Public demo deployment",
       "lineage_key": "codex-kanban:public-demo-deploy",
       "lineage_label": "Public demo deployment",
-      "pendingish_signal": true
+      "pendingish_signal": true,
+      "related_session_count": 1,
+      "related_session_ids": [
+        "sample-needs-input-deploy"
+      ],
+      "cluster_dominant_status": "Blocked",
+      "task_cluster_family": "Public demo deployment"
     },
     {
       "session_id": "sample-project-dof-repo-review",
@@ -337,7 +375,13 @@
       "topic_key": "project-dof:repo-readiness-review",
       "topic_label": "Project DOF repo readiness review",
       "lineage_key": "project-dof:repo-readiness-review",
-      "lineage_label": "Project DOF repo readiness review"
+      "lineage_label": "Project DOF repo readiness review",
+      "related_session_count": 1,
+      "related_session_ids": [
+        "sample-project-dof-repo-review"
+      ],
+      "cluster_dominant_status": "Need Review",
+      "task_cluster_family": "Project DOF repo readiness review"
     },
     {
       "session_id": "sample-claude-provider-import",
@@ -386,7 +430,13 @@
       "topic_label": "Claude Code provider import",
       "lineage_key": "provider-import:claude-code-schema",
       "lineage_label": "Claude Code provider import",
-      "pendingish_signal": true
+      "pendingish_signal": true,
+      "related_session_count": 1,
+      "related_session_ids": [
+        "sample-claude-provider-import"
+      ],
+      "cluster_dominant_status": "Pending",
+      "task_cluster_family": "Claude Code provider import"
     },
     {
       "session_id": "sample-provider-import-preflight",
@@ -439,7 +489,14 @@
       "lineage_label": "Provider import normalization",
       "doneish_signal": true,
       "suggested_reason": "後続実装に統合済みの前提確認。代表カード側でreviewすればよい。",
-      "suggested_reason_en": "A preflight check represented by the later implementation card; review the representative instead."
+      "suggested_reason_en": "A preflight check represented by the later implementation card; review the representative instead.",
+      "related_session_count": 2,
+      "related_session_ids": [
+        "sample-provider-import-preflight",
+        "sample-provider-import-normalization"
+      ],
+      "cluster_dominant_status": "Need Review",
+      "task_cluster_family": "Provider import normalization"
     },
     {
       "session_id": "sample-provider-import-normalization",
@@ -500,7 +557,9 @@
       "lineage_note": "Preflight provider-format checks are represented by this implementation card.",
       "task_shift_signal": false,
       "doneish_signal": false,
-      "pendingish_signal": false
+      "pendingish_signal": false,
+      "cluster_dominant_status": "Need Review",
+      "task_cluster_family": "Provider import normalization"
     },
     {
       "session_id": "sample-topic-conflict-login-to-mobile",
@@ -555,7 +614,13 @@
       "lineage_label": "Mobile review controls",
       "task_shift_signal": true,
       "doneish_signal": false,
-      "pendingish_signal": false
+      "pendingish_signal": false,
+      "related_session_count": 1,
+      "related_session_ids": [
+        "sample-topic-conflict-login-to-mobile"
+      ],
+      "cluster_dominant_status": "Need Review",
+      "task_cluster_family": "Mobile review controls"
     },
     {
       "session_id": "sample-abandoned-hosting-path",
@@ -603,7 +668,13 @@
       "topic_key": "distribution:abandoned-hosting-path",
       "topic_label": "Abandoned hosting path",
       "lineage_key": "distribution:abandoned-hosting-path",
-      "lineage_label": "Abandoned hosting path"
+      "lineage_label": "Abandoned hosting path",
+      "related_session_count": 1,
+      "related_session_ids": [
+        "sample-abandoned-hosting-path"
+      ],
+      "cluster_dominant_status": "Dropped",
+      "task_cluster_family": "Abandoned hosting path"
     },
     {
       "session_id": "sample-latest-phase-bookmark-dedupe",
@@ -653,7 +724,13 @@
       "topic_key": "global:bookmark-recommendation-dedupe",
       "topic_label": "Bookmark recommendation dedupe",
       "lineage_key": "global:bookmark-recommendation-dedupe",
-      "lineage_label": "Bookmark recommendation dedupe"
+      "lineage_label": "Bookmark recommendation dedupe",
+      "related_session_count": 1,
+      "related_session_ids": [
+        "sample-latest-phase-bookmark-dedupe"
+      ],
+      "cluster_dominant_status": "Need Review",
+      "task_cluster_family": "Bookmark recommendation dedupe"
     }
   ],
   "schema_version": "0.2.1",
@@ -664,5 +741,624 @@
     "cursor-agent",
     "generic-ai-session"
   ],
-  "provider_schema_note": "Provider fields are display/schema hints only; this demo does not run agents."
+  "provider_schema_note": "Provider fields are display/schema hints only; this demo does not run agents.",
+  "task_clusters": [
+    {
+      "cluster_key": "provider-import:normalization",
+      "cluster_label": "Provider import normalization",
+      "base_cluster_labels": [
+        "Provider import normalization"
+      ],
+      "topic_reasons": [],
+      "merge_confidence": 0,
+      "primary_repos": [
+        "codex-session-kanban-demo"
+      ],
+      "session_count": 2,
+      "status_counts": {
+        "Need Review": 2
+      },
+      "dominant_status": "Need Review",
+      "max_confidence": 86,
+      "auto_ready_count": 0,
+      "representative_titles": [
+        "Provider import の前提確認を代表タスクへ統合",
+        "Provider import normalization を実装して検証する"
+      ],
+      "session_ids": [
+        "sample-provider-import-preflight",
+        "sample-provider-import-normalization"
+      ],
+      "latest_end_at": "2026-04-29T04:45:00+09:00",
+      "latest_status": "Need Review",
+      "latest_title": "Provider import normalization を実装して検証する",
+      "latest_assistant_message": "provider-native aliasを正規化し、fixtureとsmokeで検証できるようにした。",
+      "latest_blocker": "none",
+      "latest_doneish_signal": false,
+      "latest_pendingish_signal": false,
+      "latest_task_shift_signal": false,
+      "latest_meaningful_change": "provider-native sampleとnormalization smokeを追加。",
+      "ai_column": "Need Review",
+      "ai_reason": "最新 session が review 要求で止まっている"
+    },
+    {
+      "cluster_key": "codex-kanban:static-review-surface",
+      "cluster_label": "Static review surface",
+      "base_cluster_labels": [
+        "Static review surface"
+      ],
+      "topic_reasons": [],
+      "merge_confidence": 0,
+      "primary_repos": [
+        "openclaw-secretary",
+        "codex-session-kanban-demo"
+      ],
+      "session_count": 2,
+      "status_counts": {
+        "In Progress": 2
+      },
+      "dominant_status": "In Progress",
+      "max_confidence": 0,
+      "auto_ready_count": 0,
+      "representative_titles": [
+        "HTML review surface で manual drag + localStorage を先に成立させる",
+        "進捗確認ではなく静的レビュー面の土台整理"
+      ],
+      "session_ids": [
+        "sample-html-surface",
+        "sample-static-surface-predecessor"
+      ],
+      "latest_end_at": "2026-04-27T15:37:00+09:00",
+      "latest_status": "In Progress",
+      "latest_title": "HTML review surface で manual drag + localStorage を先に成立させる",
+      "latest_assistant_message": "static-first で single-file HTML に寄せれば local open / Vercel / GitHub のどれでも回しやすい。",
+      "latest_blocker": null,
+      "latest_doneish_signal": null,
+      "latest_pendingish_signal": null,
+      "latest_task_shift_signal": null,
+      "latest_meaningful_change": null,
+      "ai_column": "Pending",
+      "ai_reason": "in progress のまま 3日以上更新がない"
+    },
+    {
+      "cluster_key": "codex-kanban:mobile-review-controls",
+      "cluster_label": "Mobile review controls",
+      "base_cluster_labels": [
+        "Mobile review controls"
+      ],
+      "topic_reasons": [],
+      "merge_confidence": 0,
+      "primary_repos": [
+        "codex-session-kanban-demo"
+      ],
+      "session_count": 1,
+      "status_counts": {
+        "Need Review": 1
+      },
+      "dominant_status": "Need Review",
+      "max_confidence": 79,
+      "auto_ready_count": 0,
+      "representative_titles": [
+        "Mobile review controls をログイン確認から切り分ける"
+      ],
+      "session_ids": [
+        "sample-topic-conflict-login-to-mobile"
+      ],
+      "latest_end_at": "2026-04-29T02:55:00+09:00",
+      "latest_status": "Need Review",
+      "latest_title": "Mobile review controls をログイン確認から切り分ける",
+      "latest_assistant_message": "local/Pagesのbrowser smokeでmobile操作を検証し、candidate/detail/status controlsを確認対象に入れる。",
+      "latest_blocker": "none",
+      "latest_doneish_signal": false,
+      "latest_pendingish_signal": false,
+      "latest_task_shift_signal": true,
+      "latest_meaningful_change": "mobile smokeでcandidate/detail/status controlsを検証対象にした。",
+      "ai_column": "Need Review",
+      "ai_reason": "最新 session が review 要求で止まっている"
+    },
+    {
+      "cluster_key": "distribution:abandoned-hosting-path",
+      "cluster_label": "Abandoned hosting path",
+      "base_cluster_labels": [
+        "Abandoned hosting path"
+      ],
+      "topic_reasons": [],
+      "merge_confidence": 0,
+      "primary_repos": [
+        "codex-session-kanban-demo"
+      ],
+      "session_count": 1,
+      "status_counts": {
+        "Dropped": 1
+      },
+      "dominant_status": "Dropped",
+      "max_confidence": 0,
+      "auto_ready_count": 0,
+      "representative_titles": [
+        "Vercel制限後に古いホスティング案をDroppedへ退避"
+      ],
+      "session_ids": [
+        "sample-abandoned-hosting-path"
+      ],
+      "latest_end_at": "2026-04-28T22:44:00+09:00",
+      "latest_status": "Dropped",
+      "latest_title": "Vercel制限後に古いホスティング案をDroppedへ退避",
+      "latest_assistant_message": "Vercel案は止め、公開デモはGitHub Pages、個人運用はローカル/private出力に分けて進めます。",
+      "latest_blocker": null,
+      "latest_doneish_signal": null,
+      "latest_pendingish_signal": null,
+      "latest_task_shift_signal": null,
+      "latest_meaningful_change": null,
+      "ai_column": "Dropped",
+      "ai_reason": "cluster の最新状態をそのまま採用"
+    },
+    {
+      "cluster_key": "global:bookmark-recommendation-dedupe",
+      "cluster_label": "Bookmark recommendation dedupe",
+      "base_cluster_labels": [
+        "Bookmark recommendation dedupe"
+      ],
+      "topic_reasons": [],
+      "merge_confidence": 0,
+      "primary_repos": [
+        "openclaw-secretary"
+      ],
+      "session_count": 1,
+      "status_counts": {
+        "Need Review": 1
+      },
+      "dominant_status": "Need Review",
+      "max_confidence": 0,
+      "auto_ready_count": 0,
+      "representative_titles": [
+        "メールリンク未生成調査からXブックマーク推薦除外へ移行"
+      ],
+      "session_ids": [
+        "sample-latest-phase-bookmark-dedupe"
+      ],
+      "latest_end_at": "2026-04-29T12:10:00+09:00",
+      "latest_status": "Need Review",
+      "latest_title": "メールリンク未生成調査からXブックマーク推薦除外へ移行",
+      "latest_assistant_message": "claude-autopilot 本体はクリーンです。Xブックマーク推薦側で同じ候補がまた出ないよう、採用済み/既存実装ありとして除外記録に入る経路を確認します。",
+      "latest_blocker": null,
+      "latest_doneish_signal": null,
+      "latest_pendingish_signal": null,
+      "latest_task_shift_signal": null,
+      "latest_meaningful_change": null,
+      "ai_column": "Need Review",
+      "ai_reason": "最新 session が review 要求で止まっている"
+    },
+    {
+      "cluster_key": "provider-import:claude-code-schema",
+      "cluster_label": "Claude Code provider import",
+      "base_cluster_labels": [
+        "Claude Code provider import"
+      ],
+      "topic_reasons": [],
+      "merge_confidence": 0,
+      "primary_repos": [
+        "codex-session-kanban-demo"
+      ],
+      "session_count": 1,
+      "status_counts": {
+        "Pending": 1
+      },
+      "dominant_status": "Pending",
+      "max_confidence": 0,
+      "auto_ready_count": 0,
+      "representative_titles": [
+        "Claude Code transcript import mapping"
+      ],
+      "session_ids": [
+        "sample-claude-provider-import"
+      ],
+      "latest_end_at": "2026-04-28T12:30:00+09:00",
+      "latest_status": "Pending",
+      "latest_title": "Claude Code transcript import mapping",
+      "latest_assistant_message": "Yes. Treat provider fields as import/display metadata and keep execution outside this static board.",
+      "latest_blocker": null,
+      "latest_doneish_signal": null,
+      "latest_pendingish_signal": true,
+      "latest_task_shift_signal": null,
+      "latest_meaningful_change": null,
+      "ai_column": "Pending",
+      "ai_reason": "cluster の最新状態をそのまま採用"
+    },
+    {
+      "cluster_key": "codex-kanban:external-sink-rescope",
+      "cluster_label": "External Kanban sink rescope",
+      "base_cluster_labels": [
+        "External Kanban sink rescope"
+      ],
+      "topic_reasons": [],
+      "merge_confidence": 0,
+      "primary_repos": [
+        "openclaw-secretary"
+      ],
+      "session_count": 1,
+      "status_counts": {
+        "Blocked": 1
+      },
+      "dominant_status": "Blocked",
+      "max_confidence": 0,
+      "auto_ready_count": 0,
+      "representative_titles": [
+        "Plane PoC の blocked 理由を整理して source-side に戻す"
+      ],
+      "session_ids": [
+        "sample-plane-poc"
+      ],
+      "latest_end_at": "2026-04-27T15:20:00+09:00",
+      "latest_status": "Blocked",
+      "latest_title": "Plane PoC の blocked 理由を整理して source-side に戻す",
+      "latest_assistant_message": "ボトルネックは source 理解ではなく Plane への sink を先に実装しすぎたこと。Track A を先に進めるべき。",
+      "latest_blocker": null,
+      "latest_doneish_signal": null,
+      "latest_pendingish_signal": null,
+      "latest_task_shift_signal": null,
+      "latest_meaningful_change": null,
+      "ai_column": "Blocked",
+      "ai_reason": "最新 session が blocked 判定"
+    },
+    {
+      "cluster_key": "knowledge-ops:llmwiki-delta-review",
+      "cluster_label": "LLMWIKI delta review",
+      "base_cluster_labels": [
+        "LLMWIKI delta review"
+      ],
+      "topic_reasons": [],
+      "merge_confidence": 0,
+      "primary_repos": [
+        "curiosity-wiki"
+      ],
+      "session_count": 1,
+      "status_counts": {
+        "Done": 1
+      },
+      "dominant_status": "Done",
+      "max_confidence": 0,
+      "auto_ready_count": 0,
+      "representative_titles": [
+        "llmwiki と外部投稿の差分調査"
+      ],
+      "session_ids": [
+        "sample-llmwiki-compare"
+      ],
+      "latest_end_at": "2026-04-24T23:22:55+09:00",
+      "latest_status": "Done",
+      "latest_title": "llmwiki と外部投稿の差分調査",
+      "latest_assistant_message": "根本的新情報は少ないが、workflow 向けの小さい実装アイデアが数点ある。",
+      "latest_blocker": null,
+      "latest_doneish_signal": null,
+      "latest_pendingish_signal": null,
+      "latest_task_shift_signal": null,
+      "latest_meaningful_change": null,
+      "ai_column": "Done",
+      "ai_reason": "最新 session が完了寄りで閉じている"
+    },
+    {
+      "cluster_key": "project-dof:repo-readiness-review",
+      "cluster_label": "Project DOF repo readiness review",
+      "base_cluster_labels": [
+        "Project DOF repo readiness review"
+      ],
+      "topic_reasons": [],
+      "merge_confidence": 0,
+      "primary_repos": [
+        "project-dof"
+      ],
+      "session_count": 1,
+      "status_counts": {
+        "Need Review": 1
+      },
+      "dominant_status": "Need Review",
+      "max_confidence": 0,
+      "auto_ready_count": 0,
+      "representative_titles": [
+        "project-dof repository readiness review"
+      ],
+      "session_ids": [
+        "sample-project-dof-repo-review"
+      ],
+      "latest_end_at": "2026-04-28T11:10:00+09:00",
+      "latest_status": "Need Review",
+      "latest_title": "project-dof repository readiness review",
+      "latest_assistant_message": "The repo review is separate from LP creative work: README, deployment config, and release checklist need review before public sharing.",
+      "latest_blocker": null,
+      "latest_doneish_signal": null,
+      "latest_pendingish_signal": null,
+      "latest_task_shift_signal": null,
+      "latest_meaningful_change": null,
+      "ai_column": "Need Review",
+      "ai_reason": "最新 session が review 要求で止まっている"
+    },
+    {
+      "cluster_key": "codex-kanban:public-demo-deploy",
+      "cluster_label": "Public demo deployment",
+      "base_cluster_labels": [
+        "Public demo deployment"
+      ],
+      "topic_reasons": [],
+      "merge_confidence": 0,
+      "primary_repos": [
+        "codex-session-kanban-demo"
+      ],
+      "session_count": 1,
+      "status_counts": {
+        "Blocked": 1
+      },
+      "dominant_status": "Blocked",
+      "max_confidence": 0,
+      "auto_ready_count": 0,
+      "representative_titles": [
+        "Public demo deployment permission check"
+      ],
+      "session_ids": [
+        "sample-needs-input-deploy"
+      ],
+      "latest_end_at": "2026-04-28T11:40:00+09:00",
+      "latest_status": "Blocked",
+      "latest_title": "Public demo deployment permission check",
+      "latest_assistant_message": "The build is ready, but Pages settings or repository permissions may require user-side confirmation.",
+      "latest_blocker": null,
+      "latest_doneish_signal": null,
+      "latest_pendingish_signal": true,
+      "latest_task_shift_signal": null,
+      "latest_meaningful_change": null,
+      "ai_column": "Blocked",
+      "ai_reason": "最新 session が blocked 判定"
+    },
+    {
+      "cluster_key": "project-dof:teaser-lp-creative",
+      "cluster_label": "Teaser LP creative direction",
+      "base_cluster_labels": [
+        "Teaser LP creative direction"
+      ],
+      "topic_reasons": [],
+      "merge_confidence": 0,
+      "primary_repos": [
+        "project-dof"
+      ],
+      "session_count": 1,
+      "status_counts": {
+        "Need Review": 1
+      },
+      "dominant_status": "Need Review",
+      "max_confidence": 0,
+      "auto_ready_count": 0,
+      "representative_titles": [
+        "Project DOF teaser LP creative direction"
+      ],
+      "session_ids": [
+        "sample-topic-shift-image-to-lp"
+      ],
+      "latest_end_at": "2026-04-28T10:10:00+09:00",
+      "latest_status": "Need Review",
+      "latest_title": "Project DOF teaser LP creative direction",
+      "latest_assistant_message": "The useful outcome is the LP creative direction and which generated assets should be reused, not the browser route itself.",
+      "latest_blocker": null,
+      "latest_doneish_signal": null,
+      "latest_pendingish_signal": null,
+      "latest_task_shift_signal": true,
+      "latest_meaningful_change": null,
+      "ai_column": "Need Review",
+      "ai_reason": "最新 session が review 要求で止まっている"
+    }
+  ],
+  "suggested_tasks": [
+    {
+      "task_id": "external-kanban-sink-rescope",
+      "cluster_key": "codex-kanban:external-sink-rescope",
+      "title_ja": "External Kanban sink rescope",
+      "task_size_ja": "中タスク",
+      "推奨列": "Blocked",
+      "理由": "1件の session / repo: openclaw-secretary / 主状態: Blocked",
+      "状態判断理由": "最新 session が blocked 判定",
+      "次の一手": "blocked 理由を明示して、再開条件を 1 行で固定する",
+      "cluster_label": "External Kanban sink rescope",
+      "primary_repos": [
+        "openclaw-secretary"
+      ],
+      "session_count": 1,
+      "representative_titles": [
+        "Plane PoC の blocked 理由を整理して source-side に戻す"
+      ],
+      "priority_score": 115
+    },
+    {
+      "task_id": "public-demo-deployment",
+      "cluster_key": "codex-kanban:public-demo-deploy",
+      "title_ja": "Public demo deployment",
+      "task_size_ja": "中タスク",
+      "推奨列": "Blocked",
+      "理由": "1件の session / repo: codex-session-kanban-demo / 主状態: Blocked",
+      "状態判断理由": "最新 session が blocked 判定",
+      "次の一手": "blocked 理由を明示して、再開条件を 1 行で固定する",
+      "cluster_label": "Public demo deployment",
+      "primary_repos": [
+        "codex-session-kanban-demo"
+      ],
+      "session_count": 1,
+      "representative_titles": [
+        "Public demo deployment permission check"
+      ],
+      "priority_score": 115
+    },
+    {
+      "task_id": "provider-import-normalization",
+      "cluster_key": "provider-import:normalization",
+      "title_ja": "Provider import normalization",
+      "task_size_ja": "中タスク",
+      "推奨列": "Need Review",
+      "理由": "2件の session / repo: codex-session-kanban-demo / 主状態: Need Review",
+      "状態判断理由": "最新 session が review 要求で止まっている",
+      "次の一手": "代表 session を見て、board に載せる粒度と列を確定する",
+      "cluster_label": "Provider import normalization",
+      "primary_repos": [
+        "codex-session-kanban-demo"
+      ],
+      "session_count": 2,
+      "representative_titles": [
+        "Provider import の前提確認を代表タスクへ統合",
+        "Provider import normalization を実装して検証する"
+      ],
+      "priority_score": 105
+    },
+    {
+      "task_id": "mobile-review-controls",
+      "cluster_key": "codex-kanban:mobile-review-controls",
+      "title_ja": "Mobile review controls",
+      "task_size_ja": "中タスク",
+      "推奨列": "Need Review",
+      "理由": "1件の session / repo: codex-session-kanban-demo / 主状態: Need Review",
+      "状態判断理由": "最新 session が review 要求で止まっている",
+      "次の一手": "代表 session を見て、board に載せる粒度と列を確定する",
+      "cluster_label": "Mobile review controls",
+      "primary_repos": [
+        "codex-session-kanban-demo"
+      ],
+      "session_count": 1,
+      "representative_titles": [
+        "Mobile review controls をログイン確認から切り分ける"
+      ],
+      "priority_score": 95
+    },
+    {
+      "task_id": "bookmark-recommendation-dedupe",
+      "cluster_key": "global:bookmark-recommendation-dedupe",
+      "title_ja": "Bookmark recommendation dedupe",
+      "task_size_ja": "中タスク",
+      "推奨列": "Need Review",
+      "理由": "1件の session / repo: openclaw-secretary / 主状態: Need Review",
+      "状態判断理由": "最新 session が review 要求で止まっている",
+      "次の一手": "代表 session を見て、board に載せる粒度と列を確定する",
+      "cluster_label": "Bookmark recommendation dedupe",
+      "primary_repos": [
+        "openclaw-secretary"
+      ],
+      "session_count": 1,
+      "representative_titles": [
+        "メールリンク未生成調査からXブックマーク推薦除外へ移行"
+      ],
+      "priority_score": 95
+    },
+    {
+      "task_id": "project-dof-repo-readiness-review",
+      "cluster_key": "project-dof:repo-readiness-review",
+      "title_ja": "Project DOF repo readiness review",
+      "task_size_ja": "中タスク",
+      "推奨列": "Need Review",
+      "理由": "1件の session / repo: project-dof / 主状態: Need Review",
+      "状態判断理由": "最新 session が review 要求で止まっている",
+      "次の一手": "代表 session を見て、board に載せる粒度と列を確定する",
+      "cluster_label": "Project DOF repo readiness review",
+      "primary_repos": [
+        "project-dof"
+      ],
+      "session_count": 1,
+      "representative_titles": [
+        "project-dof repository readiness review"
+      ],
+      "priority_score": 95
+    },
+    {
+      "task_id": "teaser-lp-creative-direction",
+      "cluster_key": "project-dof:teaser-lp-creative",
+      "title_ja": "Teaser LP creative direction",
+      "task_size_ja": "中タスク",
+      "推奨列": "Need Review",
+      "理由": "1件の session / repo: project-dof / 主状態: Need Review",
+      "状態判断理由": "最新 session が review 要求で止まっている",
+      "次の一手": "代表 session を見て、board に載せる粒度と列を確定する",
+      "cluster_label": "Teaser LP creative direction",
+      "primary_repos": [
+        "project-dof"
+      ],
+      "session_count": 1,
+      "representative_titles": [
+        "Project DOF teaser LP creative direction"
+      ],
+      "priority_score": 95
+    },
+    {
+      "task_id": "static-review-surface",
+      "cluster_key": "codex-kanban:static-review-surface",
+      "title_ja": "Static review surface",
+      "task_size_ja": "大タスク",
+      "推奨列": "Pending",
+      "理由": "2件の session / 2 repo 跨ぎ / 主状態: In Progress",
+      "状態判断理由": "in progress のまま 3日以上更新がない",
+      "次の一手": "直近の続きを 1 ステップだけ切り出して next action にする",
+      "cluster_label": "Static review surface",
+      "primary_repos": [
+        "openclaw-secretary",
+        "codex-session-kanban-demo"
+      ],
+      "session_count": 2,
+      "representative_titles": [
+        "HTML review surface で manual drag + localStorage を先に成立させる",
+        "進捗確認ではなく静的レビュー面の土台整理"
+      ],
+      "priority_score": 70
+    },
+    {
+      "task_id": "claude-code-provider-import",
+      "cluster_key": "provider-import:claude-code-schema",
+      "title_ja": "Claude Code provider import",
+      "task_size_ja": "中タスク",
+      "推奨列": "Pending",
+      "理由": "1件の session / repo: codex-session-kanban-demo / 主状態: Pending",
+      "状態判断理由": "cluster の最新状態をそのまま採用",
+      "次の一手": "代表 session を確認して次の 1 手を決める",
+      "cluster_label": "Claude Code provider import",
+      "primary_repos": [
+        "codex-session-kanban-demo"
+      ],
+      "session_count": 1,
+      "representative_titles": [
+        "Claude Code transcript import mapping"
+      ],
+      "priority_score": 55
+    },
+    {
+      "task_id": "abandoned-hosting-path",
+      "cluster_key": "distribution:abandoned-hosting-path",
+      "title_ja": "Abandoned hosting path",
+      "task_size_ja": "中タスク",
+      "推奨列": "Dropped",
+      "理由": "1件の session / repo: codex-session-kanban-demo / 主状態: Dropped",
+      "状態判断理由": "cluster の最新状態をそのまま採用",
+      "次の一手": "代表 session を確認して次の 1 手を決める",
+      "cluster_label": "Abandoned hosting path",
+      "primary_repos": [
+        "codex-session-kanban-demo"
+      ],
+      "session_count": 1,
+      "representative_titles": [
+        "Vercel制限後に古いホスティング案をDroppedへ退避"
+      ],
+      "priority_score": 15
+    }
+  ],
+  "quality_report": {
+    "status": "needs-review",
+    "weak_session_titles": [
+      {
+        "session_id": "sample-static-surface-predecessor",
+        "title": "進捗確認ではなく静的レビュー面の土台整理",
+        "issues": [
+          "generic-confirmation-title"
+        ],
+        "topic_label": "Static review surface",
+        "latest_meaningful_change": null
+      }
+    ],
+    "weak_candidate_titles": [],
+    "unknown_repo_sessions": [],
+    "suspicious_merges": [],
+    "project_entity_mismatches": [],
+    "stale_context_topic_risks": [],
+    "topic_title_mismatches": []
+  },
+  "app_version": "0.1.37"
 }
