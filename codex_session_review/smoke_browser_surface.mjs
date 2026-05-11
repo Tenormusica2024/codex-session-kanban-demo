@@ -105,6 +105,7 @@ async function main() {
           ok: true,
           schema_version: 1,
           source: "pane_automation_control",
+          automation_mode: "v1",
           panes: {
             upper_left: false,
             upper_right: false,
@@ -216,6 +217,26 @@ async function main() {
   }
   if (paneAutomation.hidden !== false || paneAutomation.display === "none" || paneAutomation.expanded !== "true") {
     errors.push(`pane automation panel did not stay expanded after toggle: hidden=${paneAutomation.hidden}, display=${paneAutomation.display}, expanded=${paneAutomation.expanded}`);
+  }
+
+  await page.locator("#pane-auto-version").selectOption("v2");
+  await page.waitForTimeout(100);
+  const paneAutomationVersionSwitch = await page.evaluate(() => ({
+    selectedVersion: document.querySelector("#pane-auto-version")?.value || "",
+    ui: [...document.querySelectorAll("[data-pane-toggle]")].reduce((acc, button) => {
+      acc[button.dataset.paneToggle] = button.getAttribute("aria-pressed") === "true";
+      return acc;
+    }, {}),
+  }));
+  paneAutomationVersionSwitch.postedCount = paneAutomationPosts.length;
+  paneAutomationVersionSwitch.lastPost = paneAutomationPosts.at(-1) || null;
+  if (
+    paneAutomationVersionSwitch.selectedVersion !== "v2" ||
+    paneAutomationVersionSwitch.lastPost?.automation_mode !== "v2" ||
+    Object.values(paneAutomationVersionSwitch.lastPost?.panes || {}).some(Boolean) ||
+    Object.values(paneAutomationVersionSwitch.ui || {}).some(Boolean)
+  ) {
+    errors.push(`pane automation v2 switch did not post all-off v2 state: ${JSON.stringify(paneAutomationVersionSwitch)}`);
   }
 
   await page.getByRole("button", { name: "EN" }).click();
@@ -437,6 +458,7 @@ async function main() {
     targetUrl,
     initial,
     paneAutomation,
+    paneAutomationVersionSwitch,
     promoted,
     shortcutSearch,
     clearFilters: { button: clearButtonState, shortcut: clearShortcutState },

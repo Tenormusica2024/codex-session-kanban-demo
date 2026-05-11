@@ -43,10 +43,10 @@ __INLINE_CSS__
               <div class="pane-auto-control" id="pane-auto-control" aria-labelledby="pane-auto-title" hidden>
                 <div class="pane-auto-head">
                   <strong id="pane-auto-title" data-i18n="paneAutoTitle">Pane Auto</strong>
-                  <span id="pane-auto-status">1/4 ON</span>
+                  <span id="pane-auto-status">0/4 ON</span>
                 </div>
                 <div class="pane-auto-grid" id="pane-auto-grid">
-                  <button type="button" data-pane-toggle="upper_left" aria-pressed="true">
+                  <button type="button" data-pane-toggle="upper_left" aria-pressed="false">
                     <span>UL</span>
                     <small data-i18n="paneAutoUpperLeft">左上</small>
                   </button>
@@ -63,6 +63,13 @@ __INLINE_CSS__
                     <small data-i18n="paneAutoLowerRight">右下</small>
                   </button>
                 </div>
+                <label class="pane-auto-version-row">
+                  <span data-i18n="paneAutoVersionLabel">運用版</span>
+                  <select id="pane-auto-version" aria-label="Pane Auto version">
+                    <option value="v1" data-i18n="paneAutoVersionV1">v1 安定</option>
+                    <option value="v2" data-i18n="paneAutoVersionV2">v2 検証</option>
+                  </select>
+                </label>
                 <div class="pane-auto-foot">
                   <span class="pane-auto-mode" id="pane-auto-mode" data-i18n="paneAutoModeLocal">local cache</span>
                   <button type="button" id="pane-auto-refresh" data-i18n="paneAutoRefresh">再読込</button>

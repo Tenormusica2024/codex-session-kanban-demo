@@ -5,11 +5,13 @@ const PANE_AUTOMATION_PANEL_KEY = "codex-session-review:pane-automation-panel-op
 const PANE_AUTOMATION_BRIDGE_URL = "http://127.0.0.1:8766/pane-automation";
 const PANE_AUTOMATION_REFRESH_INTERVAL_MS = 15000;
 const PANE_AUTOMATION_DEFAULT = {
-  upper_left: true,
+  upper_left: false,
   upper_right: false,
   lower_left: false,
   lower_right: false,
 };
+const PANE_AUTOMATION_MODE_DEFAULT = "v1";
+const PANE_AUTOMATION_MODES = new Set(["v1", "v2"]);
 const PANE_AUTOMATION_LABEL_KEYS = {
   upper_left: "paneAutoUpperLeft",
   upper_right: "paneAutoUpperRight",
@@ -61,6 +63,9 @@ const I18N = {
     paneAutoApplied: "反映しました",
     paneAutoApplyFailed: "反映失敗: bridge状態に戻しました",
     paneAutoBridgeOffline: "bridge未接続",
+    paneAutoVersionLabel: "運用版",
+    paneAutoVersionV1: "v1 安定",
+    paneAutoVersionV2: "v2 検証",
     guideAccessTitle: "URLの使い分け",
     guideAccessPersonal: "個人用: 実セッション入りのため、このpublic demoには含めない。",
     guideAccessDistribution: "配布用: sample fixtureだけで生成。公開前に -Distribution guard を通し、個人セッション・ローカルパス・bypass token を混ぜない。",
@@ -330,6 +335,9 @@ const I18N = {
     paneAutoApplied: "applied",
     paneAutoApplyFailed: "apply failed: restored bridge state",
     paneAutoBridgeOffline: "bridge offline",
+    paneAutoVersionLabel: "automation version",
+    paneAutoVersionV1: "v1 stable",
+    paneAutoVersionV2: "v2 test",
     guideAccessTitle: "URL profiles",
     guideAccessPersonal: "Personal: contains real sessions and is intentionally not included in this public demo.",
     guideAccessDistribution: "Distribution: generated only from sample fixtures. Run the -Distribution guard before publishing so real sessions, local paths, and bypass tokens are not included.",
@@ -583,6 +591,7 @@ const state = {
   dragId: null,
   archiveExpanded: {},
   paneAutomation: { ...PANE_AUTOMATION_DEFAULT },
+  paneAutomationMode: PANE_AUTOMATION_MODE_DEFAULT,
   paneAutomationBridgeOnline: null,
   paneAutomationDirty: false,
   paneAutomationApplying: false,
@@ -1083,18 +1092,40 @@ function saveOverrides() {
 function loadPaneAutomation() {
   try {
     const stored = JSON.parse(localStorage.getItem(PANE_AUTOMATION_KEY) || "{}");
-    return { ...PANE_AUTOMATION_DEFAULT, ...stored };
+    state.paneAutomationMode = normalizePaneAutomationMode(stored.automation_mode || stored.mode);
+    return normalizePaneAutomationPanes(stored.panes || stored);
   } catch {
     return { ...PANE_AUTOMATION_DEFAULT };
   }
 }
 
 function savePaneAutomation() {
-  localStorage.setItem(PANE_AUTOMATION_KEY, JSON.stringify(state.paneAutomation, null, 2));
+  localStorage.setItem(
+    PANE_AUTOMATION_KEY,
+    JSON.stringify(
+      {
+        automation_mode: normalizePaneAutomationMode(state.paneAutomationMode),
+        panes: normalizePaneAutomationPanes(state.paneAutomation),
+      },
+      null,
+      2,
+    ),
+  );
 }
 
 function savePaneAutomationPanelOpen() {
   localStorage.setItem(PANE_AUTOMATION_PANEL_KEY, String(state.paneAutomationPanelOpen));
+}
+
+function normalizePaneAutomationMode(value) {
+  return PANE_AUTOMATION_MODES.has(value) ? value : PANE_AUTOMATION_MODE_DEFAULT;
+}
+
+function allPaneAutomationOff() {
+  return Object.keys(PANE_AUTOMATION_DEFAULT).reduce((result, pane) => {
+    result[pane] = false;
+    return result;
+  }, {});
 }
 
 function normalizePaneAutomationPanes(panes) {
@@ -1109,6 +1140,7 @@ function paneAutomationExportPayload() {
     schema_version: 1,
     source: "codex-session-review-surface",
     storage_key: PANE_AUTOMATION_KEY,
+    automation_mode: normalizePaneAutomationMode(state.paneAutomationMode),
     updated_at: new Date().toISOString(),
     panes: { ...PANE_AUTOMATION_DEFAULT, ...state.paneAutomation },
   };
@@ -1139,6 +1171,7 @@ async function refreshPaneAutomationFromBridge({ quiet = false } = {}) {
       throw new Error("invalid pane automation bridge response");
     }
     state.paneAutomation = normalizePaneAutomationPanes(payload.panes);
+    state.paneAutomationMode = normalizePaneAutomationMode(payload.automation_mode || payload.mode || state.paneAutomationMode);
     state.paneAutomationBridgeOnline = true;
     state.paneAutomationDirty = false;
     savePaneAutomation();
@@ -1157,10 +1190,13 @@ async function refreshPaneAutomationFromBridge({ quiet = false } = {}) {
   }
 }
 
-async function applyPaneAutomationToBridge(nextPanes, { quiet = false } = {}) {
+async function applyPaneAutomationToBridge(nextPanes, { quiet = false, nextMode = state.paneAutomationMode } = {}) {
   const previous = { ...state.paneAutomation };
+  const previousMode = state.paneAutomationMode;
   const normalized = normalizePaneAutomationPanes(nextPanes);
+  const normalizedMode = normalizePaneAutomationMode(nextMode);
   state.paneAutomation = normalized;
+  state.paneAutomationMode = normalizedMode;
   state.paneAutomationDirty = true;
   state.paneAutomationApplying = true;
   savePaneAutomation();
@@ -1173,6 +1209,7 @@ async function applyPaneAutomationToBridge(nextPanes, { quiet = false } = {}) {
         schema_version: 1,
         source: "codex-session-review-surface",
         storage_key: PANE_AUTOMATION_KEY,
+        automation_mode: normalizedMode,
         updated_at: new Date().toISOString(),
         panes: normalized,
       }),
@@ -1185,6 +1222,7 @@ async function applyPaneAutomationToBridge(nextPanes, { quiet = false } = {}) {
     // bridge panes when present; otherwise keep the exact payload that was
     // acknowledged.  This avoids showing a local-only state as active.
     state.paneAutomation = normalizePaneAutomationPanes(payload.panes || normalized);
+    state.paneAutomationMode = normalizePaneAutomationMode(payload.automation_mode || payload.mode || normalizedMode);
     state.paneAutomationBridgeOnline = true;
     state.paneAutomationDirty = false;
     savePaneAutomation();
@@ -1196,6 +1234,7 @@ async function applyPaneAutomationToBridge(nextPanes, { quiet = false } = {}) {
     // Revert immediately on failed apply.  A Pane Auto button must never make
     // the UI look enabled/disabled when the local bridge did not accept it.
     state.paneAutomation = previous;
+    state.paneAutomationMode = previousMode;
     state.paneAutomationBridgeOnline = false;
     state.paneAutomationDirty = false;
     savePaneAutomation();
@@ -1229,6 +1268,11 @@ function renderPaneAutomationControl() {
   const status = document.getElementById("pane-auto-status");
   if (status) {
     status.textContent = t("paneAutoSummary", { count: enabledCount });
+  }
+  const versionSelect = document.getElementById("pane-auto-version");
+  if (versionSelect) {
+    versionSelect.value = normalizePaneAutomationMode(state.paneAutomationMode);
+    versionSelect.disabled = state.paneAutomationApplying === true;
   }
   const mode = document.getElementById("pane-auto-mode");
   if (mode) {
@@ -1282,6 +1326,14 @@ function initPaneAutomationControl() {
   });
   document.getElementById("pane-auto-apply")?.addEventListener("click", async () => {
     await applyPaneAutomationToBridge(paneAutomationExportPayload().panes);
+  });
+  document.getElementById("pane-auto-version")?.addEventListener("change", async (event) => {
+    if (state.paneAutomationApplying) {
+      event.target.value = normalizePaneAutomationMode(state.paneAutomationMode);
+      return;
+    }
+    const nextMode = normalizePaneAutomationMode(event.target.value);
+    await applyPaneAutomationToBridge(allPaneAutomationOff(), { nextMode });
   });
   document.getElementById("pane-auto-refresh")?.addEventListener("click", () => {
     refreshPaneAutomationFromBridge();

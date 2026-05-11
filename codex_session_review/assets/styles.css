@@ -292,6 +292,30 @@ body {
   opacity: 0.82;
 }
 
+.pane-auto-version-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 6px;
+  padding: 2px 0;
+  color: var(--muted);
+  font-size: 0.62rem;
+  font-weight: 800;
+}
+
+.pane-auto-version-row select {
+  min-width: 0;
+  width: 100%;
+  min-height: 24px;
+  padding: 2px 22px 2px 9px;
+  border: 1px solid rgba(151, 169, 195, 0.18);
+  border-radius: 999px;
+  color: var(--text);
+  background: rgba(7, 18, 34, 0.72);
+  font-size: 0.66rem;
+  font-weight: 900;
+}
+
 .pane-auto-foot {
   display: flex;
   align-items: center;
