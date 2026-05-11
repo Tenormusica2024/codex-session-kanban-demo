@@ -3033,6 +3033,228 @@ def derive_task_next_action_ja(cluster: dict[str, Any]) -> str:
     return "代表 session を確認して次の 1 手を決める"
 
 
+def estimate_lightweight_prioritization(session: dict[str, Any]) -> dict[str, Any]:
+    """Derive cheap prioritization hints without calling an LLM."""
+    text_parts = [
+        session.get("title"),
+        session.get("summary"),
+        session.get("deep_summary"),
+        session.get("task_body_summary"),
+        session.get("current_goal"),
+        session.get("latest_meaningful_change"),
+        session.get("latest_phase_context"),
+        session.get("blocker"),
+        session.get("first_user_message"),
+        session.get("last_user_message"),
+        session.get("last_assistant_message"),
+        *(session.get("evidence_messages") or []),
+    ]
+    text = "\n".join(str(part) for part in text_parts if part)
+    text_size_chars = len(text)
+    estimated_tokens = max(1, math.ceil(text_size_chars / 4)) if text_size_chars else 0
+    command_count = int(session.get("command_count") or 0)
+    activity_score = int(session.get("activity_score") or 0)
+    duration_minutes = int(session.get("duration_minutes") or 0)
+    high_activity = command_count >= 25 or activity_score >= 120 or duration_minutes >= 90
+    large_session = estimated_tokens >= 700 or command_count >= 50 or duration_minutes >= 180
+    flags: list[str] = []
+    if high_activity:
+        flags.append("high_activity")
+    if large_session:
+        flags.append("large_session")
+    if session.get("task_shift_signal"):
+        flags.append("task_shift")
+    if session.get("blocker"):
+        flags.append("blocker")
+    return {
+        "text_size_chars": text_size_chars,
+        "estimated_tokens": estimated_tokens,
+        "high_activity_signal": high_activity,
+        "large_session_signal": large_session,
+        "prioritization_flags": flags,
+    }
+
+
+def apply_lightweight_prioritization_stats(bundle: dict[str, Any]) -> dict[str, Any]:
+    """Populate token-free stats used by diagnostics and UI display."""
+    sessions = [item for item in bundle.get("sessions", []) if isinstance(item, dict)]
+    flag_counter: Counter[str] = Counter()
+    for session in sessions:
+        stats = estimate_lightweight_prioritization(session)
+        for key, value in stats.items():
+            session.setdefault(key, value)
+        flag_counter.update(session.get("prioritization_flags") or [])
+
+    report = bundle.setdefault("quality_report", {})
+    report["lightweight_prioritization"] = {
+        "session_count": len(sessions),
+        "high_activity_count": sum(1 for item in sessions if item.get("high_activity_signal")),
+        "large_session_count": sum(1 for item in sessions if item.get("large_session_signal")),
+        "flags": dict(sorted(flag_counter.items())),
+    }
+    return bundle
+
+
+def provider_status(value: Any) -> str:
+    raw = str(value or "").strip().lower()
+    if raw in {"done", "completed", "complete", "success", "closed"}:
+        return "Done"
+    if raw in {"dropped", "cancelled", "canceled", "wontfix", "archived"}:
+        return "Dropped"
+    if raw in {"blocked", "error", "failed", "waiting-on-user"}:
+        return "Blocked"
+    if raw in {"pending", "waiting", "paused", "todo", "backlog"}:
+        return "Pending"
+    if raw in {"in progress", "in_progress", "active", "running", "working"}:
+        return "In Progress"
+    return str(value) if value in STATUS_ORDER else "Need Review"
+
+
+def content_to_text(content: Any) -> str:
+    if content is None:
+        return ""
+    if isinstance(content, str):
+        return content.strip()
+    if isinstance(content, list):
+        return "\n".join(content_to_text(part) for part in content).strip()
+    if isinstance(content, dict):
+        if isinstance(content.get("parts"), list):
+            return content_to_text(content["parts"])
+        return str(content.get("text") or content.get("content") or content.get("message") or content.get("value") or "").strip()
+    return str(content).strip()
+
+
+def provider_messages(item: dict[str, Any]) -> list[dict[str, str]]:
+    raw_messages = item.get("timeline_messages") or item.get("messages") or item.get("conversation") or item.get("turns") or item.get("history") or item.get("events") or []
+    if not isinstance(raw_messages, list):
+        return []
+    messages: list[dict[str, str]] = []
+    for raw in raw_messages:
+        role = "user"
+        text = ""
+        if isinstance(raw, list) and raw:
+            role = str(raw[0] or "user").lower()
+            text = content_to_text(raw[1] if len(raw) > 1 else "")
+        elif isinstance(raw, dict):
+            role = str(raw.get("role") or raw.get("speaker") or raw.get("type") or "user").lower()
+            text = content_to_text(raw.get("content") or raw.get("message") or raw.get("text") or raw.get("parts"))
+        else:
+            text = content_to_text(raw)
+        if role in {"assistant", "model", "agent", "ai"}:
+            role = "assistant"
+        elif role in {"system", "tool", "function"}:
+            role = "system"
+        else:
+            role = "user"
+        if text:
+            messages.append({"role": role, "text": text})
+    return messages
+
+
+def infer_provider(item: dict[str, Any], board_provider: Any = None) -> str:
+    if item.get("provider") or item.get("source_tool") or item.get("tool") or board_provider:
+        return str(item.get("provider") or item.get("source_tool") or item.get("tool") or board_provider)
+    if (item.get("uuid") or item.get("cwd")) and (item.get("messages") or item.get("transcript")):
+        return "claude-code"
+    if (item.get("workspace") and item.get("conversation")) or item.get("cursor_session_id"):
+        return "cursor-agent"
+    if (item.get("history") and item.get("model")) or item.get("gemini_session_id"):
+        return "gemini-cli"
+    return "generic-ai-session"
+
+
+def repo_from_provider_item(item: dict[str, Any]) -> str:
+    explicit = item.get("primary_repo") or item.get("repo") or item.get("repository") or item.get("project") or item.get("workspace_name")
+    if explicit:
+        return str(explicit)
+    path_value = item.get("workspace") or item.get("cwd") or item.get("session_cwd") or item.get("project_path")
+    if path_value:
+        parts = str(path_value).replace("\\", "/").rstrip("/").split("/")
+        return parts[-1] or "unknown"
+    return "unknown"
+
+
+def normalize_provider_session(item: Any, index: int, board_provider: Any = None) -> dict[str, Any]:
+    source: dict[str, Any] = item if isinstance(item, dict) else {"summary": str(item or "")}
+    provider = infer_provider(source, board_provider)
+    messages = provider_messages(source)
+    user_messages = [msg["text"] for msg in messages if msg["role"] == "user"]
+    assistant_messages = [msg["text"] for msg in messages if msg["role"] == "assistant"]
+    evidence = source.get("evidence_messages") if isinstance(source.get("evidence_messages"), list) and source.get("evidence_messages") else [
+        clip(text, 220) for text in [*user_messages, *assistant_messages][:4]
+    ]
+    title = (
+        source.get("title")
+        or source.get("title_ja")
+        or source.get("title_en")
+        or source.get("current_goal")
+        or source.get("goal")
+        or clip(user_messages[-1] if user_messages else source.get("summary") or source.get("prompt") or f"Imported {provider} session {index + 1}", 80)
+    )
+    summary = (
+        source.get("summary")
+        or source.get("summary_ja")
+        or source.get("summary_en")
+        or source.get("current_goal")
+        or source.get("goal")
+        or clip(source.get("description") or source.get("prompt") or " / ".join(evidence[:2]) or title, 220)
+    )
+    session_id = source.get("session_id") or source.get("id") or source.get("uuid") or source.get("conversation_id") or source.get("cursor_session_id") or source.get("gemini_session_id") or source.get("name") or f"imported-{provider}-{index + 1}"
+    start_at = source.get("start_at") or source.get("created_at") or source.get("createdAt") or source.get("timestamp") or source.get("startTime") or source.get("end_at") or datetime.now(JST).isoformat()
+    end_at = source.get("end_at") or source.get("updated_at") or source.get("updatedAt") or source.get("lastUpdated") or source.get("endTime") or start_at
+    primary_repo = repo_from_provider_item(source)
+    base = {
+        **source,
+        "session_id": str(session_id),
+        "title": str(title),
+        "summary": str(summary),
+        "suggested_status": provider_status(source.get("suggested_status") or source.get("currentStatus") or source.get("status") or source.get("state")),
+        "primary_repo": primary_repo,
+        "start_at": str(start_at),
+        "end_at": str(end_at),
+        "evidence_messages": evidence,
+        "first_user_message": source.get("first_user_message") or (user_messages[0] if user_messages else ""),
+        "last_user_message": source.get("last_user_message") or (user_messages[-1] if user_messages else ""),
+        "last_assistant_message": source.get("last_assistant_message") or (assistant_messages[-1] if assistant_messages else ""),
+        "user_message_count": source.get("user_message_count") or len(user_messages),
+        "assistant_message_count": source.get("assistant_message_count") or len(assistant_messages),
+        "command_count": source.get("command_count") or len([msg for msg in messages if msg["role"] == "system"]),
+        "activity_score": source.get("activity_score") or max(1, len(messages) * 8 + len(evidence) * 5),
+        "provider": provider,
+        "provider_session_type": source.get("provider_session_type") or source.get("format") or f"{provider}-import",
+        "provider_source": source.get("provider_source") or source.get("source") or "provider-import",
+    }
+    base.update(estimate_lightweight_prioritization(base))
+    cluster_key = base.get("task_cluster_key") or base.get("topic_key") or f"{primary_repo}:{normalize_cluster_slug(str(title)) or base['session_id']}"
+    base.setdefault("task_cluster_key", cluster_key)
+    base.setdefault("topic_key", cluster_key)
+    base.setdefault("lineage_key", cluster_key)
+    base.setdefault("task_cluster_label", base.get("topic_label") or str(title))
+    base.setdefault("topic_label", base.get("task_cluster_label") or str(title))
+    base.setdefault("lineage_label", base.get("task_cluster_label") or str(title))
+    return base
+
+
+def normalize_import_bundle(raw: Any) -> dict[str, Any]:
+    sessions_raw = raw if isinstance(raw, list) else (raw.get("sessions") or raw.get("conversations") or raw.get("items") if isinstance(raw, dict) else None)
+    if not isinstance(sessions_raw, list):
+        raise ValueError("invalid session data: expected list or object with sessions/conversations/items")
+    board_provider = None if isinstance(raw, list) else (raw.get("provider") or raw.get("source_tool"))
+    sessions = [normalize_provider_session(item, index, board_provider) for index, item in enumerate(sessions_raw)]
+    providers = sorted({str(item.get("provider") or "generic-ai-session") for item in sessions})
+    bundle = {**raw} if isinstance(raw, dict) else {}
+    bundle.update(
+        {
+            "generated_at": bundle.get("generated_at") or datetime.now(JST).isoformat(timespec="seconds"),
+            "source": bundle.get("source") or "local-import",
+            "schema_version": bundle.get("schema_version") or "0.2.1",
+            "supported_providers": bundle.get("supported_providers") or providers,
+            "sessions": sessions,
+        }
+    )
+    return bundle
+
+
 def derive_task_priority(cluster: dict[str, Any]) -> int:
     session_count = int(cluster.get("session_count", 0))
     repo_count = len(cluster.get("primary_repos", []))
@@ -3494,7 +3716,7 @@ def collect_sessions(
     metrics["perf_status"] = "warn" if perf_warnings else "ok"
     if perf_warnings:
         metrics["perf_warnings"] = perf_warnings
-    return {
+    bundle = {
         "generated_at": datetime.now(JST).isoformat(timespec="seconds"),
         "source": str(codex_home),
         "mode": "auto-first-with-optional-human-override",
@@ -3504,6 +3726,8 @@ def collect_sessions(
         "quality_report": build_quality_report(sessions, task_clusters, suggested_tasks),
         "build_metrics": metrics,
     }
+    apply_lightweight_prioritization_stats(bundle)
+    return bundle
 
 
 def render_markdown(bundle: dict[str, Any]) -> str:
@@ -3629,7 +3853,15 @@ def main() -> None:
     args = parse_args()
     root = Path(__file__).resolve().parent
     if args.input_json:
-        bundle = json.loads(args.input_json.read_text(encoding="utf-8"))
+        bundle = normalize_import_bundle(json.loads(args.input_json.read_text(encoding="utf-8")))
+        sessions = bundle.get("sessions", [])
+        if sessions and not bundle.get("task_clusters"):
+            bundle["task_clusters"] = enrich_task_clusters(sessions)
+        if bundle.get("task_clusters") and not bundle.get("suggested_tasks"):
+            bundle["suggested_tasks"] = build_suggested_tasks(bundle["task_clusters"])
+        if sessions and bundle.get("task_clusters") and bundle.get("suggested_tasks") and not bundle.get("quality_report"):
+            bundle["quality_report"] = build_quality_report(sessions, bundle["task_clusters"], bundle["suggested_tasks"])
+        apply_lightweight_prioritization_stats(bundle)
     else:
         bundle = collect_sessions(
             codex_home=args.codex_home,
