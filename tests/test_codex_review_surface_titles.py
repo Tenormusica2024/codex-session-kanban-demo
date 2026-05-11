@@ -63,6 +63,24 @@ class CodexReviewSurfaceTitleTest(unittest.TestCase):
 
         self.assertEqual(title, "モバイル幅でも候補追加・詳細確認・状態変更が問題なく使えるようにレビュー操作を整える")
 
+    def test_candidate_title_marks_mobile_sample_fixture_as_demo_data(self):
+        title = derive_task_title_ja(
+            {
+                "cluster_label": "Mobile review controls",
+                "primary_repos": ["codex-session-kanban-demo"],
+                "representative_titles": ["Mobile review controls をログイン確認から切り分ける"],
+                "latest_title": "Mobile review controls をログイン確認から切り分ける",
+                "latest_source_file": "sample/topic-conflict-login-to-mobile.jsonl",
+                "latest_summary": (
+                    "セッション冒頭はPages確認や認証状態の話から始まるが、"
+                    "本題はmobile幅でも候補追加・詳細確認・状態変更が破綻しないように"
+                    "review controlsを整えること。"
+                ),
+            }
+        )
+
+        self.assertEqual(title, "サンプルデータ: モバイル幅レビュー操作の検証")
+
     def test_candidate_title_rewrites_provider_import_taxonomy_to_recognizable_work(self):
         title = derive_task_title_ja(
             {

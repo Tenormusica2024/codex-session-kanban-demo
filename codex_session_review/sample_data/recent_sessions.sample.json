@@ -563,7 +563,7 @@
     },
     {
       "session_id": "sample-topic-conflict-login-to-mobile",
-      "title": "Mobile review controls をログイン確認から切り分ける",
+      "title": "サンプルデータ: モバイル幅レビュー操作の検証",
       "summary": "セッション冒頭はPages確認や認証状態の話から始まるが、本題はmobile幅でも候補追加・詳細確認・状態変更が破綻しないようにreview controlsを整えること。認証/Pages確認は前置きとして弱める。",
       "first_user_message": "Pages上のテストはできる？cicが必要？ブラウザ操作テストやテキスト表示状態テストは重要だと思う。",
       "last_assistant_message": "local/Pagesのbrowser smokeでmobile操作を検証し、candidate/detail/status controlsを確認対象に入れる。",
@@ -854,6 +854,7 @@
       "max_confidence": 79,
       "auto_ready_count": 0,
       "representative_titles": [
+        "サンプルデータ: モバイル幅レビュー操作の検証",
         "Mobile review controls をログイン確認から切り分ける"
       ],
       "session_ids": [
@@ -861,7 +862,7 @@
       ],
       "latest_end_at": "2026-04-29T02:55:00+09:00",
       "latest_status": "Need Review",
-      "latest_title": "Mobile review controls をログイン確認から切り分ける",
+      "latest_title": "サンプルデータ: モバイル幅レビュー操作の検証",
       "latest_assistant_message": "local/Pagesのbrowser smokeでmobile操作を検証し、candidate/detail/status controlsを確認対象に入れる。",
       "latest_blocker": "none",
       "latest_doneish_signal": false,
@@ -876,7 +877,9 @@
         "冒頭のPages/CiC確認はテスト手段の相談であり、カードタイトルにはしない。",
         "実タスクはmobile review surfaceで候補追加、詳細、状態変更を安全に検証すること。",
         "外部ログイン確認は必要なら別作業だが、このカードではUI操作テストを代表にする。"
-      ]
+      ],
+      "latest_source_file": "sample/topic-conflict-login-to-mobile.jsonl",
+      "latest_provider_session_type": "codex-cli-session"
     },
     {
       "cluster_key": "distribution:abandoned-hosting-path",
@@ -1277,7 +1280,7 @@
     {
       "task_id": "mobile-review-controls",
       "cluster_key": "codex-kanban:mobile-review-controls",
-      "title_ja": "モバイル幅でも候補追加・詳細確認・状態変更が問題なく使えるようにレビュー操作を整える",
+      "title_ja": "サンプルデータ: モバイル幅レビュー操作の検証",
       "task_size_ja": "中タスク",
       "推奨列": "Need Review",
       "理由": "1件の session / repo: codex-session-kanban-demo / 主状態: Need Review",
@@ -1289,6 +1292,7 @@
       ],
       "session_count": 1,
       "representative_titles": [
+        "サンプルデータ: モバイル幅レビュー操作の検証",
         "Mobile review controls をログイン確認から切り分ける"
       ],
       "priority_score": 95

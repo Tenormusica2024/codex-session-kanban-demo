@@ -2966,8 +2966,29 @@ def derive_title_from_intent_texts(texts: list[str]) -> str:
     return ""
 
 
-def is_demo_fixture_validation_cluster(cluster: dict[str, Any]) -> bool:
-    """Detect synthetic/public-fixture validation work that should not look like a real user task."""
+def demo_fixture_context(cluster: dict[str, Any]) -> str:
+    return "\n".join(
+        str(part or "")
+        for part in (
+            cluster.get("cluster_key"),
+            cluster.get("cluster_label"),
+            cluster.get("latest_source_file"),
+            cluster.get("latest_provider_session_type"),
+            cluster.get("latest_summary"),
+            cluster.get("latest_current_goal"),
+            cluster.get("latest_meaningful_change"),
+            "\n".join(str(item) for item in (cluster.get("latest_evidence_messages") or [])),
+        )
+    ).lower()
+
+
+def is_demo_fixture_cluster(cluster: dict[str, Any]) -> bool:
+    """Detect synthetic/public-fixture work that should not look like a real user task."""
+    context = demo_fixture_context(cluster)
+    return any(token in context for token in ("fixture", "sample/", "sample-", "sample data", "サンプルデータ"))
+
+
+def is_provider_import_validation_cluster(cluster: dict[str, Any]) -> bool:
     context = "\n".join(
         str(part or "")
         for part in (
@@ -2999,12 +3020,15 @@ def is_demo_fixture_validation_cluster(cluster: dict[str, Any]) -> bool:
 
 
 def mark_demo_fixture_title(title: str, cluster: dict[str, Any]) -> str:
-    if not title or not is_demo_fixture_validation_cluster(cluster):
+    if not title or not is_demo_fixture_cluster(cluster):
         return title
     if title.startswith("サンプルデータ"):
         return title
-    if re.search(r"Claude Code/Cursor/Gemini形式", title):
+    context = demo_fixture_context(cluster)
+    if is_provider_import_validation_cluster(cluster) or re.search(r"Claude Code/Cursor/Gemini形式", title):
         return "サンプルデータ: Claude Code/Cursor/Gemini形式の取込検証"
+    if "mobile" in context or "モバイル" in title:
+        return "サンプルデータ: モバイル幅レビュー操作の検証"
     return f"サンプルデータ: {title}"
 
 
@@ -3552,6 +3576,7 @@ def repair_suggested_task_titles(suggested_tasks: list[dict[str, Any]], task_clu
         if repaired and (
             title_has_user_recognition_risk(current)
             or user_recognizable_title_score(repaired) > user_recognizable_title_score(current)
+            or (repaired.startswith("サンプルデータ") and not current.startswith("サンプルデータ"))
         ):
             task["title_ja"] = repaired
     return suggested_tasks
