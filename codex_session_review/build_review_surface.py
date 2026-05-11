@@ -2754,6 +2754,8 @@ def enrich_task_clusters(sessions: list[dict[str, Any]]) -> list[dict[str, Any]]
             cluster["latest_end_at"] = end_at
             cluster["latest_status"] = item.get("suggested_status")
             cluster["latest_title"] = item.get("title")
+            cluster["latest_source_file"] = item.get("source_file")
+            cluster["latest_provider_session_type"] = item.get("provider_session_type")
             cluster["latest_summary"] = item.get("summary")
             cluster["latest_task_body_summary"] = item.get("task_body_summary")
             cluster["latest_current_goal"] = item.get("current_goal")
@@ -2791,6 +2793,8 @@ def enrich_task_clusters(sessions: list[dict[str, Any]]) -> list[dict[str, Any]]
                 "latest_end_at": cluster.get("latest_end_at"),
                 "latest_status": cluster.get("latest_status"),
                 "latest_title": cluster.get("latest_title"),
+                "latest_source_file": cluster.get("latest_source_file"),
+                "latest_provider_session_type": cluster.get("latest_provider_session_type"),
                 "latest_summary": cluster.get("latest_summary"),
                 "latest_task_body_summary": cluster.get("latest_task_body_summary"),
                 "latest_current_goal": cluster.get("latest_current_goal"),
@@ -2962,6 +2966,48 @@ def derive_title_from_intent_texts(texts: list[str]) -> str:
     return ""
 
 
+def is_demo_fixture_validation_cluster(cluster: dict[str, Any]) -> bool:
+    """Detect synthetic/public-fixture validation work that should not look like a real user task."""
+    context = "\n".join(
+        str(part or "")
+        for part in (
+            cluster.get("cluster_key"),
+            cluster.get("cluster_label"),
+            cluster.get("latest_source_file"),
+            cluster.get("latest_provider_session_type"),
+            cluster.get("latest_summary"),
+            cluster.get("latest_current_goal"),
+            cluster.get("latest_meaningful_change"),
+            "\n".join(str(item) for item in (cluster.get("latest_evidence_messages") or [])),
+        )
+    ).lower()
+    fixture_signal = any(token in context for token in ("fixture", "sample/", "sample-", "sample data", "サンプルデータ"))
+    import_validation_signal = any(
+        token in context
+        for token in (
+            "provider import",
+            "provider-native",
+            "schema compatibility",
+            "session schema",
+            "cross-session lineage",
+            "claude code",
+            "cursor",
+            "gemini",
+        )
+    )
+    return fixture_signal and import_validation_signal
+
+
+def mark_demo_fixture_title(title: str, cluster: dict[str, Any]) -> str:
+    if not title or not is_demo_fixture_validation_cluster(cluster):
+        return title
+    if title.startswith("サンプルデータ"):
+        return title
+    if re.search(r"Claude Code/Cursor/Gemini形式", title):
+        return "サンプルデータ: Claude Code/Cursor/Gemini形式の取込検証"
+    return f"サンプルデータ: {title}"
+
+
 def derive_user_recognizable_cluster_title(cluster: dict[str, Any]) -> str:
     """Prefer a title that lets the user remember the actual session.
 
@@ -2996,7 +3042,7 @@ def derive_user_recognizable_cluster_title(cluster: dict[str, Any]) -> str:
         and not title_has_user_recognition_risk(best_direct)
         and user_recognizable_title_score(best_direct) >= 8
     ):
-        return best_direct
+        return mark_demo_fixture_title(best_direct, cluster)
 
     intent_title = derive_title_from_intent_texts(
         [
@@ -3013,8 +3059,8 @@ def derive_user_recognizable_cluster_title(cluster: dict[str, Any]) -> str:
         or title_has_user_recognition_risk(best_direct)
         or user_recognizable_title_score(intent_title) >= user_recognizable_title_score(best_direct)
     ):
-        return intent_title
-    return best_direct
+        return mark_demo_fixture_title(intent_title, cluster)
+    return mark_demo_fixture_title(best_direct, cluster)
 
 
 def derive_task_title_ja(cluster: dict[str, Any]) -> str:
@@ -3478,6 +3524,8 @@ def attach_session_context_to_task_clusters(task_clusters: list[dict[str, Any]],
             "representative_titles",
             "latest_title",
             "latest_summary",
+            "latest_source_file",
+            "latest_provider_session_type",
             "latest_task_body_summary",
             "latest_current_goal",
             "latest_assistant_message",

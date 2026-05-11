@@ -73,6 +73,8 @@ class CodexReviewSurfaceTitleTest(unittest.TestCase):
                     "Provider import normalization を実装して検証する",
                 ],
                 "latest_title": "Provider import normalization を実装して検証する",
+                "latest_source_file": "sample/provider-import-normalization.jsonl",
+                "latest_provider_session_type": "codex-cli-session",
                 "latest_current_goal": "Provider import互換の実装とfixture検証。",
                 "latest_summary": (
                     "Claude Code / Cursor / Gemini 風の軽量JSONを共通session schemaへ正規化する。"
@@ -87,7 +89,7 @@ class CodexReviewSurfaceTitleTest(unittest.TestCase):
             }
         )
 
-        self.assertEqual(title, "Claude Code/Cursor/Gemini形式のJSONを共通セッション形式に変換する")
+        self.assertEqual(title, "サンプルデータ: Claude Code/Cursor/Gemini形式の取込検証")
 
     def test_llmwiki_research_links_fallback_is_not_creative_assets(self):
         topic_key, topic_label, confidence, reason = derive_topic_key(
