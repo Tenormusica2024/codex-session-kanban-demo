@@ -661,23 +661,6 @@ function titleCaseLabel(value) {
     .replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
-const JA_TASK_LABELS = {
-  "External Kanban sink rescope": "Plane PoC の blocked 理由を整理して source-side に戻す",
-  "Public demo deployment": "公開デモのデプロイ権限確認",
-  "Public demo deployment permission check": "公開デモのデプロイ権限確認",
-  "Provider import normalization": "Provider import normalization を実装して検証する",
-  "Mobile review controls": "Mobile review controls をログイン確認から切り分ける",
-  "Bookmark recommendation dedupe": "Xブックマーク推薦の重複抑止",
-  "Project DOF repo readiness review": "project-dof repo公開準備レビュー",
-  "Project DOF repository readiness review": "project-dof repo公開準備レビュー",
-  "Teaser LP creative direction": "Project DOF ティザーLPのクリエイティブ方針",
-  "Project DOF teaser LP creative direction": "Project DOF ティザーLPのクリエイティブ方針",
-  "Static review surface": "静的レビュー面の土台整理",
-  "Claude Code provider import": "Claude Code transcript import のマッピング整理",
-  "Claude Code transcript import mapping": "Claude Code transcript import のマッピング整理",
-  "Abandoned hosting path": "Vercel制限後に古いホスティング案をDroppedへ退避",
-};
-
 const EN_TASK_LABELS = {
   "Plane PoC の blocked 理由を整理して source-side に戻す": "Re-scope a Blocked External Kanban Integration",
   "公開デモのデプロイ権限確認": "Public Demo Deployment Permission Check",
@@ -710,6 +693,16 @@ const EN_TASK_LABELS = {
   "llmwiki": "LLMWIKI Review",
 };
 
+const USER_TITLE_RISK_TOKENS = [
+  "rescope",
+  "sink",
+  "source-side",
+  "provisioning",
+  "controls",
+  "blocked",
+  "external kanban",
+];
+
 function translateKnownLabel(value, fallback = "") {
   const raw = String(value || "").trim();
   if (!raw) return fallback;
@@ -721,15 +714,18 @@ function translateKnownLabel(value, fallback = "") {
   return fallback || "Session Task";
 }
 
-function translateKnownJapaneseLabel(value, fallback = "") {
+function asciiLetterRatio(value) {
+  const compact = String(value || "").replace(/\s+/g, "");
+  if (!compact) return 0;
+  const asciiLetters = [...compact].filter((char) => /[a-z]/i.test(char)).length;
+  return asciiLetters / compact.length;
+}
+
+function titleHasUserRecognitionRisk(value) {
   const raw = String(value || "").trim();
-  if (!raw) return fallback;
-  if (hasJapanese(raw)) return raw;
-  if (JA_TASK_LABELS[raw]) return JA_TASK_LABELS[raw];
-  for (const [en, ja] of Object.entries(JA_TASK_LABELS)) {
-    if (raw.includes(en)) return ja;
-  }
-  return fallback || raw;
+  if (!raw) return true;
+  const lowered = raw.toLowerCase();
+  return USER_TITLE_RISK_TOKENS.some((token) => lowered.includes(token));
 }
 
 function representativeJapaneseTitle(item) {
@@ -746,8 +742,8 @@ function displayTaskTitle(item) {
   const raw = item?.title_ja || item?.title || item?.cluster_label || item?.task_cluster_label || item?.task_cluster_family || "task";
   if (state.lang === "ja") {
     const representativeTitle = representativeJapaneseTitle(item);
-    if (!hasJapanese(raw) && representativeTitle) return representativeTitle;
-    return translateKnownJapaneseLabel(raw, raw);
+    if (titleHasUserRecognitionRisk(raw) && representativeTitle) return representativeTitle;
+    return raw;
   }
   if (item?.title_en) return item.title_en;
   const cluster = item?.cluster_label || item?.task_cluster_label;

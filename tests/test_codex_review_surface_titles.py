@@ -13,6 +13,7 @@ from codex_session_review.build_review_surface import (
     build_quality_report,
     concrete_title_from_topic,
     derive_repo_name,
+    derive_task_title_ja,
     derive_topic_key,
     SessionAccumulator,
     summarize_session,
@@ -20,6 +21,48 @@ from codex_session_review.build_review_surface import (
 
 
 class CodexReviewSurfaceTitleTest(unittest.TestCase):
+    def test_candidate_title_prefers_user_recognizable_intent_over_cluster_taxonomy(self):
+        title = derive_task_title_ja(
+            {
+                "cluster_label": "External Kanban sink rescope",
+                "primary_repos": ["openclaw-secretary"],
+                "representative_titles": ["Plane PoC の blocked 理由を整理して source-side に戻す"],
+                "latest_title": "Plane PoC の blocked 理由を整理して source-side に戻す",
+                "latest_summary": (
+                    "Plane provisioning を先に掘りすぎたので、元の目的である "
+                    "recent Codex session review surface を前段に戻すべきと判断した。"
+                ),
+                "latest_evidence_messages": [
+                    "元は recent Codex session の内容把握と HITL 判定が目的。",
+                    "Plane blocked は元タスク全体ではなく sink 側サブタスクの blocked。",
+                    "collector / digest / review surface が先。",
+                ],
+            }
+        )
+
+        self.assertEqual(title, "Codexセッションレビュー面を先に進める")
+
+    def test_candidate_title_extracts_actual_mobile_intent_from_summary(self):
+        title = derive_task_title_ja(
+            {
+                "cluster_label": "Mobile review controls",
+                "primary_repos": ["codex-session-kanban-demo"],
+                "representative_titles": ["Mobile review controls をログイン確認から切り分ける"],
+                "latest_title": "Mobile review controls をログイン確認から切り分ける",
+                "latest_summary": (
+                    "セッション冒頭はPages確認や認証状態の話から始まるが、"
+                    "本題はmobile幅でも候補追加・詳細確認・状態変更が破綻しないように"
+                    "review controlsを整えること。認証/Pages確認は前置きとして弱める。"
+                ),
+                "latest_evidence_messages": [
+                    "冒頭のPages/CiC確認はテスト手段の相談であり、カードタイトルにはしない。",
+                    "実タスクはmobile review surfaceで候補追加、詳細、状態変更を安全に検証すること。",
+                ],
+            }
+        )
+
+        self.assertEqual(title, "モバイル幅でも候補追加・詳細確認・状態変更が問題なく使えるようにレビュー操作を整える")
+
     def test_llmwiki_research_links_fallback_is_not_creative_assets(self):
         topic_key, topic_label, confidence, reason = derive_topic_key(
             repo_name="curiosity-wiki",

@@ -2754,7 +2754,11 @@ def enrich_task_clusters(sessions: list[dict[str, Any]]) -> list[dict[str, Any]]
             cluster["latest_end_at"] = end_at
             cluster["latest_status"] = item.get("suggested_status")
             cluster["latest_title"] = item.get("title")
+            cluster["latest_summary"] = item.get("summary")
+            cluster["latest_task_body_summary"] = item.get("task_body_summary")
+            cluster["latest_current_goal"] = item.get("current_goal")
             cluster["latest_assistant_message"] = item.get("last_assistant_message")
+            cluster["latest_evidence_messages"] = item.get("evidence_messages") or []
             cluster["latest_blocker"] = item.get("blocker")
             cluster["latest_doneish_signal"] = item.get("doneish_signal")
             cluster["latest_pendingish_signal"] = item.get("pendingish_signal")
@@ -2787,7 +2791,11 @@ def enrich_task_clusters(sessions: list[dict[str, Any]]) -> list[dict[str, Any]]
                 "latest_end_at": cluster.get("latest_end_at"),
                 "latest_status": cluster.get("latest_status"),
                 "latest_title": cluster.get("latest_title"),
+                "latest_summary": cluster.get("latest_summary"),
+                "latest_task_body_summary": cluster.get("latest_task_body_summary"),
+                "latest_current_goal": cluster.get("latest_current_goal"),
                 "latest_assistant_message": cluster.get("latest_assistant_message"),
+                "latest_evidence_messages": cluster.get("latest_evidence_messages", []),
                 "latest_blocker": cluster.get("latest_blocker"),
                 "latest_doneish_signal": cluster.get("latest_doneish_signal"),
                 "latest_pendingish_signal": cluster.get("latest_pendingish_signal"),
@@ -2817,10 +2825,188 @@ def enrich_task_clusters(sessions: list[dict[str, Any]]) -> list[dict[str, Any]]
     return cluster_rows
 
 
+JP_TEXT_RE = re.compile(r"[ぁ-んァ-ヶ一-龠]")
+TITLE_INTERNAL_JARGON = (
+    "rescope",
+    "sink",
+    "source-side",
+    "provisioning",
+    "controls",
+    "blocked",
+    "poc",
+    "external kanban",
+)
+MIXED_TITLE_TERM_REPLACEMENTS = (
+    (r"\brecent\s+Codex\s+session\s+review\s+surface\b", "Codexセッションレビュー面"),
+    (r"\bCodex\s+session\s+review\s+surface\b", "Codexセッションレビュー面"),
+    (r"\breview\s+surface\b", "レビュー面"),
+    (r"review\s+controls", "レビュー操作"),
+    (r"\bcontrols\b", "操作"),
+    (r"mobile幅", "モバイル幅"),
+    (r"\bMobile\b", "モバイル"),
+    (r"\bmobile\b", "モバイル"),
+    (r"\bblocked\b", "停止中"),
+)
+
+
+def has_japanese_text(text: str) -> bool:
+    return bool(JP_TEXT_RE.search(str(text or "")))
+
+
+def ascii_letter_ratio(text: str) -> float:
+    compact = re.sub(r"\s+", "", str(text or ""))
+    if not compact:
+        return 0.0
+    ascii_letters = sum(1 for char in compact if ("a" <= char.lower() <= "z"))
+    return ascii_letters / len(compact)
+
+
+def normalize_mixed_title_terms(text: str) -> str:
+    normalized = str(text or "").strip()
+    for pattern, replacement in MIXED_TITLE_TERM_REPLACEMENTS:
+        normalized = re.sub(pattern, replacement, normalized, flags=re.IGNORECASE)
+    normalized = normalized.replace("破綻しないように", "問題なく使えるように")
+    normalized = normalized.replace("前段に戻すべきと判断した", "先に進める")
+    normalized = normalized.replace("前段に戻すべき", "先に進める")
+    normalized = re.sub(r"\s+", " ", normalized).strip(" 。、")
+    normalized = re.sub(r"すること$", "する", normalized)
+    normalized = re.sub(r"([うくぐすつぬぶむる])こと$", r"\1", normalized)
+    return normalized
+
+
+def title_has_user_recognition_risk(title: str) -> bool:
+    raw = str(title or "").strip()
+    if not raw:
+        return True
+    lowered = raw.lower()
+    if raw.lower().startswith("unknown") or raw in GENERIC_TITLE_PATTERNS:
+        return True
+    return any(token in lowered for token in TITLE_INTERNAL_JARGON)
+
+
+def user_recognizable_title_score(title: str) -> int:
+    raw = str(title or "").strip()
+    if not raw:
+        return -100
+    score = 0
+    if has_japanese_text(raw):
+        score += 8
+    if re.search(r"(修正|確認|検証|整理|反映|分離|切り分け|進める|作る|更新|改善|戻す|整える)", raw):
+        score += 5
+    if any(token in raw for token in ("を", "に", "から", "へ", "の")):
+        score += 2
+    if len(raw) < 12:
+        score -= 2
+    if len(raw) > 64:
+        score -= 3
+    if title_has_user_recognition_risk(raw):
+        score -= 6
+    if not has_japanese_text(raw) and re.search(r"\b(project-dof|Claude Code|Provider import|repo)\b", raw, flags=re.IGNORECASE):
+        score += 2
+    return score
+
+
+def clean_intent_fragment(fragment: str) -> str:
+    text = normalize_mixed_title_terms(fragment)
+    text = re.sub(r"^(本題|実タスク|目的|元の目的)(は|である)?", "", text).strip(" :：")
+    text = text.replace("べきと判断した", "")
+    text = text.replace("べき", "")
+    text = text.replace("ための", "ために")
+    text = re.sub(r"すること$", "する", text)
+    text = re.sub(r"([うくぐすつぬぶむる])こと$", r"\1", text)
+    text = text.strip(" 。、")
+    return clip(text, 64)
+
+
+def derive_title_from_intent_texts(texts: list[str]) -> str:
+    joined = "\n".join(str(text or "") for text in texts if text)
+    if not joined:
+        return ""
+    patterns = (
+        (r"元の目的である(?P<body>[^。\n]+?)を前段に戻", "{body}を先に進める"),
+        (r"本題は(?P<body>[^。\n]+)", "{body}"),
+        (r"実タスクは(?P<body>[^。\n]+)", "{body}"),
+        (r"目的(?:である|は)?(?P<body>[^。\n]+?)を前段に戻", "{body}を先に進める"),
+        (r"(?P<body>[^。\n]{8,80}?)を先に進めるべき", "{body}を先に進める"),
+        (r"(?P<body>[^。\n]{8,80}?)を確認対象に入れる", "{body}を検証する"),
+    )
+    for pattern, template in patterns:
+        match = re.search(pattern, joined, flags=re.IGNORECASE)
+        if match:
+            body = clean_intent_fragment(match.group("body"))
+            title = clean_intent_fragment(template.format(body=body))
+            if title and user_recognizable_title_score(title) > 0:
+                return title
+    # Fallback: use the first Japanese sentence that looks like an action/intent.
+    for sentence in re.split(r"[。\n]", joined):
+        sentence = clean_intent_fragment(sentence)
+        if user_recognizable_title_score(sentence) >= 8:
+            return sentence
+    return ""
+
+
+def derive_user_recognizable_cluster_title(cluster: dict[str, Any]) -> str:
+    """Prefer a title that lets the user remember the actual session.
+
+    The candidate panel is a task-cluster view. Cluster labels are useful for
+    machine grouping, but they are often too abstract for human recall. This
+    function therefore scores concrete session-derived titles first, and only
+    falls back to intent extraction from summaries/evidence when the concrete
+    titles still look like internal taxonomy or implementation jargon.
+    """
+    representative_titles = [str(title) for title in cluster.get("representative_titles", []) if title]
+    raw_direct_candidates = [
+        cluster.get("latest_title"),
+        cluster.get("latest_current_goal"),
+        cluster.get("latest_task_body_summary"),
+        *representative_titles,
+    ]
+    direct_candidates = [
+        {
+            "raw": str(item),
+            "clean": clean_intent_fragment(str(item)),
+            "raw_risk": title_has_user_recognition_risk(str(item)),
+        }
+        for item in raw_direct_candidates
+        if item
+    ]
+    best_direct_row = max(direct_candidates, key=lambda item: user_recognizable_title_score(item["clean"]), default=None)
+    best_direct = best_direct_row["clean"] if best_direct_row else ""
+    best_direct_raw_risk = bool(best_direct_row and best_direct_row["raw_risk"])
+    if (
+        best_direct
+        and not best_direct_raw_risk
+        and not title_has_user_recognition_risk(best_direct)
+        and user_recognizable_title_score(best_direct) >= 8
+    ):
+        return best_direct
+
+    intent_title = derive_title_from_intent_texts(
+        [
+            cluster.get("latest_summary") or "",
+            cluster.get("latest_task_body_summary") or "",
+            cluster.get("latest_current_goal") or "",
+            cluster.get("latest_meaningful_change") or "",
+            cluster.get("latest_assistant_message") or "",
+            "\n".join(str(item) for item in (cluster.get("latest_evidence_messages") or [])),
+        ]
+    )
+    if intent_title and (
+        best_direct_raw_risk
+        or title_has_user_recognition_risk(best_direct)
+        or user_recognizable_title_score(intent_title) >= user_recognizable_title_score(best_direct)
+    ):
+        return intent_title
+    return best_direct
+
+
 def derive_task_title_ja(cluster: dict[str, Any]) -> str:
     label = cluster.get("cluster_label", "misc")
     repos = cluster.get("primary_repos", [])
     repo_name = repos[0] if repos else "unknown"
+    user_title = derive_user_recognizable_cluster_title(cluster)
+    if user_title and (title_has_user_recognition_risk(label) or not has_japanese_text(label)):
+        return user_title
     if label == "grok4cic運用" and repo_name != "unknown":
         return concrete_title_from_topic(repo_name, label, cluster.get("latest_meaningful_change") or "", "grok4cic のクリップボード運用ルール整理")
     if label == LLMWIKI_REPORT_VISIBILITY_LABEL:
@@ -2856,16 +3042,6 @@ def derive_task_title_ja(cluster: dict[str, Any]) -> str:
     if label == "Codexセッションkanbanタイトル分類改善":
         return concrete_title_from_topic(repo_name, label, cluster.get("latest_meaningful_change") or "", "Codexセッションkanbanのタイトル分類・quality gate改善", "\n".join(str(item) for item in cluster.get("representative_titles", [])))
     mapping = {
-        "External Kanban sink rescope": "Plane PoC の blocked 理由を整理して source-side に戻す",
-        "Public demo deployment": "公開デモのデプロイ権限確認",
-        "Provider import normalization": "Provider import normalization を実装して検証する",
-        "Mobile review controls": "Mobile review controls をログイン確認から切り分ける",
-        "Bookmark recommendation dedupe": "Xブックマーク推薦の重複抑止",
-        "Project DOF repo readiness review": "project-dof repo公開準備レビュー",
-        "Teaser LP creative direction": "Project DOF ティザーLPのクリエイティブ方針",
-        "Static review surface": "静的レビュー面の土台整理",
-        "Claude Code provider import": "Claude Code transcript import のマッピング整理",
-        "Abandoned hosting path": "Vercel制限後に古いホスティング案をDroppedへ退避",
         "ナレッジ取り込み": "LLMWIKI 週次レビューと取り込み整理",
         "ブックマーク見直し": "ブックマーク管理サイト / ピン留め repo 見直し",
         "ブックマーク推薦重複抑止": "Xブックマーク推薦の採用済み反映",
@@ -3265,6 +3441,57 @@ def normalize_import_bundle(raw: Any) -> dict[str, Any]:
     return bundle
 
 
+def attach_session_context_to_task_clusters(task_clusters: list[dict[str, Any]], sessions: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Backfill cluster rows with concrete session context used for titles.
+
+    Imported/public fixtures can already contain task_clusters generated by an
+    older version. Those rows often have only an abstract cluster_label and
+    representative_titles. Keep the row shape, but attach the latest session
+    summary/current goal/evidence so title generation can choose a
+    user-recognizable title without relying on per-label overrides.
+    """
+    enriched = enrich_task_clusters([dict(item) for item in sessions])
+    by_key = {item.get("cluster_key"): item for item in enriched}
+    by_label = {item.get("cluster_label"): item for item in enriched}
+    for cluster in task_clusters:
+        source = by_key.get(cluster.get("cluster_key")) or by_label.get(cluster.get("cluster_label"))
+        if not source:
+            continue
+        for field in (
+            "representative_titles",
+            "latest_title",
+            "latest_summary",
+            "latest_task_body_summary",
+            "latest_current_goal",
+            "latest_assistant_message",
+            "latest_evidence_messages",
+            "latest_meaningful_change",
+            "latest_blocker",
+            "latest_task_shift_signal",
+        ):
+            if not cluster.get(field) and source.get(field):
+                cluster[field] = source[field]
+    return task_clusters
+
+
+def repair_suggested_task_titles(suggested_tasks: list[dict[str, Any]], task_clusters: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Repair stale candidate titles using the current title policy."""
+    by_key = {item.get("cluster_key"): item for item in task_clusters}
+    by_label = {item.get("cluster_label"): item for item in task_clusters}
+    for task in suggested_tasks:
+        cluster = by_key.get(task.get("cluster_key")) or by_label.get(task.get("cluster_label"))
+        if not cluster:
+            continue
+        repaired = derive_task_title_ja(cluster)
+        current = str(task.get("title_ja") or "")
+        if repaired and (
+            title_has_user_recognition_risk(current)
+            or user_recognizable_title_score(repaired) > user_recognizable_title_score(current)
+        ):
+            task["title_ja"] = repaired
+    return suggested_tasks
+
+
 def derive_task_priority(cluster: dict[str, Any]) -> int:
     session_count = int(cluster.get("session_count", 0))
     repo_count = len(cluster.get("primary_repos", []))
@@ -3329,6 +3556,8 @@ def title_quality_issues(title: str) -> list[str]:
         issues.append("generic-confirmation-title")
     if title.endswith(("の整理", "を整理")):
         issues.append("over-generic-organize-title")
+    if title_has_user_recognition_risk(title):
+        issues.append("user-recognition-title-risk")
     return issues
 
 
@@ -3867,9 +4096,13 @@ def main() -> None:
         sessions = bundle.get("sessions", [])
         if sessions and not bundle.get("task_clusters"):
             bundle["task_clusters"] = enrich_task_clusters(sessions)
+        elif sessions and bundle.get("task_clusters"):
+            bundle["task_clusters"] = attach_session_context_to_task_clusters(bundle["task_clusters"], sessions)
         if bundle.get("task_clusters") and not bundle.get("suggested_tasks"):
             bundle["suggested_tasks"] = build_suggested_tasks(bundle["task_clusters"])
-        if sessions and bundle.get("task_clusters") and bundle.get("suggested_tasks") and not bundle.get("quality_report"):
+        elif bundle.get("task_clusters") and bundle.get("suggested_tasks"):
+            bundle["suggested_tasks"] = repair_suggested_task_titles(bundle["suggested_tasks"], bundle["task_clusters"])
+        if sessions and bundle.get("task_clusters") and bundle.get("suggested_tasks"):
             bundle["quality_report"] = build_quality_report(sessions, bundle["task_clusters"], bundle["suggested_tasks"])
         apply_lightweight_prioritization_stats(bundle)
     else:

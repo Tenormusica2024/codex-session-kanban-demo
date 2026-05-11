@@ -779,7 +779,14 @@
       "latest_task_shift_signal": false,
       "latest_meaningful_change": "provider-native sampleとnormalization smokeを追加。",
       "ai_column": "Need Review",
-      "ai_reason": "最新 session が review 要求で止まっている"
+      "ai_reason": "最新 session が review 要求で止まっている",
+      "latest_summary": "Claude Code / Cursor / Gemini 風の軽量JSONを共通session schemaへ正規化する。古い前提確認セッションを代表カードに統合し、public fixtureでcross-session lineageを確認できるようにする。",
+      "latest_current_goal": "Provider import互換の実装とfixture検証。",
+      "latest_evidence_messages": [
+        "session_id / repo / timestamp / status / messages のaliasを正規化する。",
+        "Claude Code / Cursor / Gemini-style sampleをfixtureとして追加する。",
+        "preflight session はこの代表カードの suppressed predecessor として表示する。"
+      ]
     },
     {
       "cluster_key": "codex-kanban:static-review-surface",
@@ -818,7 +825,12 @@
       "latest_task_shift_signal": null,
       "latest_meaningful_change": null,
       "ai_column": "Pending",
-      "ai_reason": "in progress のまま 3日以上更新がない"
+      "ai_reason": "in progress のまま 3日以上更新がない",
+      "latest_summary": "single-file HTML で review board を作り、manual drag を human override として保存する。静的 deploy しやすい構成を優先。",
+      "latest_evidence_messages": [
+        "HTML なら local でも deploy 後でも同じ surface にできる。",
+        "drag 操作と detail pane を同居させると HITL がやりやすい。"
+      ]
     },
     {
       "cluster_key": "codex-kanban:mobile-review-controls",
@@ -854,7 +866,14 @@
       "latest_task_shift_signal": true,
       "latest_meaningful_change": "mobile smokeでcandidate/detail/status controlsを検証対象にした。",
       "ai_column": "Need Review",
-      "ai_reason": "最新 session が review 要求で止まっている"
+      "ai_reason": "最新 session が review 要求で止まっている",
+      "latest_summary": "セッション冒頭はPages確認や認証状態の話から始まるが、本題はmobile幅でも候補追加・詳細確認・状態変更が破綻しないようにreview controlsを整えること。認証/Pages確認は前置きとして弱める。",
+      "latest_current_goal": "mobile幅のreview操作をブラウザsmokeで検証できるようにする。",
+      "latest_evidence_messages": [
+        "冒頭のPages/CiC確認はテスト手段の相談であり、カードタイトルにはしない。",
+        "実タスクはmobile review surfaceで候補追加、詳細、状態変更を安全に検証すること。",
+        "外部ログイン確認は必要なら別作業だが、このカードではUI操作テストを代表にする。"
+      ]
     },
     {
       "cluster_key": "distribution:abandoned-hosting-path",
@@ -890,7 +909,13 @@
       "latest_task_shift_signal": null,
       "latest_meaningful_change": null,
       "ai_column": "Dropped",
-      "ai_reason": "cluster の最新状態をそのまま採用"
+      "ai_reason": "cluster の最新状態をそのまま採用",
+      "latest_summary": "Vercel無料枠や認証操作で詰まったため、当初のホスティング案は継続対象から外し、public GitHub Pages とローカル配布の安全な経路に切り替えた。古い案は参照履歴として残すが、現在の作業候補からは外す。",
+      "latest_evidence_messages": [
+        "Vercel制限によりその場でのdeploy継続は避ける。",
+        "個人データはpublic repoに入れず、公開版はfixtureだけにする。",
+        "GitHub Pages と downloadable artifact が現在の配布経路になった。"
+      ]
     },
     {
       "cluster_key": "global:bookmark-recommendation-dedupe",
@@ -926,7 +951,13 @@
       "latest_task_shift_signal": null,
       "latest_meaningful_change": null,
       "ai_column": "Need Review",
-      "ai_reason": "最新 session が review 要求で止まっている"
+      "ai_reason": "最新 session が review 要求で止まっている",
+      "latest_summary": "最初はAI秘書メールのリンク未生成調査だったが、後半はXブックマーク推薦で採用済み候補を再推薦しない除外記録の整備へ移った。最新phaseを現在タスクとして扱う。",
+      "latest_evidence_messages": [
+        "前半のリンク未生成は入口の調査だった。",
+        "後半ではXブックマーク推薦の除外記録と再推薦防止が本題になった。",
+        "最新phaseを優先し、古いmail-link topicへ戻さない。"
+      ]
     },
     {
       "cluster_key": "provider-import:claude-code-schema",
@@ -962,7 +993,13 @@
       "latest_task_shift_signal": null,
       "latest_meaningful_change": null,
       "ai_column": "Pending",
-      "ai_reason": "cluster の最新状態をそのまま採用"
+      "ai_reason": "cluster の最新状態をそのまま採用",
+      "latest_summary": "A non-Codex provider fixture maps Claude Code style session metadata into the shared session schema. The task is schema compatibility and display validation, not running Claude Code from the board.",
+      "latest_evidence_messages": [
+        "Provider compatibility should be schema/display only.",
+        "The board must not become an agent runner.",
+        "Required fields can be mapped from a sanitized Claude Code summary."
+      ]
     },
     {
       "cluster_key": "codex-kanban:external-sink-rescope",
@@ -998,7 +1035,13 @@
       "latest_task_shift_signal": null,
       "latest_meaningful_change": null,
       "ai_column": "Blocked",
-      "ai_reason": "最新 session が blocked 判定"
+      "ai_reason": "最新 session が blocked 判定",
+      "latest_summary": "Plane provisioning を先に掘りすぎたので、元の目的である recent Codex session review surface を前段に戻すべきと判断した。",
+      "latest_evidence_messages": [
+        "元は recent Codex session の内容把握と HITL 判定が目的。",
+        "Plane blocked は元タスク全体ではなく sink 側サブタスクの blocked。",
+        "collector / digest / review surface が先。"
+      ]
     },
     {
       "cluster_key": "knowledge-ops:llmwiki-delta-review",
@@ -1034,7 +1077,12 @@
       "latest_task_shift_signal": null,
       "latest_meaningful_change": null,
       "ai_column": "Done",
-      "ai_reason": "最新 session が完了寄りで閉じている"
+      "ai_reason": "最新 session が完了寄りで閉じている",
+      "latest_summary": "外部投稿の主張と既存 llmwiki の current knowledge を比較し、新情報の有無と実装差分だけ抽出した。",
+      "latest_evidence_messages": [
+        "転載記事経由で内容確認。",
+        "既存 llmwiki の構造の方が上位互換寄りと評価。"
+      ]
     },
     {
       "cluster_key": "project-dof:repo-readiness-review",
@@ -1070,7 +1118,13 @@
       "latest_task_shift_signal": null,
       "latest_meaningful_change": null,
       "ai_column": "Need Review",
-      "ai_reason": "最新 session が review 要求で止まっている"
+      "ai_reason": "最新 session が review 要求で止まっている",
+      "latest_summary": "The same project has a second task that is not the teaser LP: reviewing repository structure, README clarity, deployment files, and remaining release blockers. It should stay separate from creative-direction work even though the repo is the same.",
+      "latest_evidence_messages": [
+        "The user asks for repository readiness, not visual asset direction.",
+        "The same repo contains parallel work streams that should not be merged blindly.",
+        "The next action is to resolve README/deploy/release checklist gaps."
+      ]
     },
     {
       "cluster_key": "codex-kanban:public-demo-deploy",
@@ -1106,7 +1160,13 @@
       "latest_task_shift_signal": null,
       "latest_meaningful_change": null,
       "ai_column": "Blocked",
-      "ai_reason": "最新 session が blocked 判定"
+      "ai_reason": "最新 session が blocked 判定",
+      "latest_summary": "The session prepares GitHub Pages deployment for the public fixture demo, but final publication depends on repository Pages settings and permission confirmation. The task needs user/environment input rather than more local implementation.",
+      "latest_evidence_messages": [
+        "Distribution build must use fixture data only.",
+        "GitHub Pages settings may require user-side confirmation.",
+        "The next action is to verify Pages source and rerun the workflow."
+      ]
     },
     {
       "cluster_key": "project-dof:teaser-lp-creative",
@@ -1142,14 +1202,20 @@
       "latest_task_shift_signal": true,
       "latest_meaningful_change": null,
       "ai_column": "Need Review",
-      "ai_reason": "最新 session が review 要求で止まっている"
+      "ai_reason": "最新 session が review 要求で止まっている",
+      "latest_summary": "The session begins with image-generation route checks, then shifts to the actual task: deciding how the generated visual assets should support the Project DOF teaser LP. The setup topic is downweighted and the LP creative direction remains the card intent.",
+      "latest_evidence_messages": [
+        "Image route verification is a setup topic.",
+        "The main task is choosing creative direction for the teaser LP.",
+        "The next action is to pick assets and update the LP section."
+      ]
     }
   ],
   "suggested_tasks": [
     {
       "task_id": "external-kanban-sink-rescope",
       "cluster_key": "codex-kanban:external-sink-rescope",
-      "title_ja": "Plane PoC の blocked 理由を整理して source-side に戻す",
+      "title_ja": "Codexセッションレビュー面を先に進める",
       "task_size_ja": "中タスク",
       "推奨列": "Blocked",
       "理由": "1件の session / repo: openclaw-secretary / 主状態: Blocked",
@@ -1207,7 +1273,7 @@
     {
       "task_id": "mobile-review-controls",
       "cluster_key": "codex-kanban:mobile-review-controls",
-      "title_ja": "Mobile review controls をログイン確認から切り分ける",
+      "title_ja": "モバイル幅でも候補追加・詳細確認・状態変更が問題なく使えるようにレビュー操作を整える",
       "task_size_ja": "中タスク",
       "推奨列": "Need Review",
       "理由": "1件の session / repo: codex-session-kanban-demo / 主状態: Need Review",
@@ -1344,6 +1410,15 @@
     "status": "needs-review",
     "weak_session_titles": [
       {
+        "session_id": "sample-plane-poc",
+        "title": "Plane PoC の blocked 理由を整理して source-side に戻す",
+        "issues": [
+          "user-recognition-title-risk"
+        ],
+        "topic_label": "External Kanban sink rescope",
+        "latest_meaningful_change": null
+      },
+      {
         "session_id": "sample-static-surface-predecessor",
         "title": "進捗確認ではなく静的レビュー面の土台整理",
         "issues": [
@@ -1351,6 +1426,15 @@
         ],
         "topic_label": "Static review surface",
         "latest_meaningful_change": null
+      },
+      {
+        "session_id": "sample-topic-conflict-login-to-mobile",
+        "title": "Mobile review controls をログイン確認から切り分ける",
+        "issues": [
+          "user-recognition-title-risk"
+        ],
+        "topic_label": "Mobile review controls",
+        "latest_meaningful_change": "mobile smokeでcandidate/detail/status controlsを検証対象にした。"
       }
     ],
     "weak_candidate_titles": [],
@@ -1358,7 +1442,17 @@
     "suspicious_merges": [],
     "project_entity_mismatches": [],
     "stale_context_topic_risks": [],
-    "topic_title_mismatches": []
+    "topic_title_mismatches": [],
+    "lightweight_prioritization": {
+      "session_count": 13,
+      "high_activity_count": 1,
+      "large_session_count": 0,
+      "flags": {
+        "blocker": 3,
+        "high_activity": 1,
+        "task_shift": 3
+      }
+    }
   },
   "app_version": "0.1.37"
 }
