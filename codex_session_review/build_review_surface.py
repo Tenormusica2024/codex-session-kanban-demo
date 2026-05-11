@@ -2856,6 +2856,16 @@ def derive_task_title_ja(cluster: dict[str, Any]) -> str:
     if label == "Codexセッションkanbanタイトル分類改善":
         return concrete_title_from_topic(repo_name, label, cluster.get("latest_meaningful_change") or "", "Codexセッションkanbanのタイトル分類・quality gate改善", "\n".join(str(item) for item in cluster.get("representative_titles", [])))
     mapping = {
+        "External Kanban sink rescope": "Plane PoC の blocked 理由を整理して source-side に戻す",
+        "Public demo deployment": "公開デモのデプロイ権限確認",
+        "Provider import normalization": "Provider import normalization を実装して検証する",
+        "Mobile review controls": "Mobile review controls をログイン確認から切り分ける",
+        "Bookmark recommendation dedupe": "Xブックマーク推薦の重複抑止",
+        "Project DOF repo readiness review": "project-dof repo公開準備レビュー",
+        "Teaser LP creative direction": "Project DOF ティザーLPのクリエイティブ方針",
+        "Static review surface": "静的レビュー面の土台整理",
+        "Claude Code provider import": "Claude Code transcript import のマッピング整理",
+        "Abandoned hosting path": "Vercel制限後に古いホスティング案をDroppedへ退避",
         "ナレッジ取り込み": "LLMWIKI 週次レビューと取り込み整理",
         "ブックマーク見直し": "ブックマーク管理サイト / ピン留め repo 見直し",
         "ブックマーク推薦重複抑止": "Xブックマーク推薦の採用済み反映",

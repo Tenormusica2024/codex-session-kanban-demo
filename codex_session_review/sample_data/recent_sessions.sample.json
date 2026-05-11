@@ -1149,7 +1149,7 @@
     {
       "task_id": "external-kanban-sink-rescope",
       "cluster_key": "codex-kanban:external-sink-rescope",
-      "title_ja": "External Kanban sink rescope",
+      "title_ja": "Plane PoC の blocked 理由を整理して source-side に戻す",
       "task_size_ja": "中タスク",
       "推奨列": "Blocked",
       "理由": "1件の session / repo: openclaw-secretary / 主状態: Blocked",
@@ -1168,7 +1168,7 @@
     {
       "task_id": "public-demo-deployment",
       "cluster_key": "codex-kanban:public-demo-deploy",
-      "title_ja": "Public demo deployment",
+      "title_ja": "公開デモのデプロイ権限確認",
       "task_size_ja": "中タスク",
       "推奨列": "Blocked",
       "理由": "1件の session / repo: codex-session-kanban-demo / 主状態: Blocked",
@@ -1187,7 +1187,7 @@
     {
       "task_id": "provider-import-normalization",
       "cluster_key": "provider-import:normalization",
-      "title_ja": "Provider import normalization",
+      "title_ja": "Provider import normalization を実装して検証する",
       "task_size_ja": "中タスク",
       "推奨列": "Need Review",
       "理由": "2件の session / repo: codex-session-kanban-demo / 主状態: Need Review",
@@ -1207,7 +1207,7 @@
     {
       "task_id": "mobile-review-controls",
       "cluster_key": "codex-kanban:mobile-review-controls",
-      "title_ja": "Mobile review controls",
+      "title_ja": "Mobile review controls をログイン確認から切り分ける",
       "task_size_ja": "中タスク",
       "推奨列": "Need Review",
       "理由": "1件の session / repo: codex-session-kanban-demo / 主状態: Need Review",
@@ -1226,7 +1226,7 @@
     {
       "task_id": "bookmark-recommendation-dedupe",
       "cluster_key": "global:bookmark-recommendation-dedupe",
-      "title_ja": "Bookmark recommendation dedupe",
+      "title_ja": "Xブックマーク推薦の重複抑止",
       "task_size_ja": "中タスク",
       "推奨列": "Need Review",
       "理由": "1件の session / repo: openclaw-secretary / 主状態: Need Review",
@@ -1245,7 +1245,7 @@
     {
       "task_id": "project-dof-repo-readiness-review",
       "cluster_key": "project-dof:repo-readiness-review",
-      "title_ja": "Project DOF repo readiness review",
+      "title_ja": "project-dof repo公開準備レビュー",
       "task_size_ja": "中タスク",
       "推奨列": "Need Review",
       "理由": "1件の session / repo: project-dof / 主状態: Need Review",
@@ -1264,7 +1264,7 @@
     {
       "task_id": "teaser-lp-creative-direction",
       "cluster_key": "project-dof:teaser-lp-creative",
-      "title_ja": "Teaser LP creative direction",
+      "title_ja": "Project DOF ティザーLPのクリエイティブ方針",
       "task_size_ja": "中タスク",
       "推奨列": "Need Review",
       "理由": "1件の session / repo: project-dof / 主状態: Need Review",
@@ -1283,7 +1283,7 @@
     {
       "task_id": "static-review-surface",
       "cluster_key": "codex-kanban:static-review-surface",
-      "title_ja": "Static review surface",
+      "title_ja": "静的レビュー面の土台整理",
       "task_size_ja": "大タスク",
       "推奨列": "Pending",
       "理由": "2件の session / 2 repo 跨ぎ / 主状態: In Progress",
@@ -1304,7 +1304,7 @@
     {
       "task_id": "claude-code-provider-import",
       "cluster_key": "provider-import:claude-code-schema",
-      "title_ja": "Claude Code provider import",
+      "title_ja": "Claude Code transcript import のマッピング整理",
       "task_size_ja": "中タスク",
       "推奨列": "Pending",
       "理由": "1件の session / repo: codex-session-kanban-demo / 主状態: Pending",
@@ -1323,7 +1323,7 @@
     {
       "task_id": "abandoned-hosting-path",
       "cluster_key": "distribution:abandoned-hosting-path",
-      "title_ja": "Abandoned hosting path",
+      "title_ja": "Vercel制限後に古いホスティング案をDroppedへ退避",
       "task_size_ja": "中タスク",
       "推奨列": "Dropped",
       "理由": "1件の session / repo: codex-session-kanban-demo / 主状態: Dropped",

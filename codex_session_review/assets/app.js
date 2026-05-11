@@ -661,7 +661,34 @@ function titleCaseLabel(value) {
     .replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
+const JA_TASK_LABELS = {
+  "External Kanban sink rescope": "Plane PoC の blocked 理由を整理して source-side に戻す",
+  "Public demo deployment": "公開デモのデプロイ権限確認",
+  "Public demo deployment permission check": "公開デモのデプロイ権限確認",
+  "Provider import normalization": "Provider import normalization を実装して検証する",
+  "Mobile review controls": "Mobile review controls をログイン確認から切り分ける",
+  "Bookmark recommendation dedupe": "Xブックマーク推薦の重複抑止",
+  "Project DOF repo readiness review": "project-dof repo公開準備レビュー",
+  "Project DOF repository readiness review": "project-dof repo公開準備レビュー",
+  "Teaser LP creative direction": "Project DOF ティザーLPのクリエイティブ方針",
+  "Project DOF teaser LP creative direction": "Project DOF ティザーLPのクリエイティブ方針",
+  "Static review surface": "静的レビュー面の土台整理",
+  "Claude Code provider import": "Claude Code transcript import のマッピング整理",
+  "Claude Code transcript import mapping": "Claude Code transcript import のマッピング整理",
+  "Abandoned hosting path": "Vercel制限後に古いホスティング案をDroppedへ退避",
+};
+
 const EN_TASK_LABELS = {
+  "Plane PoC の blocked 理由を整理して source-side に戻す": "Re-scope a Blocked External Kanban Integration",
+  "公開デモのデプロイ権限確認": "Public Demo Deployment Permission Check",
+  "Provider import normalization を実装して検証する": "Normalize Provider Import Session Shapes",
+  "Mobile review controls をログイン確認から切り分ける": "Separate Mobile Review Controls from Login/Pages Checks",
+  "Xブックマーク推薦の重複抑止": "Keep Latest Bookmark Recommendation Work Instead of Old Mail Context",
+  "project-dof repository readiness review": "Project DOF Repository Readiness Review",
+  "Project DOF ティザーLPのクリエイティブ方針": "Project DOF Teaser LP Creative Direction",
+  "静的レビュー面の土台整理": "Define the Static Review Surface Foundation",
+  "Claude Code transcript import mapping": "Claude Code Transcript Import Mapping",
+  "Vercel制限後に古いホスティング案をDroppedへ退避": "Drop the Old Hosting Path After Vercel Limits",
   "AI秘書のkanban自動更新": "AI Secretary Kanban Automation",
   "kanban自動化": "Kanban Automation",
   "B2Bポートフォリオの販路拡大": "B2B Portfolio Sales Channel Expansion",
@@ -694,6 +721,22 @@ function translateKnownLabel(value, fallback = "") {
   return fallback || "Session Task";
 }
 
+function translateKnownJapaneseLabel(value, fallback = "") {
+  const raw = String(value || "").trim();
+  if (!raw) return fallback;
+  if (hasJapanese(raw)) return raw;
+  if (JA_TASK_LABELS[raw]) return JA_TASK_LABELS[raw];
+  for (const [en, ja] of Object.entries(JA_TASK_LABELS)) {
+    if (raw.includes(en)) return ja;
+  }
+  return fallback || raw;
+}
+
+function representativeJapaneseTitle(item) {
+  const titles = Array.isArray(item?.representative_titles) ? item.representative_titles : [];
+  return titles.find((title) => hasJapanese(title)) || "";
+}
+
 function displayClusterLabel(value) {
   if (state.lang === "ja") return value || "misc";
   return titleCaseLabel(translateKnownLabel(value, value || "misc"));
@@ -701,7 +744,11 @@ function displayClusterLabel(value) {
 
 function displayTaskTitle(item) {
   const raw = item?.title_ja || item?.title || item?.cluster_label || item?.task_cluster_label || item?.task_cluster_family || "task";
-  if (state.lang === "ja") return raw;
+  if (state.lang === "ja") {
+    const representativeTitle = representativeJapaneseTitle(item);
+    if (!hasJapanese(raw) && representativeTitle) return representativeTitle;
+    return translateKnownJapaneseLabel(raw, raw);
+  }
   if (item?.title_en) return item.title_en;
   const cluster = item?.cluster_label || item?.task_cluster_label;
   const fallback = cluster && !hasJapanese(cluster) ? titleCaseLabel(cluster) : titleCaseLabel(item?.primary_repo || "Session Task");
