@@ -500,7 +500,7 @@
     },
     {
       "session_id": "sample-provider-import-normalization",
-      "title": "Provider import normalization を実装して検証する",
+      "title": "Claude Code/Cursor/Gemini形式のJSONを共通セッション形式に変換する",
       "summary": "Claude Code / Cursor / Gemini 風の軽量JSONを共通session schemaへ正規化する。古い前提確認セッションを代表カードに統合し、public fixtureでcross-session lineageを確認できるようにする。",
       "first_user_message": "残タスクを進めて。provider import compatibilityを先にやろう。",
       "last_assistant_message": "provider-native aliasを正規化し、fixtureとsmokeで検証できるようにした。",
@@ -762,6 +762,7 @@
       "max_confidence": 86,
       "auto_ready_count": 0,
       "representative_titles": [
+        "Claude Code/Cursor/Gemini形式のJSONを共通セッション形式に変換する",
         "Provider import の前提確認を代表タスクへ統合",
         "Provider import normalization を実装して検証する"
       ],
@@ -771,7 +772,7 @@
       ],
       "latest_end_at": "2026-04-29T04:45:00+09:00",
       "latest_status": "Need Review",
-      "latest_title": "Provider import normalization を実装して検証する",
+      "latest_title": "Claude Code/Cursor/Gemini形式のJSONを共通セッション形式に変換する",
       "latest_assistant_message": "provider-native aliasを正規化し、fixtureとsmokeで検証できるようにした。",
       "latest_blocker": "none",
       "latest_doneish_signal": false,
@@ -1253,7 +1254,7 @@
     {
       "task_id": "provider-import-normalization",
       "cluster_key": "provider-import:normalization",
-      "title_ja": "Provider import normalization を実装して検証する",
+      "title_ja": "Claude Code/Cursor/Gemini形式のJSONを共通セッション形式に変換する",
       "task_size_ja": "中タスク",
       "推奨列": "Need Review",
       "理由": "2件の session / repo: codex-session-kanban-demo / 主状態: Need Review",
@@ -1265,6 +1266,7 @@
       ],
       "session_count": 2,
       "representative_titles": [
+        "Claude Code/Cursor/Gemini形式のJSONを共通セッション形式に変換する",
         "Provider import の前提確認を代表タスクへ統合",
         "Provider import normalization を実装して検証する"
       ],

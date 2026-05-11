@@ -63,6 +63,32 @@ class CodexReviewSurfaceTitleTest(unittest.TestCase):
 
         self.assertEqual(title, "モバイル幅でも候補追加・詳細確認・状態変更が問題なく使えるようにレビュー操作を整える")
 
+    def test_candidate_title_rewrites_provider_import_taxonomy_to_recognizable_work(self):
+        title = derive_task_title_ja(
+            {
+                "cluster_label": "Provider import normalization",
+                "primary_repos": ["codex-session-kanban-demo"],
+                "representative_titles": [
+                    "Provider import の前提確認を代表タスクへ統合",
+                    "Provider import normalization を実装して検証する",
+                ],
+                "latest_title": "Provider import normalization を実装して検証する",
+                "latest_current_goal": "Provider import互換の実装とfixture検証。",
+                "latest_summary": (
+                    "Claude Code / Cursor / Gemini 風の軽量JSONを共通session schemaへ正規化する。"
+                    "古い前提確認セッションを代表カードに統合し、public fixtureで"
+                    "cross-session lineageを確認できるようにする。"
+                ),
+                "latest_evidence_messages": [
+                    "session_id / repo / timestamp / status / messages のaliasを正規化する。",
+                    "Claude Code / Cursor / Gemini-style sampleをfixtureとして追加する。",
+                    "preflight session はこの代表カードの suppressed predecessor として表示する。",
+                ],
+            }
+        )
+
+        self.assertEqual(title, "Claude Code/Cursor/Gemini形式のJSONを共通セッション形式に変換する")
+
     def test_llmwiki_research_links_fallback_is_not_creative_assets(self):
         topic_key, topic_label, confidence, reason = derive_topic_key(
             repo_name="curiosity-wiki",

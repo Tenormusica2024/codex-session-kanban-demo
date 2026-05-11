@@ -701,6 +701,13 @@ const USER_TITLE_RISK_TOKENS = [
   "controls",
   "blocked",
   "external kanban",
+  "provider import",
+  "provider-native",
+  "normalization",
+  "session schema",
+  "schema compatibility",
+  "cross-session lineage",
+  "suppressed predecessor",
 ];
 
 function translateKnownLabel(value, fallback = "") {

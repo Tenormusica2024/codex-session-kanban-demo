@@ -2835,6 +2835,13 @@ TITLE_INTERNAL_JARGON = (
     "blocked",
     "poc",
     "external kanban",
+    "provider import",
+    "provider-native",
+    "normalization",
+    "session schema",
+    "schema compatibility",
+    "cross-session lineage",
+    "suppressed predecessor",
 )
 MIXED_TITLE_TERM_REPLACEMENTS = (
     (r"\brecent\s+Codex\s+session\s+review\s+surface\b", "Codexセッションレビュー面"),
@@ -2846,6 +2853,16 @@ MIXED_TITLE_TERM_REPLACEMENTS = (
     (r"\bMobile\b", "モバイル"),
     (r"\bmobile\b", "モバイル"),
     (r"\bblocked\b", "停止中"),
+    (r"\s*/\s*", "/"),
+    (r"\s*風の軽量JSON", "形式のJSON"),
+    (r"共通\s*session\s+schema\s*へ\s*正規化する", "共通セッション形式に変換する"),
+    (r"\bsession\s+schema\b", "セッション形式"),
+    (r"\bschema\s+compatibility\b", "形式互換"),
+    (r"\bfixture\b", "サンプルデータ"),
+    (r"\bprovider-native\b", "外部ツール形式"),
+    (r"\balias\b", "項目名"),
+    (r"\bcross-session\s+lineage\b", "複数セッションの前後関係"),
+    (r"\bsuppressed\s+predecessor\b", "統合された古い根拠"),
 )
 
 
