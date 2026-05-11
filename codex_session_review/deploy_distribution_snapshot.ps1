@@ -3,10 +3,18 @@ param(
   [string]$OutputDir = "codex_session_review\distribution_snapshot",
   [switch]$DeployToVercel,
   [string]$VercelAlias = "",
-  [string]$VercelProjectName = "codex-session-kanban-demo"
+  [string]$VercelProjectName = "codex-session-kanban-demo",
+  [switch]$AllowFixtureProductionAlias
 )
 
 $ErrorActionPreference = "Stop"
+
+if ($DeployToVercel -and $VercelAlias -and -not $AllowFixtureProductionAlias) {
+  $aliasLower = $VercelAlias.ToLowerInvariant()
+  if ($aliasLower -notmatch "demo|sample|fixture") {
+    throw "Refusing to deploy sample fixture distribution to production-like alias '$VercelAlias'. Use -AllowFixtureProductionAlias only when intentionally publishing a clearly marked sample/demo page."
+  }
+}
 
 function Invoke-LoggedProcess {
   param(

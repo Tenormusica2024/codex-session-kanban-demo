@@ -136,6 +136,8 @@ async function main() {
   const initial = await page.evaluate(() => ({
     title: document.title,
     candidateCards: document.querySelectorAll(".candidate-card").length,
+    sampleBannerVisible: Boolean(document.querySelector("#sample-mode-banner:not([hidden])")),
+    sampleToggleText: document.querySelector("#sample-candidate-toggle")?.textContent?.trim() || "",
     sessionCards: document.querySelectorAll(".session-card").length,
     columns: [...document.querySelectorAll(".column-header h2")].map((node) => node.textContent.trim()),
     stats: [...document.querySelectorAll(".stat-card .value")].map((node) => node.textContent.trim()),
@@ -158,7 +160,7 @@ async function main() {
 
   if (!initial.hasCandidateList) errors.push("candidate-list is missing");
   if (!initial.hasDetailPanel) errors.push("detail-panel is missing");
-  if (initial.candidateCards <= 0) errors.push("candidate cards are not visible");
+  if (initial.candidateCards <= 0 && !initial.sampleBannerVisible) errors.push("candidate cards are not visible");
   if (initial.columns.length < 5) errors.push(`too few kanban columns: ${initial.columns.join(", ")}`);
   if (!/v\d+\.\d+\.\d+/.test(initial.buildMeta)) {
     errors.push(`build meta does not show app version: ${initial.buildMeta}`);
@@ -175,6 +177,25 @@ async function main() {
   if (initial.paneAutomationHidden !== true || initial.paneAutomationDisplay !== "none" || initial.paneAutomationExpanded !== "false") {
     errors.push(`pane automation panel should start collapsed: hidden=${initial.paneAutomationHidden}, display=${initial.paneAutomationDisplay}, expanded=${initial.paneAutomationExpanded}`);
   }
+
+  let candidatesAfterSampleToggle = {
+    candidateCards: initial.candidateCards,
+    sampleTogglePressed: "",
+    sampleToggleText: "",
+  };
+  if (initial.sampleBannerVisible && initial.candidateCards <= 0) {
+    await page.click("#sample-candidate-toggle");
+    await page.waitForFunction(() => document.querySelectorAll(".candidate-card").length > 0);
+    candidatesAfterSampleToggle = await page.evaluate(() => ({
+      candidateCards: document.querySelectorAll(".candidate-card").length,
+      sampleTogglePressed: document.querySelector("#sample-candidate-toggle")?.getAttribute("aria-pressed") || "",
+      sampleToggleText: document.querySelector("#sample-candidate-toggle")?.textContent?.trim() || "",
+    }));
+    if (candidatesAfterSampleToggle.candidateCards <= 0) {
+      errors.push("sample candidate toggle did not reveal candidates");
+    }
+  }
+  const baselineCandidateCards = Math.max(initial.candidateCards, candidatesAfterSampleToggle.candidateCards);
 
   await page.click("#pane-auto-toggle");
   await page.waitForFunction(() => {
@@ -276,8 +297,8 @@ async function main() {
   if (shortcutSearch.activeId !== "search-input" || shortcutSearch.value !== "provider") {
     errors.push(`slash shortcut did not focus/search correctly: ${JSON.stringify(shortcutSearch)}`);
   }
-  if (shortcutSearch.candidateCards >= initial.candidateCards) {
-    errors.push(`candidate list was not filtered by search: before=${initial.candidateCards}, after=${shortcutSearch.candidateCards}`);
+  if (shortcutSearch.candidateCards >= baselineCandidateCards) {
+    errors.push(`candidate list was not filtered by search: before=${baselineCandidateCards}, after=${shortcutSearch.candidateCards}`);
   }
   if (!/provider|active|有効|候補|candidates/i.test(shortcutSearch.filterSummary)) {
     errors.push(`filter summary did not update after search: ${shortcutSearch.filterSummary}`);
@@ -457,6 +478,7 @@ async function main() {
     ok: errors.length === 0,
     targetUrl,
     initial,
+    candidatesAfterSampleToggle,
     paneAutomation,
     paneAutomationVersionSwitch,
     promoted,

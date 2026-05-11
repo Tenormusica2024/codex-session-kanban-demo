@@ -41,7 +41,13 @@ const I18N = {
     pillOpsValue: "AI優先 / 手動修正可",
     pillAccessKey: "用途",
     accessPersonal: "個人用・保護URL",
-    accessDistribution: "配布用・fixture",
+    accessDistribution: "サンプル配布用・実タスクではない",
+    sampleModeTitle: "サンプルデータ表示中",
+    sampleModeBody:
+      "この公開URLは実セッションではなく配布確認用のfixtureです。実運用Kanbanとは切り分けています。",
+    sampleModeShow: "サンプル候補を表示",
+    sampleModeHide: "サンプル候補を隠す",
+    sampleCandidatesHidden: "サンプル候補 {count} 件を非表示中。実タスク候補ではありません。",
     paneAutoTitle: "Pane Auto",
     paneAutoToggle: "Pane Auto",
     paneAutoShow: "Pane Autoを表示",
@@ -313,7 +319,13 @@ const I18N = {
     pillOpsValue: "auto-first / override-optional",
     pillAccessKey: "access",
     accessPersonal: "personal / protected",
-    accessDistribution: "distribution / fixture",
+    accessDistribution: "sample distribution / fixture",
+    sampleModeTitle: "Sample data mode",
+    sampleModeBody:
+      "This public URL is generated from fixtures for distribution checks. It is separate from the real private-session Kanban.",
+    sampleModeShow: "Show sample candidates",
+    sampleModeHide: "Hide sample candidates",
+    sampleCandidatesHidden: "{count} sample candidates hidden. They are not real task candidates.",
     paneAutoTitle: "Pane Auto",
     paneAutoToggle: "Pane Auto",
     paneAutoShow: "show Pane Auto",
@@ -596,6 +608,7 @@ const state = {
   paneAutomationDirty: false,
   paneAutomationApplying: false,
   paneAutomationPanelOpen: localStorage.getItem(PANE_AUTOMATION_PANEL_KEY) === "true",
+  showSampleCandidates: true,
   lang: localStorage.getItem(LANGUAGE_KEY) || "ja",
 };
 
@@ -621,6 +634,52 @@ function accessProfileLabel() {
   return getAccessProfile() === "distribution" ? t("accessDistribution") : t("accessPersonal");
 }
 
+function isDistributionMode() {
+  return getAccessProfile() === "distribution";
+}
+
+function isSampleSession(session) {
+  const sourceFile = String(session?.source_file || "");
+  const sessionId = String(session?.session_id || "");
+  const providerSource = String(session?.provider_source || "");
+  return (
+    isDistributionMode() ||
+    sourceFile.startsWith("sample/") ||
+    sourceFile.includes("/sample/") ||
+    sessionId.startsWith("sample-") ||
+    providerSource.includes("sample")
+  );
+}
+
+function isSampleTask(task) {
+  const representative = findRepresentativeForTask(task);
+  if (representative && isSampleSession(representative)) return true;
+  const text = [
+    task?.task_id,
+    task?.cluster_key,
+    task?.cluster_label,
+    task?.title_ja,
+    ...(task?.representative_titles || []),
+  ]
+    .filter(Boolean)
+    .join("\n")
+    .toLowerCase();
+  return text.includes("サンプルデータ") || text.includes("sample-") || text.includes("sample/");
+}
+
+function renderSampleModeBanner() {
+  const banner = document.getElementById("sample-mode-banner");
+  if (!banner) return;
+  const isDistribution = isDistributionMode();
+  banner.hidden = !isDistribution;
+  const button = document.getElementById("sample-candidate-toggle");
+  if (button) {
+    button.hidden = !isDistribution;
+    button.textContent = t(state.showSampleCandidates ? "sampleModeHide" : "sampleModeShow");
+    button.setAttribute("aria-pressed", String(state.showSampleCandidates));
+  }
+}
+
 function updateHeroMeta() {
   const buildMeta = document.getElementById("build-meta");
   if (buildMeta) {
@@ -635,6 +694,7 @@ function updateHeroMeta() {
     accessPill.innerHTML = `<strong>${escapeHtml(t("pillAccessKey"))}</strong> ${escapeHtml(accessProfileLabel())}`;
     accessPill.dataset.profile = getAccessProfile();
   }
+  renderSampleModeBanner();
 }
 
 function statusLabel(status) {
@@ -1574,6 +1634,7 @@ function sessionMatchesCurrentFilters(session, { includeStatus = true } = {}) {
 }
 
 function candidateMatchesCurrentFilters(task) {
+  if (!state.showSampleCandidates && isSampleTask(task)) return false;
   const representative = findRepresentativeForTask(task);
   if (!representative) return false;
   if (!sessionMatchesCurrentFilters(representative, { includeStatus: false })) return false;
@@ -1912,21 +1973,27 @@ function renderCandidateStrip() {
   const allCandidates = state.boardData?.suggested_tasks || [];
   const openCandidates = getOpenCandidateTasks();
   const hiddenCount = allCandidates.length - openCandidates.length;
+  const hiddenSampleCount = allCandidates.filter((task) => isSampleTask(task)).length;
   updateFilterSummary(null, openCandidates);
   state.selectedCandidateIndex = Math.max(0, Math.min(state.selectedCandidateIndex || 0, Math.max(0, openCandidates.length - 1)));
   const candidates = openCandidates.slice(0, 8);
   host.innerHTML = "";
   if (!candidates.length) {
-    host.innerHTML = `<span class="small">${
-      hiddenCount ? escapeHtml(t("noUnaddedCandidates", { count: hiddenCount })) : escapeHtml(t("noCandidates"))
-    }</span>`;
+    const message = !state.showSampleCandidates && hiddenSampleCount
+      ? t("sampleCandidatesHidden", { count: hiddenSampleCount })
+      : hiddenCount
+        ? t("noUnaddedCandidates", { count: hiddenCount })
+        : t("noCandidates");
+    host.innerHTML = `<span class="small candidate-filter-note">${escapeHtml(message)}</span>`;
     renderCandidateReviewPanel();
     return;
   }
   if (hiddenCount) {
     const note = document.createElement("div");
     note.className = "candidate-filter-note";
-    note.textContent = t("fixedHidden", { count: hiddenCount });
+    note.textContent = !state.showSampleCandidates && hiddenSampleCount
+      ? t("sampleCandidatesHidden", { count: hiddenSampleCount })
+      : t("fixedHidden", { count: hiddenCount });
     host.appendChild(note);
   }
   candidates.forEach((task, index) => {
@@ -1984,20 +2051,18 @@ function renderCandidateReviewPanel() {
   if (!host) return;
   const displaySessions = getDisplaySessions();
   const allCandidates = state.boardData?.suggested_tasks || [];
+  const openCandidates = getOpenCandidateTasks();
   const fixedCandidateIds = new Set();
-  let openCandidateCount = 0;
   allCandidates.forEach((task) => {
     const representative = findRepresentativeForTask(task);
     if (representative && state.overrides[representative.session_id]?.status) {
       fixedCandidateIds.add(representative.session_id);
-    } else {
-      openCandidateCount += 1;
     }
   });
   const qualityReview = displaySessions.filter((item) => !auditExtractionQuality(item).ok);
   const lineageSessions = displaySessions.filter((item) => lineageInfo(item).hasMerged);
   const rows = [
-    { label: t("candidateOpen"), count: openCandidateCount, items: allCandidates.slice(0, 3).map((task) => displayTaskTitle(task)).filter(Boolean), action: "open" },
+    { label: t("candidateOpen"), count: openCandidates.length, items: openCandidates.slice(0, 3).map((task) => displayTaskTitle(task)).filter(Boolean), action: "open" },
     { label: t("candidateFixed"), count: fixedCandidateIds.size, items: [...fixedCandidateIds].slice(0, 3).map((id) => displayTaskTitle(displaySessions.find((item) => item.session_id === id) || { title: id })) },
     { label: t("candidateQualityReview"), count: qualityReview.length, items: qualityReview.slice(0, 3).map(displayTaskTitle), attention: "quality-review" },
     { label: t("candidateLineage"), count: lineageSessions.length, items: lineageSessions.slice(0, 3).map(displayTaskTitle), attention: "lineage" },
@@ -3435,6 +3500,7 @@ function deriveClientSuggestedTasks(taskClusters) {
 
 function applyBoardData(boardData) {
   state.boardData = boardData;
+  state.showSampleCandidates = !isDistributionMode();
   state.sessions = state.boardData.sessions || [];
   state.selectedId = state.sessions[0]?.session_id || null;
   state.repo = "all";
@@ -3522,6 +3588,7 @@ function escapeHtml(value) {
 
 function init() {
   state.boardData = loadBootstrap();
+  state.showSampleCandidates = !isDistributionMode();
   state.originalBoardData = JSON.parse(JSON.stringify(state.boardData));
   state.sessions = state.boardData.sessions || [];
   state.overrides = loadOverrides();
@@ -3592,6 +3659,14 @@ function init() {
     renderBoard();
   });
   document.getElementById("clear-filters")?.addEventListener("click", clearFilters);
+  document.getElementById("sample-candidate-toggle")?.addEventListener("click", () => {
+    state.showSampleCandidates = !state.showSampleCandidates;
+    state.selectedCandidateIndex = 0;
+    updateHeroMeta();
+    renderCandidateStrip();
+    renderBoard();
+    renderDetail();
+  });
 
   document.getElementById("export-button").addEventListener("click", exportOverrides);
   document.getElementById("copy-overrides-json").addEventListener("click", () => {
