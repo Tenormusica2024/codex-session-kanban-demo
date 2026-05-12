@@ -5,6 +5,8 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 [![Static first](https://img.shields.io/badge/static--first-privacy--aware-64d2ff)](./docs/ARCHITECTURE.md)
 
+![Codex Session Kanban hero: AI coding sessions become reviewable task candidates](docs/assets/codex-session-kanban-hero.png)
+
 Public fixture demo for **Codex Session Kanban**.
 
 Codex Session Kanban is a static, privacy-aware review surface that turns long AI coding sessions into **deduplicated task candidates**.
