@@ -1,23 +1,5 @@
 const STORAGE_KEY = "codex-session-review:v1";
 const LANGUAGE_KEY = "codex-session-review:language";
-const PANE_AUTOMATION_KEY = "codex-session-review:pane-automation:v1";
-const PANE_AUTOMATION_PANEL_KEY = "codex-session-review:pane-automation-panel-open";
-const PANE_AUTOMATION_BRIDGE_URL = "http://127.0.0.1:8766/pane-automation";
-const PANE_AUTOMATION_REFRESH_INTERVAL_MS = 15000;
-const PANE_AUTOMATION_DEFAULT = {
-  upper_left: false,
-  upper_right: false,
-  lower_left: false,
-  lower_right: false,
-};
-const PANE_AUTOMATION_MODE_DEFAULT = "v1";
-const PANE_AUTOMATION_MODES = new Set(["v1", "v2"]);
-const PANE_AUTOMATION_LABEL_KEYS = {
-  upper_left: "paneAutoUpperLeft",
-  upper_right: "paneAutoUpperRight",
-  lower_left: "paneAutoLowerLeft",
-  lower_right: "paneAutoLowerRight",
-};
 const STATUSES = [
   "Need Review",
   "Pending",
@@ -48,30 +30,6 @@ const I18N = {
     sampleModeShow: "サンプル候補を表示",
     sampleModeHide: "サンプル候補を隠す",
     sampleCandidatesHidden: "サンプル候補 {count} 件を非表示中。実タスク候補ではありません。",
-    paneAutoTitle: "Pane Auto",
-    paneAutoToggle: "Pane Auto",
-    paneAutoShow: "Pane Autoを表示",
-    paneAutoHide: "Pane Autoを非表示",
-    paneAutoModeLocal: "local cache",
-    paneAutoModeBridge: "bridge同期",
-    paneAutoModePending: "未反映",
-    paneAutoModeApplying: "反映中",
-    paneAutoUpperLeft: "左上",
-    paneAutoUpperRight: "右上",
-    paneAutoLowerLeft: "左下",
-    paneAutoLowerRight: "右下",
-    paneAutoEnabled: "{label} 自動継続 ON",
-    paneAutoDisabled: "{label} 自動継続 OFF",
-    paneAutoSummary: "{count}/4 ON",
-    paneAutoRefresh: "再読込",
-    paneAutoApply: "ローカル反映",
-    paneAutoLoaded: "bridgeから読込",
-    paneAutoApplied: "反映しました",
-    paneAutoApplyFailed: "反映失敗: bridge状態に戻しました",
-    paneAutoBridgeOffline: "bridge未接続",
-    paneAutoVersionLabel: "運用版",
-    paneAutoVersionV1: "v1 安定",
-    paneAutoVersionV2: "v2 検証",
     guideAccessTitle: "URLの使い分け",
     guideAccessPersonal: "個人用: 実セッション入りのため、このpublic demoには含めない。",
     guideAccessDistribution: "配布用: sample fixtureだけで生成。公開前に -Distribution guard を通し、個人セッション・ローカルパス・bypass token を混ぜない。",
@@ -266,6 +224,9 @@ const I18N = {
       "default は AI recommendation。drag / status select した時だけ human override lock を入れ、後段 AI sync は status を戻さない。",
     firstUserRequest: "最初の依頼",
     recentUserMessages: "直近のユーザー発言",
+    rawPreviewNote: "長文のため先頭だけ表示しています。",
+    showRawText: "原文を表示",
+    rawCharCount: "{count}文字",
     relatedSessionsTitle: "同じタスクまとまりの関連セッション",
     relatedTaskMap: "関連タスク",
     sameLineage: "同じ前後関係",
@@ -326,30 +287,6 @@ const I18N = {
     sampleModeShow: "Show sample candidates",
     sampleModeHide: "Hide sample candidates",
     sampleCandidatesHidden: "{count} sample candidates hidden. They are not real task candidates.",
-    paneAutoTitle: "Pane Auto",
-    paneAutoToggle: "Pane Auto",
-    paneAutoShow: "show Pane Auto",
-    paneAutoHide: "hide Pane Auto",
-    paneAutoModeLocal: "local cache",
-    paneAutoModeBridge: "bridge sync",
-    paneAutoModePending: "pending",
-    paneAutoModeApplying: "applying",
-    paneAutoUpperLeft: "upper left",
-    paneAutoUpperRight: "upper right",
-    paneAutoLowerLeft: "lower left",
-    paneAutoLowerRight: "lower right",
-    paneAutoEnabled: "{label} auto-continue on",
-    paneAutoDisabled: "{label} auto-continue off",
-    paneAutoSummary: "{count}/4 ON",
-    paneAutoRefresh: "refresh",
-    paneAutoApply: "apply local",
-    paneAutoLoaded: "loaded from bridge",
-    paneAutoApplied: "applied",
-    paneAutoApplyFailed: "apply failed: restored bridge state",
-    paneAutoBridgeOffline: "bridge offline",
-    paneAutoVersionLabel: "automation version",
-    paneAutoVersionV1: "v1 stable",
-    paneAutoVersionV2: "v2 test",
     guideAccessTitle: "URL profiles",
     guideAccessPersonal: "Personal: contains real sessions and is intentionally not included in this public demo.",
     guideAccessDistribution: "Distribution: generated only from sample fixtures. Run the -Distribution guard before publishing so real sessions, local paths, and bypass tokens are not included.",
@@ -544,6 +481,9 @@ const I18N = {
       "Default is AI recommendation. Dragging or selecting status creates a human override lock; downstream AI sync must not revert status.",
     firstUserRequest: "First user request",
     recentUserMessages: "Recent user messages",
+    rawPreviewNote: "Long raw text: showing the beginning only.",
+    showRawText: "Show raw text",
+    rawCharCount: "{count} chars",
     relatedSessionsTitle: "Related sessions in the same task cluster",
     relatedTaskMap: "Related task map",
     sameLineage: "Same lineage",
@@ -602,12 +542,6 @@ const state = {
   selectedCandidateIndex: 0,
   dragId: null,
   archiveExpanded: {},
-  paneAutomation: { ...PANE_AUTOMATION_DEFAULT },
-  paneAutomationMode: PANE_AUTOMATION_MODE_DEFAULT,
-  paneAutomationBridgeOnline: null,
-  paneAutomationDirty: false,
-  paneAutomationApplying: false,
-  paneAutomationPanelOpen: localStorage.getItem(PANE_AUTOMATION_PANEL_KEY) === "true",
   showSampleCandidates: true,
   lang: localStorage.getItem(LANGUAGE_KEY) || "ja",
 };
@@ -891,6 +825,37 @@ function displayEvidenceMessages(session) {
     return session.evidence_messages_en;
   }
   return session.evidence_messages || [];
+}
+
+function isLongRawText(value) {
+  const text = String(value || "");
+  return text.length > 420 || text.split(/\r?\n/).length > 6;
+}
+
+function compactRawPreview(value, limit = 260) {
+  const text = String(value || "n/a").replace(/\s+/g, " ").trim();
+  if (text.length <= limit) return text;
+  return `${text.slice(0, limit).trimEnd()}…`;
+}
+
+function renderRawTextBlock(value) {
+  const text = String(value || "n/a");
+  if (!isLongRawText(text)) {
+    return `<p>${escapeHtml(text)}</p>`;
+  }
+  return `
+    <div class="raw-text-block">
+      <p class="raw-text-preview">${escapeHtml(compactRawPreview(text))}</p>
+      <div class="raw-text-note">${escapeHtml(t("rawPreviewNote"))}</div>
+      <details class="raw-text-details">
+        <summary>
+          <span>${escapeHtml(t("showRawText"))}</span>
+          <span class="raw-text-count">${escapeHtml(t("rawCharCount", { count: text.length }))}</span>
+        </summary>
+        <pre class="raw-text-body">${escapeHtml(text)}</pre>
+      </details>
+    </div>
+  `;
 }
 
 function classifyEvidenceMessage(message) {
@@ -1197,270 +1162,6 @@ function loadOverrides() {
 
 function saveOverrides() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state.overrides, null, 2));
-}
-
-function loadPaneAutomation() {
-  try {
-    const stored = JSON.parse(localStorage.getItem(PANE_AUTOMATION_KEY) || "{}");
-    state.paneAutomationMode = normalizePaneAutomationMode(stored.automation_mode || stored.mode);
-    return normalizePaneAutomationPanes(stored.panes || stored);
-  } catch {
-    return { ...PANE_AUTOMATION_DEFAULT };
-  }
-}
-
-function savePaneAutomation() {
-  localStorage.setItem(
-    PANE_AUTOMATION_KEY,
-    JSON.stringify(
-      {
-        automation_mode: normalizePaneAutomationMode(state.paneAutomationMode),
-        panes: normalizePaneAutomationPanes(state.paneAutomation),
-      },
-      null,
-      2,
-    ),
-  );
-}
-
-function savePaneAutomationPanelOpen() {
-  localStorage.setItem(PANE_AUTOMATION_PANEL_KEY, String(state.paneAutomationPanelOpen));
-}
-
-function normalizePaneAutomationMode(value) {
-  return PANE_AUTOMATION_MODES.has(value) ? value : PANE_AUTOMATION_MODE_DEFAULT;
-}
-
-function allPaneAutomationOff() {
-  return Object.keys(PANE_AUTOMATION_DEFAULT).reduce((result, pane) => {
-    result[pane] = false;
-    return result;
-  }, {});
-}
-
-function normalizePaneAutomationPanes(panes) {
-  return Object.keys(PANE_AUTOMATION_DEFAULT).reduce((result, pane) => {
-    result[pane] = panes?.[pane] ?? PANE_AUTOMATION_DEFAULT[pane];
-    return result;
-  }, {});
-}
-
-function paneAutomationExportPayload() {
-  return {
-    schema_version: 1,
-    source: "codex-session-review-surface",
-    storage_key: PANE_AUTOMATION_KEY,
-    automation_mode: normalizePaneAutomationMode(state.paneAutomationMode),
-    updated_at: new Date().toISOString(),
-    panes: { ...PANE_AUTOMATION_DEFAULT, ...state.paneAutomation },
-  };
-}
-
-function setPaneAutomationFeedback(messageKey, timeout = 1600) {
-  const feedback = document.getElementById("pane-auto-feedback");
-  if (!feedback) return;
-  feedback.textContent = t(messageKey);
-  if (timeout > 0) {
-    window.setTimeout(() => {
-      feedback.textContent = "";
-    }, timeout);
-  }
-}
-
-async function refreshPaneAutomationFromBridge({ quiet = false } = {}) {
-  if (state.paneAutomationApplying) {
-    return false;
-  }
-  try {
-    const response = await fetch(PANE_AUTOMATION_BRIDGE_URL, { method: "GET" });
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-    const payload = await response.json();
-    if (!payload?.ok || !payload?.panes) {
-      throw new Error("invalid pane automation bridge response");
-    }
-    state.paneAutomation = normalizePaneAutomationPanes(payload.panes);
-    state.paneAutomationMode = normalizePaneAutomationMode(payload.automation_mode || payload.mode || state.paneAutomationMode);
-    state.paneAutomationBridgeOnline = true;
-    state.paneAutomationDirty = false;
-    savePaneAutomation();
-    renderPaneAutomationControl();
-    if (!quiet) {
-      setPaneAutomationFeedback("paneAutoLoaded");
-    }
-    return true;
-  } catch {
-    state.paneAutomationBridgeOnline = false;
-    renderPaneAutomationControl();
-    if (!quiet) {
-      setPaneAutomationFeedback("paneAutoBridgeOffline", 0);
-    }
-    return false;
-  }
-}
-
-async function applyPaneAutomationToBridge(nextPanes, { quiet = false, nextMode = state.paneAutomationMode } = {}) {
-  const previous = { ...state.paneAutomation };
-  const previousMode = state.paneAutomationMode;
-  const normalized = normalizePaneAutomationPanes(nextPanes);
-  const normalizedMode = normalizePaneAutomationMode(nextMode);
-  state.paneAutomation = normalized;
-  state.paneAutomationMode = normalizedMode;
-  state.paneAutomationDirty = true;
-  state.paneAutomationApplying = true;
-  savePaneAutomation();
-  renderPaneAutomationControl();
-  try {
-    const response = await fetch(PANE_AUTOMATION_BRIDGE_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        schema_version: 1,
-        source: "codex-session-review-surface",
-        storage_key: PANE_AUTOMATION_KEY,
-        automation_mode: normalizedMode,
-        updated_at: new Date().toISOString(),
-        panes: normalized,
-      }),
-    });
-    const payload = await response.json().catch(() => ({}));
-    if (!response.ok || !payload?.ok) {
-      throw new Error(payload?.error || `HTTP ${response.status}`);
-    }
-    // The bridge/backend state is the source of truth.  Prefer the echoed
-    // bridge panes when present; otherwise keep the exact payload that was
-    // acknowledged.  This avoids showing a local-only state as active.
-    state.paneAutomation = normalizePaneAutomationPanes(payload.panes || normalized);
-    state.paneAutomationMode = normalizePaneAutomationMode(payload.automation_mode || payload.mode || normalizedMode);
-    state.paneAutomationBridgeOnline = true;
-    state.paneAutomationDirty = false;
-    savePaneAutomation();
-    if (!quiet) {
-      setPaneAutomationFeedback("paneAutoApplied");
-    }
-    return true;
-  } catch {
-    // Revert immediately on failed apply.  A Pane Auto button must never make
-    // the UI look enabled/disabled when the local bridge did not accept it.
-    state.paneAutomation = previous;
-    state.paneAutomationMode = previousMode;
-    state.paneAutomationBridgeOnline = false;
-    state.paneAutomationDirty = false;
-    savePaneAutomation();
-    if (!quiet) {
-      setPaneAutomationFeedback("paneAutoApplyFailed", 0);
-    }
-    return false;
-  } finally {
-    state.paneAutomationApplying = false;
-    renderPaneAutomationControl();
-  }
-}
-
-function renderPaneAutomationControl() {
-  const panel = document.getElementById("pane-auto-control");
-  const toggle = document.getElementById("pane-auto-toggle");
-  if (panel) {
-    panel.hidden = !state.paneAutomationPanelOpen;
-  }
-  if (toggle) {
-    toggle.setAttribute("aria-expanded", String(state.paneAutomationPanelOpen));
-    toggle.setAttribute(
-      "aria-label",
-      state.paneAutomationPanelOpen ? t("paneAutoHide") : t("paneAutoShow"),
-    );
-    toggle.classList.toggle("active", state.paneAutomationPanelOpen);
-  }
-  const enabledCount = Object.keys(PANE_AUTOMATION_DEFAULT).filter(
-    (pane) => state.paneAutomation[pane] !== false,
-  ).length;
-  const status = document.getElementById("pane-auto-status");
-  if (status) {
-    status.textContent = t("paneAutoSummary", { count: enabledCount });
-  }
-  const versionSelect = document.getElementById("pane-auto-version");
-  if (versionSelect) {
-    versionSelect.value = normalizePaneAutomationMode(state.paneAutomationMode);
-    versionSelect.disabled = state.paneAutomationApplying === true;
-  }
-  const mode = document.getElementById("pane-auto-mode");
-  if (mode) {
-    const bridgeOnline = state.paneAutomationBridgeOnline === true;
-    const pending = state.paneAutomationDirty === true;
-    const applying = state.paneAutomationApplying === true;
-    mode.textContent = applying
-      ? t("paneAutoModeApplying")
-      : pending
-        ? t("paneAutoModePending")
-        : bridgeOnline
-          ? t("paneAutoModeBridge")
-          : t("paneAutoModeLocal");
-    mode.classList.toggle("is-online", bridgeOnline && !pending);
-    mode.classList.toggle("is-local", !bridgeOnline && !pending);
-    mode.classList.toggle("is-pending", pending || applying);
-  }
-  document.querySelectorAll("[data-pane-toggle]").forEach((button) => {
-    const pane = button.dataset.paneToggle;
-    const enabled = state.paneAutomation[pane] !== false;
-    const label = t(PANE_AUTOMATION_LABEL_KEYS[pane] || pane);
-    button.setAttribute("aria-pressed", String(enabled));
-    button.classList.toggle("off", !enabled);
-    button.title = enabled ? t("paneAutoEnabled", { label }) : t("paneAutoDisabled", { label });
-    button.setAttribute("aria-label", button.title);
-    button.disabled = state.paneAutomationApplying === true;
-  });
-  const applyButton = document.getElementById("pane-auto-apply");
-  if (applyButton) {
-    applyButton.disabled = state.paneAutomationApplying === true;
-  }
-}
-
-function initPaneAutomationControl() {
-  state.paneAutomation = loadPaneAutomation();
-  document.getElementById("pane-auto-toggle")?.addEventListener("click", () => {
-    state.paneAutomationPanelOpen = !state.paneAutomationPanelOpen;
-    savePaneAutomationPanelOpen();
-    renderPaneAutomationControl();
-  });
-  document.querySelectorAll("[data-pane-toggle]").forEach((button) => {
-    button.addEventListener("click", async () => {
-      if (state.paneAutomationApplying) {
-        return;
-      }
-      const pane = button.dataset.paneToggle;
-      const next = { ...state.paneAutomation };
-      next[pane] = !(next[pane] !== false);
-      await applyPaneAutomationToBridge(next);
-    });
-  });
-  document.getElementById("pane-auto-apply")?.addEventListener("click", async () => {
-    await applyPaneAutomationToBridge(paneAutomationExportPayload().panes);
-  });
-  document.getElementById("pane-auto-version")?.addEventListener("change", async (event) => {
-    if (state.paneAutomationApplying) {
-      event.target.value = normalizePaneAutomationMode(state.paneAutomationMode);
-      return;
-    }
-    const nextMode = normalizePaneAutomationMode(event.target.value);
-    await applyPaneAutomationToBridge(allPaneAutomationOff(), { nextMode });
-  });
-  document.getElementById("pane-auto-refresh")?.addEventListener("click", () => {
-    refreshPaneAutomationFromBridge();
-  });
-  renderPaneAutomationControl();
-  refreshPaneAutomationFromBridge({ quiet: true });
-  window.setInterval(() => {
-    refreshPaneAutomationFromBridge({ quiet: true });
-  }, PANE_AUTOMATION_REFRESH_INTERVAL_MS);
-  window.addEventListener("focus", () => {
-    refreshPaneAutomationFromBridge({ quiet: true });
-  });
-  document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "visible") {
-      refreshPaneAutomationFromBridge({ quiet: true });
-    }
-  });
 }
 
 function getMergedSessions() {
@@ -2603,7 +2304,7 @@ function renderDetail() {
         <div><strong>${escapeHtml(t("inferredIntent"))}:</strong> ${escapeHtml(rationale.intent || "n/a")}</div>
         <div>
           <strong>${escapeHtml(t("evidence"))}:</strong>
-          <ul>${rationale.evidence.map((item) => `<li>${escapeHtml(displayOriginalText(item))}</li>`).join("") || "<li>n/a</li>"}</ul>
+          <ul>${rationale.evidence.map((item) => `<li>${renderRawTextBlock(displayOriginalText(item))}</li>`).join("") || "<li>n/a</li>"}</ul>
         </div>
         <div>
           <strong>${escapeHtml(t("lineage"))}:</strong>
@@ -2618,15 +2319,15 @@ function renderDetail() {
       <div class="debug-grid">
         <div class="debug-card">
           <strong>${escapeHtml(t("titleSource"))}</strong>
-          <p>${escapeHtml(displayOriginalText(extractionDebug.titleSource || displayTaskTitle(session)))}</p>
+          ${renderRawTextBlock(displayOriginalText(extractionDebug.titleSource || displayTaskTitle(session)))}
         </div>
         <div class="debug-card">
           <strong>${escapeHtml(t("summarySource"))}</strong>
-          <p>${escapeHtml(displayOriginalText(extractionDebug.summarySource || displayTaskSummary(session)))}</p>
+          ${renderRawTextBlock(displayOriginalText(extractionDebug.summarySource || displayTaskSummary(session)))}
         </div>
         <div class="debug-card">
           <strong>${escapeHtml(t("discardedTopicSignals"))}</strong>
-          <ul>${extractionDebug.discardedSignals.map((item) => `<li>${escapeHtml(displayOriginalText(item))}</li>`).join("") || `<li>${escapeHtml(t("debugNoSignals"))}</li>`}</ul>
+          <ul>${extractionDebug.discardedSignals.map((item) => `<li>${renderRawTextBlock(displayOriginalText(item))}</li>`).join("") || `<li>${escapeHtml(t("debugNoSignals"))}</li>`}</ul>
         </div>
         <div class="debug-card">
           <strong>${escapeHtml(t("debugRules"))}</strong>
@@ -2643,7 +2344,7 @@ function renderDetail() {
             (group) => `
               <div class="evidence-category-card ${escapeHtml(group.category)}">
                 <strong>${escapeHtml(evidenceCategoryLabel(group.category))}</strong>
-                <ul>${group.items.map((item) => `<li>${escapeHtml(displayOriginalText(item))}</li>`).join("")}</ul>
+                <ul>${group.items.map((item) => `<li>${renderRawTextBlock(displayOriginalText(item))}</li>`).join("")}</ul>
               </div>`
           )
           .join("") || `<p>${escapeHtml(t("qualityWeakEvidence"))}</p>`}
@@ -2730,12 +2431,12 @@ function renderDetail() {
 
     <div class="detail-section">
       <h3>${escapeHtml(t("firstUserRequest"))}</h3>
-      <p>${escapeHtml(displayOriginalText(session.first_user_message || "n/a", undefined, session.first_user_message_en))}</p>
+      ${renderRawTextBlock(displayOriginalText(session.first_user_message || "n/a", undefined, session.first_user_message_en))}
     </div>
 
     <div class="detail-section">
       <h3>${escapeHtml(t("recentUserMessages"))}</h3>
-      <ul>${displayEvidenceMessages(session).map((item) => `<li>${escapeHtml(displayOriginalText(item))}</li>`).join("") || "<li>n/a</li>"}</ul>
+      <ul>${displayEvidenceMessages(session).map((item) => `<li>${renderRawTextBlock(displayOriginalText(item))}</li>`).join("") || "<li>n/a</li>"}</ul>
     </div>
 
     <div class="detail-section">
@@ -2817,7 +2518,7 @@ function renderDetail() {
 
     <div class="detail-section">
       <h3>${escapeHtml(t("lastAssistantRecap"))}</h3>
-      <p>${escapeHtml(displayOriginalText(session.last_assistant_message || "n/a", undefined, session.last_assistant_message_en))}</p>
+      ${renderRawTextBlock(displayOriginalText(session.last_assistant_message || "n/a", undefined, session.last_assistant_message_en))}
     </div>
 
     <div class="detail-section">
@@ -3597,7 +3298,6 @@ function init() {
 
   applyStaticI18n();
   updateHeroMeta();
-  initPaneAutomationControl();
   const workflowHelp = document.getElementById("workflow-help");
   document.getElementById("workflow-help-button")?.addEventListener("click", () => {
     workflowHelp.hidden = !workflowHelp.hidden;
@@ -3611,7 +3311,6 @@ function init() {
       localStorage.setItem(LANGUAGE_KEY, state.lang);
       applyStaticI18n();
       updateHeroMeta();
-      renderPaneAutomationControl();
       renderRepoFilter();
       renderStatusFilter();
       renderClusterFilter();

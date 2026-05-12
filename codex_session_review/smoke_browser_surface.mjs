@@ -95,44 +95,9 @@ async function main() {
     }
   });
 
-  const paneAutomationPosts = [];
-  await page.route("http://127.0.0.1:8766/pane-automation", async (route) => {
-    if (route.request().method() === "GET") {
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify({
-          ok: true,
-          schema_version: 1,
-          source: "pane_automation_control",
-          automation_mode: "v1",
-          panes: {
-            upper_left: false,
-            upper_right: false,
-            lower_left: false,
-            lower_right: true,
-          },
-        }),
-      });
-      return;
-    }
-    if (route.request().method() === "POST") {
-      paneAutomationPosts.push(await route.request().postDataJSON());
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify({ ok: true }),
-      });
-      return;
-    }
-    await route.continue();
-  });
-
   await page.goto(targetUrl, { waitUntil: "networkidle", timeout: 60000 });
   await page.waitForSelector("#candidate-list", { timeout: 15000 });
   await page.waitForSelector("#detail-panel", { timeout: 15000 });
-  await page.waitForFunction(() => document.querySelector('[data-pane-toggle="lower_right"]')?.getAttribute("aria-pressed") === "true");
-
   const initial = await page.evaluate(() => ({
     title: document.title,
     candidateCards: document.querySelectorAll(".candidate-card").length,
@@ -145,14 +110,6 @@ async function main() {
     hasDetailPanel: Boolean(document.querySelector("#detail-panel")),
     filterSummary: document.querySelector("#filter-summary")?.textContent?.trim() || "",
     buildMeta: document.querySelector("#build-meta")?.textContent?.trim() || "",
-    paneAutomation: [...document.querySelectorAll("[data-pane-toggle]")].reduce((acc, button) => {
-      acc[button.dataset.paneToggle] = button.getAttribute("aria-pressed") === "true";
-      return acc;
-    }, {}),
-    paneAutomationMode: document.querySelector("#pane-auto-mode")?.textContent?.trim() || "",
-    paneAutomationHidden: document.querySelector("#pane-auto-control")?.hidden ?? null,
-    paneAutomationDisplay: window.getComputedStyle(document.querySelector("#pane-auto-control")).display,
-    paneAutomationExpanded: document.querySelector("#pane-auto-toggle")?.getAttribute("aria-expanded") || "",
     viewport: { width: window.innerWidth, height: window.innerHeight },
     scrollWidth: document.documentElement.scrollWidth,
     hasHorizontalOverflow: document.documentElement.scrollWidth > window.innerWidth + 2,
@@ -167,15 +124,6 @@ async function main() {
   }
   if (initial.hasHorizontalOverflow) {
     errors.push(`horizontal overflow before interaction: viewport=${initial.viewport.width}, scrollWidth=${initial.scrollWidth}`);
-  }
-  if (initial.paneAutomation.upper_left !== false || initial.paneAutomation.lower_right !== true) {
-    errors.push(`pane automation did not load bridge state: ${JSON.stringify(initial.paneAutomation)}`);
-  }
-  if (!/bridge/.test(initial.paneAutomationMode)) {
-    errors.push(`pane automation mode did not show bridge sync: ${initial.paneAutomationMode}`);
-  }
-  if (initial.paneAutomationHidden !== true || initial.paneAutomationDisplay !== "none" || initial.paneAutomationExpanded !== "false") {
-    errors.push(`pane automation panel should start collapsed: hidden=${initial.paneAutomationHidden}, display=${initial.paneAutomationDisplay}, expanded=${initial.paneAutomationExpanded}`);
   }
 
   let candidatesAfterSampleToggle = {
@@ -196,69 +144,6 @@ async function main() {
     }
   }
   const baselineCandidateCards = Math.max(initial.candidateCards, candidatesAfterSampleToggle.candidateCards);
-
-  await page.click("#pane-auto-toggle");
-  await page.waitForFunction(() => {
-    const panel = document.querySelector("#pane-auto-control");
-    return panel?.hidden === false && window.getComputedStyle(panel).display !== "none";
-  });
-  await page.locator('[data-pane-toggle="upper_right"]').click();
-  await page.waitForTimeout(100);
-  const appliedPaneAutomationMode = await page
-    .locator("#pane-auto-mode")
-    .textContent()
-    .then((text) => text?.trim() || "");
-  if (!/bridge/.test(appliedPaneAutomationMode)) {
-    errors.push(`pane automation mode did not return to bridge sync after one-click apply: ${appliedPaneAutomationMode}`);
-  }
-  await page.click("#pane-auto-refresh");
-  await page.waitForFunction(() => document.querySelector('[data-pane-toggle="upper_right"]')?.getAttribute("aria-pressed") === "false");
-  const paneAutomation = await page.evaluate(() => ({
-    postedCount: window.__paneAutomationPostCount || 0,
-    ui: [...document.querySelectorAll("[data-pane-toggle]")].reduce((acc, button) => {
-      acc[button.dataset.paneToggle] = button.getAttribute("aria-pressed") === "true";
-      return acc;
-    }, {}),
-    feedback: document.querySelector("#pane-auto-feedback")?.textContent?.trim() || "",
-    mode: document.querySelector("#pane-auto-mode")?.textContent?.trim() || "",
-    hidden: document.querySelector("#pane-auto-control")?.hidden ?? null,
-    display: window.getComputedStyle(document.querySelector("#pane-auto-control")).display,
-    expanded: document.querySelector("#pane-auto-toggle")?.getAttribute("aria-expanded") || "",
-  }));
-  paneAutomation.postedCount = paneAutomationPosts.length;
-  paneAutomation.lastPost = paneAutomationPosts.at(-1) || null;
-  if (paneAutomation.postedCount !== 1 || paneAutomation.lastPost?.panes?.upper_right !== true) {
-    errors.push(`pane automation toggle did not post immediately: ${JSON.stringify(paneAutomation.lastPost)}`);
-  }
-  if (paneAutomation.ui.upper_right !== false || paneAutomation.ui.lower_right !== true) {
-    errors.push(`pane automation refresh did not restore bridge state: ${JSON.stringify(paneAutomation.ui)}`);
-  }
-  if (!/bridge/.test(paneAutomation.mode)) {
-    errors.push(`pane automation mode did not stay bridge synced: ${paneAutomation.mode}`);
-  }
-  if (paneAutomation.hidden !== false || paneAutomation.display === "none" || paneAutomation.expanded !== "true") {
-    errors.push(`pane automation panel did not stay expanded after toggle: hidden=${paneAutomation.hidden}, display=${paneAutomation.display}, expanded=${paneAutomation.expanded}`);
-  }
-
-  await page.locator("#pane-auto-version").selectOption("v2");
-  await page.waitForTimeout(100);
-  const paneAutomationVersionSwitch = await page.evaluate(() => ({
-    selectedVersion: document.querySelector("#pane-auto-version")?.value || "",
-    ui: [...document.querySelectorAll("[data-pane-toggle]")].reduce((acc, button) => {
-      acc[button.dataset.paneToggle] = button.getAttribute("aria-pressed") === "true";
-      return acc;
-    }, {}),
-  }));
-  paneAutomationVersionSwitch.postedCount = paneAutomationPosts.length;
-  paneAutomationVersionSwitch.lastPost = paneAutomationPosts.at(-1) || null;
-  if (
-    paneAutomationVersionSwitch.selectedVersion !== "v2" ||
-    paneAutomationVersionSwitch.lastPost?.automation_mode !== "v2" ||
-    Object.values(paneAutomationVersionSwitch.lastPost?.panes || {}).some(Boolean) ||
-    Object.values(paneAutomationVersionSwitch.ui || {}).some(Boolean)
-  ) {
-    errors.push(`pane automation v2 switch did not post all-off v2 state: ${JSON.stringify(paneAutomationVersionSwitch)}`);
-  }
 
   await page.getByRole("button", { name: "EN" }).click();
   await page.waitForTimeout(100);
@@ -479,8 +364,6 @@ async function main() {
     targetUrl,
     initial,
     candidatesAfterSampleToggle,
-    paneAutomation,
-    paneAutomationVersionSwitch,
     promoted,
     shortcutSearch,
     clearFilters: { button: clearButtonState, shortcut: clearShortcutState },

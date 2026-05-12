@@ -1891,7 +1891,6 @@ def derive_topic_key(
             "自動送信",
             "残タスクを進めて",
             "残タスクは？",
-            "pane auto",
             "transcript",
             "clipboard copy",
             "ctrl+v",
