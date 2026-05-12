@@ -999,6 +999,9 @@ def concrete_title_from_topic(repo_name: str, topic_label: str, latest_change: s
         if repo_name == "near-future-demand-lens":
             return "近未来予測レンズの需要・マネタイズ指数設計"
         return f"{repo_name}の需要・マネタイズ指数設計"
+    if topic_label == "転職・求人選別":
+        if "求人" in latest_source and any(token in latest_source for token in ("求人DB", "レポート", ".md", " md ", "GitHub CLI", "ローカル")):
+            return "求人DB・レポートmdの探索"
     if topic_label == "ランキング鮮度・sparkline修正" and repo_name == "near-future-demand-lens":
         return "近未来予測レンズのランキング鮮度・sparkline修正"
     if topic_label == "近未来予測レンズ運用改善":

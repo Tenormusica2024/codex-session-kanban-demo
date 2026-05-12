@@ -42,3 +42,15 @@ def test_detail_panel_collapses_long_raw_text_by_default():
     assert ".raw-text-details" in css
     assert ".raw-text-body" in css
     assert "max-height: min(48vh, 520px);" in css
+
+
+def test_public_surface_prunes_stale_or_mojibake_local_overrides():
+    js = (ROOT / "codex_session_review" / "assets" / "app.js").read_text(encoding="utf-8")
+
+    assert "function hasMojibakeSignal(value)" in js
+    assert "function currentOverrideKeys()" in js
+    assert "function sanitizeOverrideMap(overrides, options = {})" in js
+    assert "return sanitizeOverrideMap({ ...embedded, ...local }, { dropStale: true });" in js
+    assert "state.overrides = sanitizeOverrideMap(state.overrides, { dropStale: true });" in js
+    assert "removed ${removedMojibake} mojibake override entries from public demo local state" in js
+    assert "removed ${removedStale} stale override entries not present in the current public fixture" in js

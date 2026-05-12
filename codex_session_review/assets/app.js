@@ -1152,16 +1152,62 @@ function loadOverrides() {
     const local = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
     const embedded = state.boardData?.initial_overrides || {};
     if (!localStorage.getItem(STORAGE_KEY) && Object.keys(embedded).length) {
-      return embedded;
+      return sanitizeOverrideMap(embedded, { dropStale: true });
     }
-    return { ...embedded, ...local };
+    return sanitizeOverrideMap({ ...embedded, ...local }, { dropStale: true });
   } catch {
     return {};
   }
 }
 
 function saveOverrides() {
+  state.overrides = sanitizeOverrideMap(state.overrides, { dropStale: true });
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state.overrides, null, 2));
+}
+
+function hasMojibakeSignal(value) {
+  if (typeof value === "string") {
+    return value.includes("\uFFFD") || /\?{4,}/.test(value);
+  }
+  if (!value || typeof value !== "object") return false;
+  if (Array.isArray(value)) return value.some((item) => hasMojibakeSignal(item));
+  return Object.entries(value).some(([key, item]) => hasMojibakeSignal(key) || hasMojibakeSignal(item));
+}
+
+function currentOverrideKeys() {
+  const keys = new Set();
+  for (const session of state.sessions || []) {
+    if (session?.session_id) keys.add(session.session_id);
+    for (const relatedId of session?.related_session_ids || []) {
+      if (relatedId) keys.add(relatedId);
+    }
+  }
+  return keys;
+}
+
+function sanitizeOverrideMap(overrides, options = {}) {
+  const allowed = options.dropStale ? currentOverrideKeys() : null;
+  const next = {};
+  let removedMojibake = 0;
+  let removedStale = 0;
+  for (const [key, value] of Object.entries(overrides || {})) {
+    if (hasMojibakeSignal(key) || hasMojibakeSignal(value)) {
+      removedMojibake += 1;
+      continue;
+    }
+    if (allowed && !allowed.has(key)) {
+      removedStale += 1;
+      continue;
+    }
+    next[key] = value;
+  }
+  if (removedMojibake > 0) {
+    console.warn(`removed ${removedMojibake} mojibake override entries from public demo local state`);
+  }
+  if (removedStale > 0) {
+    console.warn(`removed ${removedStale} stale override entries not present in the current public fixture`);
+  }
+  return next;
 }
 
 function getMergedSessions() {
@@ -3267,7 +3313,7 @@ function importOverrides(file) {
   const reader = new FileReader();
   reader.onload = () => {
     try {
-      state.overrides = JSON.parse(reader.result);
+      state.overrides = sanitizeOverrideMap(JSON.parse(reader.result), { dropStale: true });
       saveOverrides();
       renderBoard();
       renderDetail();

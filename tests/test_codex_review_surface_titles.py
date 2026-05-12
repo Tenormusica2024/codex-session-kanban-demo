@@ -17,6 +17,7 @@ from codex_session_review.build_review_surface import (
     derive_topic_key,
     SessionAccumulator,
     summarize_session,
+    title_quality_issues,
 )
 
 
@@ -259,6 +260,17 @@ class CodexReviewSurfaceTitleTest(unittest.TestCase):
         self.assertIn("next_fix", investigation)
         stale_issues = [item["issue"] for item in report["stale_context_topic_risks"]]
         self.assertTrue(any("Supabase RLS/security" in issue for issue in stale_issues))
+
+    def test_career_job_db_report_search_has_specific_title(self):
+        title = concrete_title_from_topic(
+            "unknown",
+            "転職・求人選別",
+            "ローカルとGitHub CLIで、今日作成された求人DB/レポート系の md を探します。",
+            "求人選別を整理",
+        )
+
+        self.assertEqual(title, "求人DB・レポートmdの探索")
+        self.assertEqual(title_quality_issues(title), [])
 
     def test_web_remote_desktop_clipboard_work_is_not_ranking_freshness(self):
         topic_key, topic_label, confidence, reason = derive_topic_key(
