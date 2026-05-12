@@ -23,7 +23,7 @@ try {
   process.exit(2);
 }
 
-const DEFAULT_URL = "https://tenormusica2024.github.io/codex-session-kanban-demo/";
+const DEFAULT_URL = "https://tenormusica2024.github.io/codex-session-kanban/";
 
 function argValue(name) {
   const index = process.argv.indexOf(name);

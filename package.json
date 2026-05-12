@@ -1,5 +1,5 @@
 {
-  "name": "codex-session-kanban-demo",
+  "name": "codex-session-kanban",
   "version": "0.1.37",
   "description": "Static, privacy-aware Kanban review surface that turns AI coding sessions into deduplicated task candidates.",
   "private": true,
@@ -7,11 +7,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Tenormusica2024/codex-session-kanban-demo.git"
+    "url": "git+https://github.com/Tenormusica2024/codex-session-kanban.git"
   },
-  "homepage": "https://tenormusica2024.github.io/codex-session-kanban-demo/",
+  "homepage": "https://tenormusica2024.github.io/codex-session-kanban/",
   "bugs": {
-    "url": "https://github.com/Tenormusica2024/codex-session-kanban-demo/issues"
+    "url": "https://github.com/Tenormusica2024/codex-session-kanban/issues"
   },
   "keywords": [
     "codex",
@@ -28,7 +28,7 @@
     "local:update:open": "powershell -NoProfile -ExecutionPolicy Bypass -File ./codex_session_review/update_local_review.ps1 -Open",
     "local:update:full": "powershell -NoProfile -ExecutionPolicy Bypass -File ./codex_session_review/update_local_review.ps1 -MobileSmoke -Package",
     "package:distribution": "powershell -NoProfile -ExecutionPolicy Bypass -File ./codex_session_review/package_distribution_snapshot.ps1",
-    "smoke:package": "python ./codex_session_review/smoke_distribution_package.py ./codex_session_review/distribution_package/codex-session-kanban-demo.zip --distribution",
+    "smoke:package": "python ./codex_session_review/smoke_distribution_package.py ./codex_session_review/distribution_package/codex-session-kanban.zip --distribution",
     "smoke:browser": "node codex_session_review/smoke_browser_surface.mjs",
     "smoke:browser:local": "node codex_session_review/smoke_browser_surface.mjs --file codex_session_review/fixture_snapshot/index.html",
     "smoke:browser:mobile": "node codex_session_review/smoke_browser_surface.mjs --mobile",

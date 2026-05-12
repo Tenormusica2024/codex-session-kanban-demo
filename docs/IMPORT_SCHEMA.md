@@ -140,7 +140,7 @@ Use `--distribution` builds for public Pages output.
   "title_en": "Review Candidate Card Extraction Quality",
   "summary_en": "Review whether generated candidate cards have task-oriented titles, concise bodies, and correct lineage.",
   "suggested_status": "Need Review",
-  "primary_repo": "codex-session-kanban-demo",
+  "primary_repo": "codex-session-kanban",
   "start_at": "2026-04-28T10:00:00+09:00",
   "end_at": "2026-04-28T11:00:00+09:00",
   "evidence_messages": [

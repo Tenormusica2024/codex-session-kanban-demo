@@ -3,7 +3,7 @@ param(
   [string]$OutputDir = "codex_session_review\distribution_snapshot",
   [switch]$DeployToVercel,
   [string]$VercelAlias = "",
-  [string]$VercelProjectName = "codex-session-kanban-demo",
+  [string]$VercelProjectName = "codex-session-kanban",
   [switch]$AllowFixtureProductionAlias
 )
 

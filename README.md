@@ -1,15 +1,15 @@
-# Codex Session Kanban Demo
+# Codex Session Kanban
 
-[![GitHub Pages](https://img.shields.io/badge/demo-GitHub%20Pages-2ea44f)](https://tenormusica2024.github.io/codex-session-kanban-demo/)
-[![Release](https://img.shields.io/github/v/release/Tenormusica2024/codex-session-kanban-demo?include_prereleases&sort=semver)](https://github.com/Tenormusica2024/codex-session-kanban-demo/releases)
+[![GitHub Pages](https://img.shields.io/badge/GitHub%20Pages-live-2ea44f)](https://tenormusica2024.github.io/codex-session-kanban/)
+[![Release](https://img.shields.io/github/v/release/Tenormusica2024/codex-session-kanban?include_prereleases&sort=semver)](https://github.com/Tenormusica2024/codex-session-kanban/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 [![Static first](https://img.shields.io/badge/static--first-privacy--aware-64d2ff)](./docs/ARCHITECTURE.md)
 
 ![Codex Session Kanban hero: AI coding sessions become reviewable task candidates](docs/assets/codex-session-kanban-hero.png)
 
-Public fixture demo for **Codex Session Kanban**.
+Codex Session Kanban is a static, privacy-aware review surface that turns local Codex CLI / AI-coding sessions into **deduplicated task candidates**.
 
-Codex Session Kanban is a static, privacy-aware review surface that turns long AI coding sessions into **deduplicated task candidates**.
+The public Pages site is a fixture-only demo. Real `.codex` logs stay local or in a private repository.
 
 It is **not** a generic Kanban board and it is **not** an agent runner. The core job is narrower: help a human quickly review what recent AI sessions were actually doing, which tasks are still active, which older sessions were superseded, and which manual board decisions must not be reverted by later AI sync.
 
@@ -17,7 +17,7 @@ It is **not** a generic Kanban board and it is **not** an agent runner. The core
 
 Open the fixture-only public demo:
 
-https://tenormusica2024.github.io/codex-session-kanban-demo/
+https://tenormusica2024.github.io/codex-session-kanban/
 
 In the demo, try this flow:
 
@@ -44,7 +44,7 @@ MIT. See [LICENSE](./LICENSE).
 
 ## Release
 
-- Latest release: [GitHub Releases](https://github.com/Tenormusica2024/codex-session-kanban-demo/releases/latest)
+- Latest release: [GitHub Releases](https://github.com/Tenormusica2024/codex-session-kanban/releases/latest)
 - Changelog: [CHANGELOG.md](./CHANGELOG.md)
 
 ## Contributing / security
@@ -86,7 +86,7 @@ Real session data should stay local or in a private repository. The public demo 
 Open:
 
 ```text
-https://tenormusica2024.github.io/codex-session-kanban-demo/
+https://tenormusica2024.github.io/codex-session-kanban/
 ```
 
 ### Build the fixture locally
@@ -106,6 +106,19 @@ Output:
 ```text
 codex_session_review/fixture_snapshot/index.html
 ```
+
+### Use with your own Codex CLI logs
+
+For a private/local board from your own `.codex` sessions:
+
+```powershell
+git clone https://github.com/Tenormusica2024/codex-session-kanban.git
+cd codex-session-kanban
+npm install
+npm run private:update:open
+```
+
+This writes the real-session surface under `codex_session_review/local_private_review/`, which is git-ignored. Do not copy that output into the public fixture build.
 
 ### Run the release checks
 

@@ -179,9 +179,9 @@
       "assistant_message_count": 4,
       "command_count": 3,
       "activity_score": 22,
-      "primary_repo": "codex-session-kanban-demo",
+      "primary_repo": "codex-session-kanban",
       "active_paths": [
-        "/workspace/codex-session-kanban-demo"
+        "/workspace/codex-session-kanban"
       ],
       "source_file": "sample/static-surface-predecessor.jsonl",
       "start_at": "2026-04-27T12:00:00+09:00",
@@ -290,9 +290,9 @@
       "assistant_message_count": 4,
       "command_count": 9,
       "activity_score": 33,
-      "primary_repo": "codex-session-kanban-demo",
+      "primary_repo": "codex-session-kanban",
       "active_paths": [
-        "/workspace/codex-session-kanban-demo"
+        "/workspace/codex-session-kanban"
       ],
       "source_file": "sample/needs-input-deploy.jsonl",
       "start_at": "2026-04-28T11:00:00+09:00",
@@ -399,9 +399,9 @@
       "assistant_message_count": 4,
       "command_count": 2,
       "activity_score": 20,
-      "primary_repo": "codex-session-kanban-demo",
+      "primary_repo": "codex-session-kanban",
       "active_paths": [
-        "/workspace/codex-session-kanban-demo"
+        "/workspace/codex-session-kanban"
       ],
       "source_file": "sample/claude-provider-import.jsonl",
       "start_at": "2026-04-28T12:00:00+09:00",
@@ -454,9 +454,9 @@
       "assistant_message_count": 4,
       "command_count": 2,
       "activity_score": 38,
-      "primary_repo": "codex-session-kanban-demo",
+      "primary_repo": "codex-session-kanban",
       "active_paths": [
-        "/workspace/codex-session-kanban-demo"
+        "/workspace/codex-session-kanban"
       ],
       "source_file": "sample/provider-import-preflight.jsonl",
       "start_at": "2026-04-28T11:20:00+09:00",
@@ -515,9 +515,9 @@
       "assistant_message_count": 9,
       "command_count": 31,
       "activity_score": 118,
-      "primary_repo": "codex-session-kanban-demo",
+      "primary_repo": "codex-session-kanban",
       "active_paths": [
-        "/workspace/codex-session-kanban-demo"
+        "/workspace/codex-session-kanban"
       ],
       "source_file": "sample/provider-import-normalization.jsonl",
       "start_at": "2026-04-29T04:35:00+09:00",
@@ -578,9 +578,9 @@
       "assistant_message_count": 7,
       "command_count": 18,
       "activity_score": 92,
-      "primary_repo": "codex-session-kanban-demo",
+      "primary_repo": "codex-session-kanban",
       "active_paths": [
-        "/workspace/codex-session-kanban-demo"
+        "/workspace/codex-session-kanban"
       ],
       "source_file": "sample/topic-conflict-login-to-mobile.jsonl",
       "start_at": "2026-04-29T02:20:00+09:00",
@@ -638,9 +638,9 @@
       "assistant_message_count": 4,
       "command_count": 6,
       "activity_score": 17,
-      "primary_repo": "codex-session-kanban-demo",
+      "primary_repo": "codex-session-kanban",
       "active_paths": [
-        "/workspace/codex-session-kanban-demo"
+        "/workspace/codex-session-kanban"
       ],
       "source_file": "sample/abandoned-hosting-path.jsonl",
       "start_at": "2026-04-28T22:20:00+09:00",
@@ -752,7 +752,7 @@
       "topic_reasons": [],
       "merge_confidence": 0,
       "primary_repos": [
-        "codex-session-kanban-demo"
+        "codex-session-kanban"
       ],
       "session_count": 2,
       "status_counts": {
@@ -801,7 +801,7 @@
       "merge_confidence": 0,
       "primary_repos": [
         "openclaw-secretary",
-        "codex-session-kanban-demo"
+        "codex-session-kanban"
       ],
       "session_count": 2,
       "status_counts": {
@@ -844,7 +844,7 @@
       "topic_reasons": [],
       "merge_confidence": 0,
       "primary_repos": [
-        "codex-session-kanban-demo"
+        "codex-session-kanban"
       ],
       "session_count": 1,
       "status_counts": {
@@ -890,7 +890,7 @@
       "topic_reasons": [],
       "merge_confidence": 0,
       "primary_repos": [
-        "codex-session-kanban-demo"
+        "codex-session-kanban"
       ],
       "session_count": 1,
       "status_counts": {
@@ -974,7 +974,7 @@
       "topic_reasons": [],
       "merge_confidence": 0,
       "primary_repos": [
-        "codex-session-kanban-demo"
+        "codex-session-kanban"
       ],
       "session_count": 1,
       "status_counts": {
@@ -1141,7 +1141,7 @@
       "topic_reasons": [],
       "merge_confidence": 0,
       "primary_repos": [
-        "codex-session-kanban-demo"
+        "codex-session-kanban"
       ],
       "session_count": 1,
       "status_counts": {
@@ -1243,12 +1243,12 @@
       "title_ja": "公開デモのデプロイ権限確認",
       "task_size_ja": "中タスク",
       "推奨列": "Blocked",
-      "理由": "1件の session / repo: codex-session-kanban-demo / 主状態: Blocked",
+      "理由": "1件の session / repo: codex-session-kanban / 主状態: Blocked",
       "状態判断理由": "最新 session が blocked 判定",
       "次の一手": "blocked 理由を明示して、再開条件を 1 行で固定する",
       "cluster_label": "Public demo deployment",
       "primary_repos": [
-        "codex-session-kanban-demo"
+        "codex-session-kanban"
       ],
       "session_count": 1,
       "representative_titles": [
@@ -1262,12 +1262,12 @@
       "title_ja": "サンプルデータ: Claude Code/Cursor/Gemini形式の取込検証",
       "task_size_ja": "中タスク",
       "推奨列": "Need Review",
-      "理由": "2件の session / repo: codex-session-kanban-demo / 主状態: Need Review",
+      "理由": "2件の session / repo: codex-session-kanban / 主状態: Need Review",
       "状態判断理由": "最新 session が review 要求で止まっている",
       "次の一手": "代表 session を見て、board に載せる粒度と列を確定する",
       "cluster_label": "Provider import normalization",
       "primary_repos": [
-        "codex-session-kanban-demo"
+        "codex-session-kanban"
       ],
       "session_count": 2,
       "representative_titles": [
@@ -1283,12 +1283,12 @@
       "title_ja": "サンプルデータ: モバイル幅レビュー操作の検証",
       "task_size_ja": "中タスク",
       "推奨列": "Need Review",
-      "理由": "1件の session / repo: codex-session-kanban-demo / 主状態: Need Review",
+      "理由": "1件の session / repo: codex-session-kanban / 主状態: Need Review",
       "状態判断理由": "最新 session が review 要求で止まっている",
       "次の一手": "代表 session を見て、board に載せる粒度と列を確定する",
       "cluster_label": "Mobile review controls",
       "primary_repos": [
-        "codex-session-kanban-demo"
+        "codex-session-kanban"
       ],
       "session_count": 1,
       "representative_titles": [
@@ -1366,7 +1366,7 @@
       "cluster_label": "Static review surface",
       "primary_repos": [
         "openclaw-secretary",
-        "codex-session-kanban-demo"
+        "codex-session-kanban"
       ],
       "session_count": 2,
       "representative_titles": [
@@ -1381,12 +1381,12 @@
       "title_ja": "Claude Code transcript import のマッピング整理",
       "task_size_ja": "中タスク",
       "推奨列": "Pending",
-      "理由": "1件の session / repo: codex-session-kanban-demo / 主状態: Pending",
+      "理由": "1件の session / repo: codex-session-kanban / 主状態: Pending",
       "状態判断理由": "cluster の最新状態をそのまま採用",
       "次の一手": "代表 session を確認して次の 1 手を決める",
       "cluster_label": "Claude Code provider import",
       "primary_repos": [
-        "codex-session-kanban-demo"
+        "codex-session-kanban"
       ],
       "session_count": 1,
       "representative_titles": [
@@ -1400,12 +1400,12 @@
       "title_ja": "Vercel制限後に古いホスティング案をDroppedへ退避",
       "task_size_ja": "中タスク",
       "推奨列": "Dropped",
-      "理由": "1件の session / repo: codex-session-kanban-demo / 主状態: Dropped",
+      "理由": "1件の session / repo: codex-session-kanban / 主状態: Dropped",
       "状態判断理由": "cluster の最新状態をそのまま採用",
       "次の一手": "代表 session を確認して次の 1 手を決める",
       "cluster_label": "Abandoned hosting path",
       "primary_repos": [
-        "codex-session-kanban-demo"
+        "codex-session-kanban"
       ],
       "session_count": 1,
       "representative_titles": [

@@ -392,7 +392,7 @@ Risk to avoid:
 
 Status:
 - Initial implementation added: `docs/ARTIFACT_USAGE.md` explains how to download the GitHub Actions artifact, open `index.html`, import local session JSON, preserve overrides, reset demo data, and avoid publishing private logs. README, demo usage docs, and release checklist link/check this path.
-- Follow-up clarified that the Actions artifact now contains a tested inner `codex-session-kanban-demo.zip`.
+- Follow-up clarified that the Actions artifact now contains a tested inner `codex-session-kanban.zip`.
 
 Goal:
 - Make the non-Pages distribution path understandable for users.

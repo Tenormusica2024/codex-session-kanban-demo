@@ -20,7 +20,6 @@ from codex_session_review.build_review_surface import (
     title_quality_issues,
 )
 
-
 class CodexReviewSurfaceTitleTest(unittest.TestCase):
     def test_candidate_title_prefers_user_recognizable_intent_over_cluster_taxonomy(self):
         title = derive_task_title_ja(
@@ -47,7 +46,7 @@ class CodexReviewSurfaceTitleTest(unittest.TestCase):
         title = derive_task_title_ja(
             {
                 "cluster_label": "Mobile review controls",
-                "primary_repos": ["codex-session-kanban-demo"],
+                "primary_repos": ["codex-session-kanban"],
                 "representative_titles": ["Mobile review controls をログイン確認から切り分ける"],
                 "latest_title": "Mobile review controls をログイン確認から切り分ける",
                 "latest_summary": (
@@ -68,7 +67,7 @@ class CodexReviewSurfaceTitleTest(unittest.TestCase):
         title = derive_task_title_ja(
             {
                 "cluster_label": "Mobile review controls",
-                "primary_repos": ["codex-session-kanban-demo"],
+                "primary_repos": ["codex-session-kanban"],
                 "representative_titles": ["Mobile review controls をログイン確認から切り分ける"],
                 "latest_title": "Mobile review controls をログイン確認から切り分ける",
                 "latest_source_file": "sample/topic-conflict-login-to-mobile.jsonl",
@@ -86,7 +85,7 @@ class CodexReviewSurfaceTitleTest(unittest.TestCase):
         title = derive_task_title_ja(
             {
                 "cluster_label": "Provider import normalization",
-                "primary_repos": ["codex-session-kanban-demo"],
+                "primary_repos": ["codex-session-kanban"],
                 "representative_titles": [
                     "Provider import の前提確認を代表タスクへ統合",
                     "Provider import normalization を実装して検証する",
@@ -507,7 +506,6 @@ class CodexReviewSurfaceTitleTest(unittest.TestCase):
         self.assertEqual(summary["topic_label"], "近未来予測レンズ運用改善")
         self.assertIn("Cloudflare Access", summary["current_goal"])
         self.assertNotIn("残タスク", summary["current_goal"])
-
 
 if __name__ == "__main__":
     unittest.main()

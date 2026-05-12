@@ -62,13 +62,13 @@ The output directory is generated and ignored by git.
 Use this as the action command if you want a low-cost periodic local refresh:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File "C:\Users\Tenormusica\codex-session-kanban-demo-public\codex_session_review\update_local_review.ps1" -SkipBrowserSmoke
+powershell -NoProfile -ExecutionPolicy Bypass -File "C:\path\to\codex-session-kanban\codex_session_review\update_local_review.ps1" -SkipBrowserSmoke
 ```
 
 For an interactive manual shortcut, prefer:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File "C:\Users\Tenormusica\codex-session-kanban-demo-public\codex_session_review\update_local_review.ps1" -Open
+powershell -NoProfile -ExecutionPolicy Bypass -File "C:\path\to\codex-session-kanban\codex_session_review\update_local_review.ps1" -Open
 ```
 
 ## When to use release checks instead

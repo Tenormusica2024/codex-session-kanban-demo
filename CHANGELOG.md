@@ -316,7 +316,7 @@ This project is still pre-1.0. Entries focus on public distribution, fixture saf
 ### Changed
 
 - Release checks now build and smoke-test the downloadable package in addition to the static HTML and browser checks.
-- GitHub Actions now uploads a tested `codex-session-kanban-demo.zip` artifact instead of a raw folder artifact.
+- GitHub Actions now uploads a tested `codex-session-kanban.zip` artifact instead of a raw folder artifact.
 - Artifact/distribution docs now explain the tested inner zip path.
 
 ## 0.1.7 - 2026-04-29

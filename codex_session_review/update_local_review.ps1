@@ -68,7 +68,7 @@ if ($Package) {
         powershell -NoProfile -ExecutionPolicy Bypass -File .\codex_session_review\package_distribution_snapshot.ps1
     }
     Invoke-Step "Distribution package smoke" {
-        python .\codex_session_review\smoke_distribution_package.py .\codex_session_review\distribution_package\codex-session-kanban-demo.zip --distribution
+        python .\codex_session_review\smoke_distribution_package.py .\codex_session_review\distribution_package\codex-session-kanban.zip --distribution
     }
 }
 

@@ -75,7 +75,7 @@ Personal/local builds can use real session summaries, but should stay private un
 
 ## Downloadable artifact
 
-If GitHub Pages is unavailable, download the `codex-session-kanban-demo` artifact from the latest successful Actions run and open `index.html`. See [Downloadable artifact usage](./ARTIFACT_USAGE.md).
+If GitHub Pages is unavailable, download the `codex-session-kanban` artifact from the latest successful Actions run and open `index.html`. See [Downloadable artifact usage](./ARTIFACT_USAGE.md).
 
 ## Testing the demo
 

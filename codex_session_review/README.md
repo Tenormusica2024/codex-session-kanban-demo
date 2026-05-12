@@ -1,4 +1,4 @@
-# Codex Session Kanban Demo
+# Codex Session Kanban
 
 Static HTML Kanban/review surface for recent Codex sessions.
 
@@ -26,7 +26,7 @@ generation only because stale context contains `ai-character-ip`, `character`,
 
 The shared deterministic rules live in
 `codex_session_review/title_classification_rules.py`. Keep that file identical
-between `openclaw-secretary` and `codex-session-kanban-demo-public`; the local
+between `openclaw-secretary` and the public checkout; the local
 sync guard is `tests/test_title_classification_rules_sync.py`.
 
 Treat these as priority signals for `LLMWIKI報告メール誤表示修正` when they

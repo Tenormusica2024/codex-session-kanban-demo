@@ -1,7 +1,7 @@
 param(
     [switch]$SkipBrowserSmoke,
     [switch]$PagesSmoke,
-    [string]$PagesUrl = "https://tenormusica2024.github.io/codex-session-kanban-demo/"
+    [string]$PagesUrl = "https://tenormusica2024.github.io/codex-session-kanban/"
 )
 
 $ErrorActionPreference = "Stop"
@@ -73,7 +73,7 @@ Invoke-Step "Package downloadable distribution" {
 }
 
 Invoke-Step "Distribution package smoke" {
-    python .\codex_session_review\smoke_distribution_package.py .\codex_session_review\distribution_package\codex-session-kanban-demo.zip --distribution
+    python .\codex_session_review\smoke_distribution_package.py .\codex_session_review\distribution_package\codex-session-kanban.zip --distribution
 }
 
 if (-not $SkipBrowserSmoke) {

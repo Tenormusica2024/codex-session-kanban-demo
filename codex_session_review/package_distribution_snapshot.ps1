@@ -2,7 +2,7 @@ param(
   [string]$RepoRoot = "",
   [string]$OutputDir = "codex_session_review\distribution_snapshot",
   [string]$PackageDir = "codex_session_review\distribution_package",
-  [string]$PackageName = "codex-session-kanban-demo.zip"
+  [string]$PackageName = "codex-session-kanban.zip"
 )
 
 $ErrorActionPreference = "Stop"
@@ -21,7 +21,7 @@ New-Item -ItemType Directory -Force -Path $absolutePackageDir | Out-Null
 
 $readmePath = Join-Path $absoluteOutputDir "README_LOCAL_DEMO.txt"
 @"
-Codex Session Kanban Demo
+Codex Session Kanban
 
 Open index.html in a browser.
 

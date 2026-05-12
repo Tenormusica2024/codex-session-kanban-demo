@@ -16,7 +16,7 @@ The workflow:
 4. Generates `codex_session_review/github_pages/index.html`.
 5. Copies public `docs/` into the Pages/artifact output so in-app schema links work.
 6. Runs static artifact smoke before upload/deploy.
-7. Packages a downloadable `codex-session-kanban-demo.zip` and smoke-tests the zip contents.
+7. Packages a downloadable `codex-session-kanban.zip` and smoke-tests the zip contents.
 8. Optionally runs Playwright desktop and mobile browser smoke when manually dispatched with `run_browser_smoke=true`.
 9. Uploads a GitHub Pages artifact.
 10. Uploads the tested zip as a downloadable Actions artifact.
@@ -35,7 +35,7 @@ Repository Settings:
 3. Source: GitHub Actions
 4. Push to `master`, or run the workflow manually with `deploy_pages=true` if Pages is supported
 
-If Pages is not available for the repository visibility/plan, use the Actions artifact or move the demo-only files to a public repository. The workflow uploads a tested `codex-session-kanban-demo.zip` so distribution still works when Pages is unsupported.
+If Pages is not available for the repository visibility/plan, use the Actions artifact or move the demo-only files to a public repository. The workflow uploads a tested `codex-session-kanban.zip` so distribution still works when Pages is unsupported.
 
 ## Optional browser smoke in Actions
 
@@ -44,7 +44,7 @@ The push workflow keeps browser smoke disabled to avoid slowing down every deplo
 For a release verification run:
 
 1. Open **Actions**.
-2. Select **Codex Session Kanban Demo Pages**.
+2. Select **Codex Session Kanban Pages**.
 3. Run workflow.
 4. Set `run_browser_smoke=true`.
 5. Set `deploy_pages=true` only if you also want to redeploy Pages from that manual run.

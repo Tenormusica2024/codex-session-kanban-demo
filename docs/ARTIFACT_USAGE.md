@@ -6,9 +6,9 @@ Use this path when GitHub Pages is unavailable or when you want an offline demo 
 
 1. Open the GitHub repository.
 2. Go to **Actions**.
-3. Open the latest successful **Codex Session Kanban Demo Pages** run.
-4. Download the artifact named `codex-session-kanban-demo`.
-5. Unzip the downloaded GitHub artifact, then unzip `codex-session-kanban-demo.zip` locally.
+3. Open the latest successful **Codex Session Kanban Pages** run.
+4. Download the artifact named `codex-session-kanban`.
+5. Unzip the downloaded GitHub artifact, then unzip `codex-session-kanban.zip` locally.
 
 The inner distribution zip should contain:
 

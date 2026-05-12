@@ -52,7 +52,7 @@ Optional flags:
 Recommended low-cost scheduled action:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File "C:\Users\Tenormusica\codex-session-kanban-demo-public\codex_session_review\update_private_review.ps1" -SkipBrowserSmoke
+powershell -NoProfile -ExecutionPolicy Bypass -File "C:\path\to\codex-session-kanban\codex_session_review\update_private_review.ps1" -SkipBrowserSmoke
 ```
 
 Task Scheduler fields:
@@ -61,13 +61,13 @@ Task Scheduler fields:
 - Add arguments:
 
 ```text
--NoProfile -ExecutionPolicy Bypass -File "C:\Users\Tenormusica\codex-session-kanban-demo-public\codex_session_review\update_private_review.ps1" -SkipBrowserSmoke
+-NoProfile -ExecutionPolicy Bypass -File "C:\path\to\codex-session-kanban\codex_session_review\update_private_review.ps1" -SkipBrowserSmoke
 ```
 
 - Start in:
 
 ```text
-C:\Users\Tenormusica\codex-session-kanban-demo-public
+C:\path\to\codex-session-kanban
 ```
 
 Suggested cadence:
@@ -101,4 +101,4 @@ If the scheduled task fails:
 1. Run the same command manually in PowerShell.
 2. Confirm `python`, `node`, and `npm install` have been run in the repo if browser smoke is enabled.
 3. Use `-SkipBrowserSmoke` for unattended scheduled runs.
-4. Check that `C:\Users\Tenormusica\.codex\sessions` exists or pass `-CodexHome`.
+4. Check that `%USERPROFILE%\.codex\sessions` exists or pass `-CodexHome`.

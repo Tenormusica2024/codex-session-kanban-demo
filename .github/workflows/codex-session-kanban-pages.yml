@@ -1,4 +1,4 @@
-name: Codex Session Kanban Demo Pages
+name: Codex Session Kanban Pages
 
 on:
   workflow_dispatch:
@@ -73,7 +73,7 @@ jobs:
           cp -R docs codex_session_review/github_pages/docs
           touch codex_session_review/github_pages/.nojekyll
           cat > codex_session_review/github_pages/README_LOCAL_DEMO.txt <<'EOF'
-          Codex Session Kanban Demo
+          Codex Session Kanban
 
           This GitHub Pages build is generated from sample fixture data only.
           It must not contain real Codex sessions, local user paths, Vercel bypass tokens, or private project data.
@@ -85,10 +85,10 @@ jobs:
       - name: Package downloadable artifact zip
         run: |
           cd codex_session_review/github_pages
-          zip -r ../codex-session-kanban-demo.zip index.html README_LOCAL_DEMO.txt docs
+          zip -r ../codex-session-kanban.zip index.html README_LOCAL_DEMO.txt docs
 
       - name: Smoke test downloadable artifact zip
-        run: python codex_session_review/smoke_distribution_package.py codex_session_review/codex-session-kanban-demo.zip --distribution
+        run: python codex_session_review/smoke_distribution_package.py codex_session_review/codex-session-kanban.zip --distribution
 
       - name: Install browser smoke dependencies
         if: ${{ github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.run_browser_smoke == 'true') }}
@@ -116,8 +116,8 @@ jobs:
       - name: Upload downloadable artifact
         uses: actions/upload-artifact@v7
         with:
-          name: codex-session-kanban-demo
-          path: codex_session_review/codex-session-kanban-demo.zip
+          name: codex-session-kanban
+          path: codex_session_review/codex-session-kanban.zip
 
   deploy:
     if: ${{ github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.deploy_pages == 'true') }}

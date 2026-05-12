@@ -64,11 +64,11 @@ npm run smoke:browser:mobile:local
 
 - [ ] Repository is public if using free GitHub Pages.
 - [ ] Settings → Pages → Source is GitHub Actions.
-- [ ] Workflow `Codex Session Kanban Demo Pages` passes.
+- [ ] Workflow `Codex Session Kanban Pages` passes.
 - [ ] Push workflow browser smoke passes for desktop, mobile, and narrow viewport.
 - [ ] Optional manual workflow with `run_browser_smoke=true` passes before major public releases when testing without a push.
 - [ ] If Pages is unavailable, use the downloadable Actions artifact instead.
-- [ ] Downloadable artifact contains the tested `codex-session-kanban-demo.zip`.
+- [ ] Downloadable artifact contains the tested `codex-session-kanban.zip`.
 - [ ] The inner zip contains `index.html`, `README_LOCAL_DEMO.txt`, and `docs/`.
 
 ## Positioning
